@@ -198,7 +198,7 @@ public class Simulator {
 			cellProcessed[newNo] = true;
 		} else {
 			// can't move but age
-			nextWorld[no] = fishAge <= fishReproduceAge ? fishReproduceAge : (short) (fishAge - 1);
+			nextWorld[no] = (short) (fishAge <= fishReproduceAge ? -fishReproduceAge : (fishAge - 1));
 		}
 	}
 

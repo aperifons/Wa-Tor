@@ -42,7 +42,11 @@ public class WatorDisplay extends Fragment {
 
 	private static final short FISH_REPRODUCTION_AGE = 5;
 	private static final short SHARK_REPRODUCTION_AGE = 20;
-	private static final short SHARK_MAX_HUNGER = 12;
+	private static final short SHARK_MAX_HUNGER = 25;
+	private static final int WORLD_WIDTH = 400;
+	private static final int WORLD_HEIGHT = 300;
+	private static final int INITIAL_FISH = 600;
+	private static final int INITIAL_SHARK = 200;
 
 	private Simulator simulator;
 
@@ -70,7 +74,12 @@ public class WatorDisplay extends Fragment {
 	public void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		handler = new Handler();
-		simulator = new Simulator(400, 300, FISH_REPRODUCTION_AGE, SHARK_REPRODUCTION_AGE, SHARK_MAX_HUNGER, 200, 40);
+		simulator = new Simulator(
+				WORLD_WIDTH, WORLD_HEIGHT,
+				FISH_REPRODUCTION_AGE,
+				SHARK_REPRODUCTION_AGE, SHARK_MAX_HUNGER,
+				INITIAL_FISH, INITIAL_SHARK
+		);
 		b = Bitmap.createBitmap(simulator.getWorldWidth(), simulator.getWorldHeight(), Bitmap.Config.ARGB_8888);
 	}
 
@@ -147,6 +156,7 @@ public class WatorDisplay extends Fragment {
 						} finally {
 							simulator.releaseWorldToPaint();
 						}
+						Log.d("Wa-Tor", "Generating pixels " + (System.currentTimeMillis() - startUpdate) + " ms");
 						synchronized(WatorDisplay.this) {
 							if (Thread.currentThread() == painterThread) {
 								b.setPixels(pixels, 0, simulator.getWorldWidth(), 0, 0, simulator.getWorldWidth(), simulator.getWorldHeight());
