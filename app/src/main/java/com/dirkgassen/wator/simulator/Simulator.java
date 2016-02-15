@@ -77,14 +77,16 @@ public class Simulator {
 			do {
 				cellNo = random.nextInt(worldSize);
 			} while (currentWorld[cellNo] != 0);
-			currentWorld[cellNo] = (short) -random.nextInt(fishReproduceAge);
+			// Note: age is 1-based!
+			currentWorld[cellNo] = (short) (-random.nextInt(fishReproduceAge) - 1);
 		}
 		while (initialSharkCount-- > 0) {
 			int cellNo;
 			do {
 				cellNo = random.nextInt(worldSize);
 			} while (currentWorld[cellNo] != 0);
-			currentWorld[cellNo] = (short) ((random.nextInt(maxSharkHunger) << 8) | random.nextInt(sharkReproduceAge));
+			// Note: age and hunger are 1-based!
+			currentWorld[cellNo] = (short) (((random.nextInt(maxSharkHunger) + 1) << 8) | (random.nextInt(sharkReproduceAge) + 1));
 		}
 	}
 
@@ -219,14 +221,13 @@ public class Simulator {
 			// we can eat a fish :) so ignore the hunger
 			short reproduceAge = (short) (currentCompositeAge & 255);
 			int newNo = fishNeighbourPos[fishNeighbours == 1 ? 0 : random.nextInt(fishNeighbours)];
-			// eat fish in target loc: ignore hunger coz this is gonna be reset
 			if (reproduceAge > sharkReproduceAge) {
 				// eat fish, reproduce and move
-				nextWorld[newNo] = 1 + 256;
-				nextWorld[no] = 1 + 256;
+				nextWorld[newNo] = (1 << 8) + 1;
+				nextWorld[no] = (1 << 8) + 1;
 			} else {
 				// just eat the fish, increase reproduce age and move
-				nextWorld[newNo] = (short) ((reproduceAge + 1) | (1 << 8));
+				nextWorld[newNo] = (short) ((1 << 8) | (reproduceAge + 1));
 				nextWorld[no] = 0;
 			}
 			cellProcessed[newNo] = true;
@@ -248,13 +249,17 @@ public class Simulator {
 						nextWorld[newNo] = (short) ((hunger << 8) | 1);
 						nextWorld[no] = (short) ((hunger << 8) | 1);
 					} else {
-						// just starve
+						// just move
 						nextWorld[newNo] = (short) ((hunger << 8) | (reproduceAge + 1));
 						nextWorld[no] = 0;
 					}
 					cellProcessed[newNo] = true;
 				} else {
-					nextWorld[no] = (short) ((((hunger << 8) & 127)) | (reproduceAge + 1));
+					// can't move, just age
+					if (reproduceAge < sharkReproduceAge) {
+						reproduceAge++;
+					}
+					nextWorld[no] = (short) ((hunger << 8) | reproduceAge);
 				}
 			}
 		}

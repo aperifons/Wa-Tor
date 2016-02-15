@@ -40,8 +40,8 @@ import android.widget.ImageView;
  */
 public class WatorDisplay extends Fragment {
 
-	private static final short FISH_REPRODUCTION_AGE = 5;
-	private static final short SHARK_REPRODUCTION_AGE = 20;
+	private static final short FISH_REPRODUCTION_AGE = 12;
+	private static final short SHARK_REPRODUCTION_AGE = 17;
 	private static final short SHARK_MAX_HUNGER = 25;
 	private static final int WORLD_WIDTH = 400;
 	private static final int WORLD_HEIGHT = 300;
@@ -61,6 +61,23 @@ public class WatorDisplay extends Fragment {
 	private ImageView watorDisplay;
 
 	Bitmap b;
+
+	private int[] calculateIndividualAgeColors(int max, int youngColor, int oldColor) {
+		final int[] colors = new int[max];
+		final float[] youngColorHsv = new float[3];
+		final float[] oldColorHsv = new float[3];
+		final float[] targetColor = new float[3];
+		Color.colorToHSV(youngColor, youngColorHsv);
+		Color.colorToHSV(oldColor, oldColorHsv);
+		for (int age = 0; age < max; age++) {
+			for (int no = 0; no < 3; no++) {
+				float proportion = (float) age / (float) max;
+				targetColor[no] = (youngColorHsv[no] + ((oldColorHsv[no] - youngColorHsv[no]) * proportion));
+				colors[age] = Color.HSVToColor(targetColor);
+			}
+		}
+		return colors;
+	}
 
 	@Nullable
 	@Override
@@ -105,22 +122,23 @@ public class WatorDisplay extends Fragment {
 			@Override
 			public void run() {
 				Context c = WatorDisplay.this.getContext();
-				// Set up the colors... we do some fancy interpolation in HSV color space.
+				// Set up the colors... we do some fancy interpolation in HSV color space,
+				// however, let's precalculate the colors.
 				// See
 				//   http://stackoverflow.com/questions/4414673/android-color-between-two-colors-based-on-percentage
 				// for details
+				final int[] fishAgeColors = calculateIndividualAgeColors(
+						FISH_REPRODUCTION_AGE,
+						ContextCompat.getColor(c, R.color.fish_young),
+						ContextCompat.getColor(c, R.color.fish_old)
+				);
+				final int[] sharkAgeColors = calculateIndividualAgeColors(
+						SHARK_MAX_HUNGER,
+						ContextCompat.getColor(c, R.color.shark_young),
+						ContextCompat.getColor(c, R.color.shark_old)
+				);
 				final int[] pixels = new int[simulator.getWorldWidth() * simulator.getWorldHeight()];
 				final int waterColor = ContextCompat.getColor(c, R.color.water);
-				final float[] fishColorYoung = new float[3];
-				final float[] fishColorOld = new float[3];
-				final float[] sharkColorYoung = new float[3];
-				final float[] sharkColorOld = new float[3];
-				final float[] targetColor = new float[3];
-				Color.colorToHSV(ContextCompat.getColor(c, R.color.fish_young), fishColorYoung);
-				Color.colorToHSV(ContextCompat.getColor(c, R.color.fish_old), fishColorOld);
-				Color.colorToHSV(ContextCompat.getColor(c, R.color.shark_young), sharkColorYoung);
-				Color.colorToHSV(ContextCompat.getColor(c, R.color.shark_old), sharkColorOld);
-
 				try {
 					while (Thread.currentThread() == painterThread) {
 						Log.d("Wa-Tor", "Updating image");
@@ -132,25 +150,12 @@ public class WatorDisplay extends Fragment {
 							do {
 								if (world.isEmpty()) {
 									pixels[world.getCurrentPosition()] = waterColor;
+								} else  if (world.isFish()) {
+									pixels[world.getCurrentPosition()] = fishAgeColors[world.getFishAge() - 1];
+									fishCount++;
 								} else {
-									final float[] colorYoung;
-									final float[] colorOld;
-									final float proportion;
-									if (world.isFish()) {
-										colorYoung = fishColorYoung;
-										colorOld = fishColorOld;
-										proportion = (float) world.getFishAge() / (float) FISH_REPRODUCTION_AGE;
-										fishCount++;
-									} else {
-										colorYoung = sharkColorYoung;
-										colorOld = sharkColorOld;
-										proportion = (float) world.getSharkHunger() / (float) SHARK_MAX_HUNGER;
-										sharkCount++;
-									}
-									for (int no = 0; no < 3; no++) {
-										targetColor[no] = (colorYoung[no] + ((colorOld[no] - colorYoung[no]) * proportion));
-									}
-									pixels[world.getCurrentPosition()] = Color.HSVToColor(targetColor);
+									pixels[world.getCurrentPosition()] = sharkAgeColors[world.getSharkHunger() - 1];
+									sharkCount++;
 								}
 							} while (world.moveToNext() != WorldInspector.MOVE_RESULT.RESET);
 						} finally {
