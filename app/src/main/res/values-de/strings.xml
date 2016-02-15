@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ strings.xml is part of Wa-Tor (C) 2016 by Dirk Gassen.
+  ~
+  ~ Wa-Tor is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Wa-Tor is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<resources>
+	<string name="app_name">Wa-Tor</string>
+	<string name="wator_image_view_desc">Wa-Tor Planetenanzeige</string>
+
+	<!-- generic button labels -->
+	<string name="ok">Ok</string>
+	<string name="yes">Ja</string>
+	<string name="no">No</string>
+	<string name="cancel">Abbrechen</string>
+
+
+
+	<!-- rolling stats graph -->
+	<string name="fish_dataseries_name">F</string>
+	<string name="shark_dataseries_name">H</string>
+
+
+
+	<!-- about -->
+	<string name="version_label">Version:</string>
+	<string name="version">%1$s (Build #%2$d)</string>
+	<string name="website_label">Web:</string>
+	<string name="website">http://www.dirkgassen.com/</string>
+	<string name="license_label">Lizenz:</string>
+	<string name="license">GNU General Public License version 3 or later</string>
+	<string name="copyright_label">Copyright:</string>
+	<string name="copyright">Copyright © 2016 Dirk Gassen</string>
+	<string name="unknown_version"><![CDATA[<unbekannt>]]></string>
+
+
+	<!-- new world stuff -->
+	<string name="world_size_label">Weltgröße:</string>
+	<string name="world_size_x_label">x</string>
+	<string name="initial_fish_count_label">Anfangszahl Fische:</string>
+	<string name="fish_breed_time_label">Fischbrutzeit:</string>
+	<string name="initial_shark_count_label">Anfangszahl Haie:</string>
+	<string name="shark_breed_time_label">Haibrutzeit:</string>
+	<string name="shark_starve_time_label">Haihunger:</string>
+	<string name="create_new_world">Neu</string>
+
+
+
+	<!-- Strings for entering a value after clicking on the thumb in the RangeSlider -->
+	<string name="enter_new_value_title">Neuen Wert Eingeben</string>
+	<string name="invalid_value">Ungültiger Wert</string>
+	<string name="entered_value_adjusted">Eingabe nach %1$d angepaßt</string>
+
+
+
+	<!-- app drawer (hamburger menu) -->
+	<string name="open_drawer_description">Optionen anzeigen</string>
+	<string name="close_drawer_description">Optionen schließen</string>
+	<string name="wator_name">@string/app_name</string>
+	<string name="wator_synopsis">Ein Umweltsimulator</string>
+	<string name="wator_logo_description">Wa-Tor Logo</string>
+	<string name="drawer_command_icon_description">Aktionsbild</string>
+	<string name="desired_fps_label">Gewünscht:</string>
+	<string name="threads_label">Threads:</string>
+	<string name="current_fps_label">Aktuell:</string>
+	<string name="current_simulation_fps">Simulation: %1$d B/s</string>
+	<string name="current_drawing_fps">Zeichnen: %1$d B/s</string>
+	<string name="paused">- Angehalten -</string>
+	<string name="fps_format">%d B/s</string>
+
+	<string name="create_new_world_command">Neue Welt</string>
+	<string name="create_new_world_description">Started mit einer neuen Welt mit wählbaren Parametern</string>
+
+	<string name="about_command">Über Wa-Tor</string>
+	<string name="about_description">Zeigt Informationen über diese App an.</string>
+
+
+
+	<!-- errors in the "new world" fragment -->
+	<string name="world_width_too_small_error">Weltbreite ist zu klein</string>
+	<string name="world_width_too_large_error">Weltbreite ist zu groß (max. %1$d)</string>
+	<string name="world_width_empty_error">Weltbreite ist leer</string>
+	<string name="world_height_too_small_error">Welthöhe ist zu klein</string>
+	<string name="world_height_too_large_error">Welthöhe ist zu groß (max. %1$d)</string>
+	<string name="world_height_empty_error">Welthöhe ist leer</string>
+	<string name="initial_fish_count_empty_error">Anfangszahl Fische ist leer</string>
+	<string name="initial_shark_count_empty_error">Anfangszahl Haie ist leer</string>
+	<string name="fish_breed_time_too_small_error">Fischbrutzeit ist zu klein</string>
+	<string name="fish_breed_time_too_large_error">Fishbrutzeit ist zu groß (max. %1$d)</string>
+	<string name="fish_breed_time_empty_error">Fischbrutzeit ist leer</string>
+	<string name="shark_breed_time_too_small_error">Haibrutzeit ist zu klein</string>
+	<string name="shark_breed_time_too_large_error">Haibrutzeit ist zu gross (max. %1$d)</string>
+	<string name="shark_breed_time_empty_error">Haibrutzeit ist leer</string>
+	<string name="shark_starve_time_too_small_error">Haihunger ist zu klein</string>
+	<string name="shark_starve_time_too_large_error">Haihunger ist zu groß (max. %1$d)</string>
+	<string name="shark_starve_time_empty_error">Haihunger ist leer</string>
+	<string name="too_many_fish_error">Zu viele Fische (max. %1$d)</string>
+	<string name="too_many_shark_error">Zu viele Haie (max. %1$d)</string>
+</resources>

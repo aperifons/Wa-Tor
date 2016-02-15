@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ attrs.xml is part of Wa-Tor (C) 2016 by Dirk Gassen.
+  ~
+  ~ Wa-Tor is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Wa-Tor is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<resources>
+	<declare-styleable name="RollingGraphView">
+		<attr name="series1name"     format="string"/>
+		<attr name="series2name"     format="string"/>
+		<attr name="series3name"     format="string"/>
+		<attr name="series4name"     format="string"/>
+		<attr name="series1color" format="color"/>
+		<attr name="series2color" format="color"/>
+		<attr name="series3color" format="color"/>
+		<attr name="series4color" format="color"/>
+		<attr name="series1thickness" format="dimension"/>
+		<attr name="series2thickness" format="dimension"/>
+		<attr name="series3thickness" format="dimension"/>
+		<attr name="series4thickness" format="dimension"/>
+		<attr name="label1textSize" format="dimension"/>
+		<attr name="label2textSize" format="dimension"/>
+		<attr name="label3textSize" format="dimension"/>
+		<attr name="label4textSize" format="dimension"/>
+		<attr name="maxValues"       format="integer"/>
+		<attr name="android:orientation"/>
+		<attr name="android:background"/>
+		<attr name="android:backgroundTint"/>
+	</declare-styleable>
+
+	<declare-styleable name="RangeSlider">
+		<attr name="minValue" format="integer" />
+		<attr name="maxValue" format="integer" />
+		<attr name="thumbPadding" format="dimension" />
+		<attr name="thumbFormat" format="string" />
+		<attr name="sliderThickness" format="dimension" />
+		<attr name="android:value" />
+		<attr name="logarithmic" format="boolean"/>
+		<attr name="valueSet" format="string"/>
+		<attr name="android:textSize"/>
+		<attr name="android:fontFamily"/>
+		<attr name="android:color" />
+		<attr name="android:textColor" />
+	</declare-styleable>
+</resources>

@@ -1,16 +1,8 @@
-buildscript {
-	repositories {
-		jcenter()
-	}
-	dependencies {
-		classpath 'com.android.tools.build:gradle:1.2.3'
-	}
-}
-apply plugin: 'com.android.application'
+import com.eowise.imagemagick.tasks.Magick
 
-repositories {
-	jcenter()
-}
+apply plugin: 'com.android.application'
+apply plugin: 'jacoco'
+project.ext.set("archivesBaseName", "Wa-Tor")
 
 android {
 	compileSdkVersion 23
@@ -20,15 +12,25 @@ android {
 		applicationId "com.dirkgassen.wator"
 		minSdkVersion 9
 		targetSdkVersion 23
-		versionCode 1
+		versionCode System.getenv("BUILD_NUMBER") as Integer ?: 9999
 		versionName "1.0"
+
+		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 	}
 
 	compileOptions {
 		sourceCompatibility JavaVersion.VERSION_1_6
 		targetCompatibility JavaVersion.VERSION_1_6
 	}
+
+	lintOptions {
+		ignore 'GradleDependency'
+	}
+
 	buildTypes {
+		debug {
+			testCoverageEnabled true
+		}
 		release {
 			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -36,9 +38,108 @@ android {
 	}
 }
 
+jacoco {
+	toolVersion = "0.7.4+"
+}
+
+if (project.hasProperty("signing.properties") && new File(project.property("signing.properties") as String).exists()) {
+	Properties signingProps = new Properties()
+	signingProps.load(new FileInputStream(file(project.property("signing.properties"))))
+	android {
+		signingConfigs {
+			release {
+				storeFile file(signingProps["keystore"])
+				storePassword signingProps["keystore.password"]
+				keyAlias signingProps["key.alias"]
+				keyPassword signingProps["key.password"]
+			}
+		}
+		buildTypes {
+			release {
+				signingConfig signingConfigs.release
+			}
+		}
+		lintOptions {
+			abortOnError false
+		}
+	}
+}
+
 dependencies {
 	compile fileTree(dir: 'libs', include: ['*.jar'])
-	compile 'com.android.support:support-v4:23.1.1'
-	compile 'com.android.support:appcompat-v7:23.1.1'
-	compile 'com.android.support:gridlayout-v7:23.1.1'
+	compile 'com.android.support:support-v4:23.2.1'
+	compile 'com.android.support:appcompat-v7:23.2.1'
+	compile 'com.android.support:gridlayout-v7:23.2.1'
+	testCompile 'junit:junit:4.12'
+	testCompile 'org.mockito:mockito-core:1.10.19'
+	androidTestCompile 'com.android.support:support-annotations:23.2.1'
+	androidTestCompile 'com.android.support.test:runner:0.4.1'
+	androidTestCompile 'com.android.support.test:rules:0.4.1'
+	androidTestCompile 'org.hamcrest:hamcrest-library:1.3'
+	androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.1'
+	androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
+}
+
+gradle.projectsEvaluated {
+	// Prebuild should depend on all the ImageMagick tasks. Maybe this should be changed so that it depends
+	// on task by name, etc. buildDrawable* and buildMipmap*?
+	preBuild.dependsOn tasks.withType(Magick)
+	tasks.withType(JavaCompile) {
+		options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+	}
+}
+
+// See: http://stackoverflow.com/questions/17033878/generate-javadocs-with-android-gradle-plugin
+android.applicationVariants.all { variant ->
+	task("generate${variant.name.capitalize()}JavaDoc", type: Javadoc) {
+		description "Generates Javadoc for $variant.name."
+		title = "Wa-Tor $android.defaultConfig.versionName (build #$android.defaultConfig.versionCode) API"
+		source = variant.javaCompile.source
+		ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
+		classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
+		options {
+			links "http://docs.oracle.com/javase/7/docs/api/"
+			linksOffline "http://d.android.com/reference", "${android.sdkDirectory}/docs/reference"
+		}
+		exclude '**/BuildConfig.java'
+		exclude '**/R.java'
+	}
+}
+
+// Create tasks that convert the SVG images for each resolution and type (drawable vs mipmap)
+// See: http://stackoverflow.com/questions/27263160/external-dependencies-on-gradle
+// Also interesting: http://stackoverflow.com/questions/30351549/generating-drawables-from-svg-for-android-with-gradle-on-mac-os
+// Groovy RegExp stuff: http://naleid.com/blog/2008/05/19/dont-fear-the-regexp
+[
+		[dirTypes: [ "drawable"           ], variant: "ldpi", dpi: 120],
+		[dirTypes: [ "drawable", "mipmap" ], variant: "mdpi", dpi: 160],
+		[dirTypes: [ "drawable", "mipmap" ], variant: "hdpi", dpi: 240],
+		[dirTypes: [ "drawable", "mipmap" ], variant: "xhdpi", dpi: 320],
+		[dirTypes: [ "drawable", "mipmap" ], variant: "xxhdpi", dpi: 480],
+		[dirTypes: [ "drawable", "mipmap" ], variant: "xxxhdpi", dpi: 640]
+].each { resolution ->
+	resolution.dirTypes.each { dirType ->
+		def srcFolder = new File(projectDir.absolutePath + '/src/main/')
+		srcFolder.eachDirMatch(~/${dirType}(-v[0-9]+|)-src/) { dir ->
+			def androidVersionMatcher = dir.name =~ /.*-v([0-9]+)-src/
+			def outputDirName
+			if (androidVersionMatcher.getCount() == 1) {
+				def version = androidVersionMatcher[0][1]
+				outputDirName = dirType + '-' + resolution.variant + '-v' + version
+			} else {
+				outputDirName = dirType + '-' + resolution.variant
+			}
+			task( "build${outputDirName.replaceAll(/-(\w)/) { fullMatch, firstCharacter -> firstCharacter.toUpperCase() }.capitalize()}", type: Magick) {
+				convert dir.getCanonicalPath(), { include '*.svg' }
+				into projectDir.absolutePath + '/src/main/res/' + outputDirName
+				actions {
+					-background('none')
+					-density((8 * resolution.dpi).toString())
+					-resize('12.5%')
+					inputFile()
+					outputFile { filename, extension -> "${filename}.png" }
+				}
+			}
+		}
+	}
 }

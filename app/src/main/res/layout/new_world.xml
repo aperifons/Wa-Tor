@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ new_world.xml is part of Wa-Tor (C) 2016 by Dirk Gassen.
+  ~
+  ~ Wa-Tor is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Wa-Tor is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:orientation="vertical"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:padding="4dp">
+	<LinearLayout
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal">
+		<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:labelFor="@+id/world_width"
+				android:text="@string/world_size_label"
+		/>
+		<EditText
+				android:id="@+id/world_width"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:inputType="number"
+				android:textAlignment="center"
+				android:ems="4"
+				android:maxLength="4"
+				android:nextFocusForward="@+id/world_height"
+				android:singleLine="true"
+				android:imeOptions="flagNavigateNext"
+				tools:text="200"
+				tools:ignore="RtlCompat,UnusedAttribute">
+			<requestFocus/>
+		</EditText>
+		<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:labelFor="@+id/world_height"
+				android:text="@string/world_size_x_label"/>
+		<EditText
+				android:id="@+id/world_height"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:inputType="number"
+				android:textAlignment="center"
+				android:ems="4"
+				android:maxLength="4"
+				android:singleLine="true"
+				android:imeOptions="flagNavigateNext"
+				android:nextFocusForward="@+id/initial_fish_count"
+				tools:text="100"
+				tools:ignore="RtlCompat,UnusedAttribute"/>
+	</LinearLayout>
+
+	<TableLayout
+			android:id="@+id/left_column"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:stretchColumns="1,3">
+		<TableRow>
+			<TextView
+					android:id="@+id/initial_fish_count_label"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:labelFor="@+id/initial_fish_count"
+					android:text="@string/initial_fish_count_label"
+			/>
+			<EditText
+					android:id="@+id/initial_fish_count"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:inputType="number"
+					android:textAlignment="textEnd"
+					android:ems="4"
+					android:maxLength="4"
+					android:nextFocusForward="@+id/fish_breed_time"
+					android:singleLine="true"
+					android:imeOptions="flagNavigateNext"
+					tools:text="200"
+					tools:ignore="RtlCompat,UnusedAttribute"/>
+			<TextView
+					android:id="@+id/initial_shark_count_label"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:labelFor="@+id/initial_shark_count"
+					android:text="@string/initial_shark_count_label"
+			/>
+			<EditText
+					android:id="@+id/initial_shark_count"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:inputType="number"
+					android:textAlignment="textEnd"
+					android:ems="4"
+					android:maxLength="4"
+					android:nextFocusForward="@+id/shark_breed_time"
+					android:singleLine="true"
+					android:imeOptions="flagNavigateNext"
+					tools:text="100"
+					tools:ignore="RtlCompat,UnusedAttribute"/>
+		</TableRow>
+		<TableRow>
+			<TextView
+					android:id="@+id/fish_breed_time_label"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:labelFor="@+id/fish_breed_time"
+					android:text="@string/fish_breed_time_label"/>
+			<EditText
+					android:id="@+id/fish_breed_time"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:inputType="number"
+					android:textAlignment="textEnd"
+					android:ems="3"
+					android:maxLength="3"
+					android:nextFocusForward="@+id/initial_shark_count"
+					android:singleLine="true"
+					android:imeOptions="flagNavigateNext"
+					tools:text="3"
+					tools:ignore="RtlCompat,UnusedAttribute"/>
+			<TextView
+					android:id="@+id/shark_breed_time_label"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:labelFor="@+id/shark_breed_time"
+					android:text="@string/shark_breed_time_label"
+			/>
+			<EditText
+					android:id="@+id/shark_breed_time"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:inputType="number"
+					android:textAlignment="textEnd"
+					android:nextFocusForward="@+id/shark_starve"
+					android:ems="3"
+					android:maxLength="3"
+					android:singleLine="true"
+					android:imeOptions="flagNavigateNext"
+					tools:text="10"
+					tools:ignore="RtlCompat,UnusedAttribute"/>
+		</TableRow>
+		<TableRow>
+			<FrameLayout tools:ignore="UselessLeaf"/>
+			<FrameLayout tools:ignore="UselessLeaf"/>
+			<TextView
+					android:id="@+id/shark_starve_label"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:labelFor="@+id/shark_starve"
+					android:layout_column="2"
+					android:text="@string/shark_starve_time_label"
+			/>
+			<EditText
+					android:id="@+id/shark_starve"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:inputType="number"
+					android:textAlignment="textEnd"
+					android:layout_column="3"
+					android:ems="3"
+					android:maxLength="3"
+					android:singleLine="true"
+					android:imeOptions="actionDone"
+					tools:text="3"
+					tools:ignore="RtlCompat,UnusedAttribute"/>
+		</TableRow>
+	</TableLayout>
+
+	<LinearLayout
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			android:layout_gravity="center_horizontal">
+		<Button
+				android:id="@+id/cancel_new_world"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="@string/cancel"/>
+		<Button
+				android:id="@+id/create_new_world"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="@string/create_new_world"/>
+	</LinearLayout>
+
+</LinearLayout>
