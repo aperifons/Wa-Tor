@@ -1,16 +1,5 @@
-buildscript {
-	repositories {
-		jcenter()
-	}
-	dependencies {
-		classpath 'com.android.tools.build:gradle:1.5.0'
-	}
-}
 apply plugin: 'com.android.application'
-
-repositories {
-	jcenter()
-}
+project.ext.set("archivesBaseName", "Wa-Tor")
 
 android {
 	compileSdkVersion 23
@@ -20,8 +9,9 @@ android {
 		applicationId "com.dirkgassen.wator"
 		minSdkVersion 9
 		targetSdkVersion 23
-		versionCode 1
+		versionCode System.getenv("BUILD_NUMBER") as Integer ?: 9999
 		versionName "1.0"
+
 		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 	}
 
@@ -33,6 +23,26 @@ android {
 		release {
 			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+		}
+	}
+}
+
+if (project.hasProperty("signing.properties") && new File(project.property("signing.properties") as String).exists()) {
+	Properties signingProps = new Properties()
+	signingProps.load(new FileInputStream(file(project.property("signing.properties"))))
+	android {
+		signingConfigs {
+			release {
+				storeFile file(signingProps["keystore"])
+				storePassword signingProps["keystore.password"]
+				keyAlias signingProps["key.alias"]
+				keyPassword signingProps["key.password"]
+			}
+		}
+		buildTypes {
+			release {
+				signingConfig signingConfigs.release
+			}
 		}
 	}
 }
@@ -50,5 +60,72 @@ dependencies {
 	androidTestCompile 'org.hamcrest:hamcrest-library:1.3'
 	androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.1'
 	androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
+}
 
+gradle.projectsEvaluated {
+	preBuild.dependsOn(convertDrawables)
+}
+
+android.applicationVariants.all { variant ->
+	task("generate${variant.name.capitalize()}JavaDoc", type: Javadoc) {
+		description "Generates Javadoc for $variant.name."
+		source = variant.javaCompile.source
+		ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
+		classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
+	}
+}
+
+/* See: http://stackoverflow.com/questions/27263160/external-dependencies-on-gradle */
+/* Also interesting: http://stackoverflow.com/questions/30351549/generating-drawables-from-svg-for-android-with-gradle-on-mac-os */
+task convertDrawables() {
+	// look for *.svg files in app/src/art/drawable folder
+	def resolutions = [
+			[variant: "ldpi", dpi: 120],
+			[variant: "mdpi", dpi: 160],
+			[variant: "hdpi", dpi: 240],
+			[variant: "xhdpi", dpi: 320],
+			[variant: "xxhdpi", dpi: 480],
+			[variant: "xxxhdpi", dpi: 640]
+	]
+	def drawabledir = new File(projectDir.absolutePath + '/src/main/drawable-src');
+	if (drawabledir.exists()) {
+		drawabledir.eachFileMatch(~/.*\.svg/) { file ->
+			// look for destination folders
+			def outName = file.name.replaceFirst(/-[0-9]+\.svg/, '').replaceFirst(/\.svg/, '')
+			def androidVersion = file.name.replaceFirst(/.*-([0-9]+)\.svg/, '-v$1')
+			if (androidVersion == file.name) {
+				androidVersion = ''
+			}
+			resolutions.each { resolution ->
+				def outputDir = new File(projectDir.absolutePath + '/src/main/res', 'drawable-' + resolution.variant + androidVersion)
+				if (!outputDir.exists()) {
+					outputDir.mkdir()
+				}
+				def mustUpdate = false
+				def outFile = new File(outputDir.getAbsolutePath(), outName + '.png')
+				if (!outFile.exists()) {
+					mustUpdate = true
+				} else if (file.lastModified() > outFile.lastModified()) {
+					mustUpdate = true
+				} else if (project.getBuildFile().lastModified() > outFile.lastModified()) {
+					mustUpdate = true
+				}
+				if (mustUpdate) {
+					println 'Updating ' + outFile.absolutePath + ' from ' + file.absolutePath + ' (dpi: ' + resolution.dpi + ')'
+					def stdout = new ByteArrayInputStream()
+					exec {
+						commandLine(
+								"/usr/bin/inkscape",
+								file.getCanonicalPath(),
+								'--without-gui',
+								'--export-png=' + outputDir.getAbsolutePath() + '/' + outName + '.png',
+								'--export-dpi', resolution.dpi,
+								'--export-background-opacity=0',
+								'--export-area-page'
+						);
+					}
+				}
+			}
+		}
+	}
 }
