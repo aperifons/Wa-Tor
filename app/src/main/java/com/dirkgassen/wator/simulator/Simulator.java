@@ -58,6 +58,12 @@ public class Simulator {
 		if (initialFishCount + initialSharkCount > worldSize) {
 			throw new IllegalArgumentException("Can't have " + initialFishCount + " fish and " + initialSharkCount + " sharks in a world with " + worldSize + " cells");
 		}
+		if (sharkReproduceAge > Short.MAX_VALUE >> 9) {
+			throw new IllegalArgumentException("Shark reproduction age " + sharkReproduceAge + " too large");
+		}
+		if (maxSharkHunger > Short.MAX_VALUE >> 9) {
+			throw new IllegalArgumentException("Shark max hunger " + maxSharkHunger + " too large");
+		}
 		this.fishReproduceAge = fishReproduceAge;
 		this.sharkReproduceAge = sharkReproduceAge;
 		this.maxSharkHunger = maxSharkHunger;
@@ -175,23 +181,24 @@ public class Simulator {
 				emptyNeighbourPos[emptyNeighbours++] = neighbourNo;
 			}
 		}
+		short fishAge = nextWorld[no];
 		if (emptyNeighbours > 0) {
 			int newNo = emptyNeighbourPos[
 					emptyNeighbours == 1 ? 0 : random.nextInt(emptyNeighbours)
 					];
-			if (nextWorld[no] <= -fishReproduceAge) {
+			if (fishAge <= -fishReproduceAge) {
 				// reproduce
 				nextWorld[newNo] = -1;
 				nextWorld[no] = -1;
 			} else {
 				// just move (and age)
-				nextWorld[newNo] = (short) (nextWorld[no] - 1);
+				nextWorld[newNo] = (short) (fishAge - 1);
 				nextWorld[no] = 0;
 			}
 			cellProcessed[newNo] = true;
 		} else {
 			// can't move but age
-			nextWorld[no]--;
+			nextWorld[no] = fishAge <= fishReproduceAge ? fishReproduceAge : (short) (fishAge - 1);
 		}
 	}
 
@@ -229,20 +236,26 @@ public class Simulator {
 			if (hunger >= maxSharkHunger) {
 				// die
 				nextWorld[no] = 0;
-			} else if (emptyNeighbours > 0) {
-				// move
-				int newNo = emptyNeighbourPos[emptyNeighbours == 1 ? 0 : random.nextInt(emptyNeighbours)];
+			} else {
+				hunger = (short) ((hunger + 1) & 127);
+				// starve a bit...
 				short reproduceAge = (short) (currentCompositeAge & 255);
-				if (reproduceAge >= sharkReproduceAge) {
-					// reproduce and move
-					nextWorld[newNo] = (short) ((hunger << 8) | 1);
-					nextWorld[no] = (short) ((hunger << 8) | 1);
+				if (emptyNeighbours > 0) {
+					// ... and move
+					int newNo = emptyNeighbourPos[emptyNeighbours == 1 ? 0 : random.nextInt(emptyNeighbours)];
+					if (reproduceAge >= sharkReproduceAge) {
+						// reproduce and move
+						nextWorld[newNo] = (short) ((hunger << 8) | 1);
+						nextWorld[no] = (short) ((hunger << 8) | 1);
+					} else {
+						// just starve
+						nextWorld[newNo] = (short) ((hunger << 8) | (reproduceAge + 1));
+						nextWorld[no] = 0;
+					}
+					cellProcessed[newNo] = true;
 				} else {
-					// just move
-					nextWorld[newNo] = (short) ((hunger << 8) | (reproduceAge + 1));
-					nextWorld[no] = 0;
+					nextWorld[no] = (short) ((((hunger << 8) & 127)) | (reproduceAge + 1));
 				}
-				cellProcessed[newNo] = true;
 			}
 		}
 	}

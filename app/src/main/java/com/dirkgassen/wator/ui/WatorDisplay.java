@@ -21,11 +21,14 @@ import com.dirkgassen.wator.R;
 import com.dirkgassen.wator.simulator.Simulator;
 import com.dirkgassen.wator.simulator.WorldInspector;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -44,8 +47,6 @@ public class WatorDisplay extends Fragment {
 	private Simulator simulator;
 
 	private int fps = 30;
-
-	private boolean watorImageValid = false;
 
 	private Thread simulatorThread;
 
@@ -82,17 +83,35 @@ public class WatorDisplay extends Fragment {
 	@Override
 	public void onPause() {
 		super.onPause();
-		simulatorThread = null;
-		painterThread = null;
+		synchronized(this) {
+			simulatorThread = null;
+			painterThread = null;
+		}
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		painterThread = new Thread() {
+		painterThread = new Thread(getString(R.string.painterThreadName)) {
 			@Override
 			public void run() {
+				Context c = WatorDisplay.this.getContext();
+				// Set up the colors... we do some fancy interpolation in HSV color space.
+				// See
+				//   http://stackoverflow.com/questions/4414673/android-color-between-two-colors-based-on-percentage
+				// for details
 				final int[] pixels = new int[simulator.getWorldWidth() * simulator.getWorldHeight()];
+				final int waterColor = ContextCompat.getColor(c, R.color.water);
+				final float[] fishColorYoung = new float[3];
+				final float[] fishColorOld = new float[3];
+				final float[] sharkColorYoung = new float[3];
+				final float[] sharkColorOld = new float[3];
+				final float[] targetColor = new float[3];
+				Color.colorToHSV(ContextCompat.getColor(c, R.color.fish_young), fishColorYoung);
+				Color.colorToHSV(ContextCompat.getColor(c, R.color.fish_old), fishColorOld);
+				Color.colorToHSV(ContextCompat.getColor(c, R.color.shark_young), sharkColorYoung);
+				Color.colorToHSV(ContextCompat.getColor(c, R.color.shark_old), sharkColorOld);
+
 				try {
 					while (Thread.currentThread() == painterThread) {
 						Log.d("Wa-Tor", "Updating image");
@@ -103,19 +122,36 @@ public class WatorDisplay extends Fragment {
 						try {
 							do {
 								if (world.isEmpty()) {
-									pixels[world.getCurrentPosition()] = 0xff000000 | (200 << 16) | (200 << 8) | 255;
-								} else if (world.isFish()) {
-									pixels[world.getCurrentPosition()] = 0xff000000 | ((world.getFishAge() * 127 / FISH_REPRODUCTION_AGE + 127) << 8);
-									fishCount++;
+									pixels[world.getCurrentPosition()] = waterColor;
 								} else {
-									pixels[world.getCurrentPosition()] = 0xff000000 | ((world.getSharkHunger() * 127 / SHARK_MAX_HUNGER + 127) << 16);
-									sharkCount++;
+									final float[] colorYoung;
+									final float[] colorOld;
+									final float proportion;
+									if (world.isFish()) {
+										colorYoung = fishColorYoung;
+										colorOld = fishColorOld;
+										proportion = (float) world.getFishAge() / (float) FISH_REPRODUCTION_AGE;
+										fishCount++;
+									} else {
+										colorYoung = sharkColorYoung;
+										colorOld = sharkColorOld;
+										proportion = (float) world.getSharkHunger() / (float) SHARK_MAX_HUNGER;
+										sharkCount++;
+									}
+									for (int no = 0; no < 3; no++) {
+										targetColor[no] = (colorYoung[no] + ((colorOld[no] - colorYoung[no]) * proportion));
+									}
+									pixels[world.getCurrentPosition()] = Color.HSVToColor(targetColor);
 								}
 							} while (world.moveToNext() != WorldInspector.MOVE_RESULT.RESET);
 						} finally {
 							simulator.releaseWorldToPaint();
 						}
-						b.setPixels(pixels, 0, simulator.getWorldWidth(), 0, 0, simulator.getWorldWidth(), simulator.getWorldHeight());
+						synchronized(WatorDisplay.this) {
+							if (Thread.currentThread() == painterThread) {
+								b.setPixels(pixels, 0, simulator.getWorldWidth(), 0, 0, simulator.getWorldWidth(), simulator.getWorldHeight());
+							}
+						}
 						handler.post(new Runnable() {
 							@Override
 							public void run() {
@@ -138,16 +174,19 @@ public class WatorDisplay extends Fragment {
 			}
 		};
 		painterThread.start();
-		simulatorThread = new Thread() {
+		simulatorThread = new Thread(getString(R.string.simulatorThreadName)) {
 			@Override
 			public void run() {
 				try {
 					while (Thread.currentThread() == simulatorThread) {
 						long startUpdate = System.currentTimeMillis();
 						simulator.tick();
-						if (painterThread != null) {
-							synchronized (painterThread) {
-								painterThread.notify();
+						synchronized(WatorDisplay.this) {
+							if (painterThread != null) {
+								//noinspection SynchronizeOnNonFinalField
+								synchronized (painterThread) {
+									painterThread.notify();
+								}
 							}
 						}
 						long duration = System.currentTimeMillis() - startUpdate;

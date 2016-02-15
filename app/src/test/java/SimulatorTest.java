@@ -89,15 +89,79 @@ public class SimulatorTest {
 		}
 
 		WorldInspector world = simulator.getWorldToPaint();
-		int fishCount = 0;
-		do {
-			if (world.isFish()) {
-				fishCount++;
-				Assert.assertEquals("Wrong fish reproduction age", world.getFishAge(), 1);
-			}
-		} while (world.moveToNext() != WorldInspector.MOVE_RESULT.RESET);
-		Assert.assertEquals("Unexpected number of fish", 8, fishCount);
 		try {
+			int fishCount = 0;
+			do {
+				if (world.isFish()) {
+					fishCount++;
+					Assert.assertEquals("Wrong fish reproduction age", world.getFishAge(), 1);
+				}
+			} while (world.moveToNext() != WorldInspector.MOVE_RESULT.RESET);
+			Assert.assertEquals("Unexpected number of fish", 8, fishCount);
+		} finally {
+			simulator.releaseWorldToPaint();
+		}
+	}
+
+	@Test
+	public void testSharkStarve() {
+		Simulator simulator = new Simulator(
+				3 /* width */,
+				3 /* height */,
+				(short) 2 /* fish reproduction age */,
+				(short) 10 /* shark reproduction age */,
+				(short) 3 /* shark max hunger */);
+		simulator.setShark(0, 0, (short) 1, (short) 3);
+		simulator.setShark(1, 1, (short) 1, (short) 1);
+		simulator.setShark(2, 2, (short) 1, (short) 2);
+
+		for (int tickNo = 2; tickNo >= 0; tickNo--) {
+			simulator.tick();
+
+			WorldInspector world = simulator.getWorldToPaint();
+			try {
+				int sharkCount = 0;
+				do {
+					if (world.isFish()) {
+						Assert.fail("Didn't expect a fish");
+					} else if (world.isShark()) {
+						sharkCount++;
+					}
+				} while (world.moveToNext() != WorldInspector.MOVE_RESULT.RESET);
+				Assert.assertEquals("Unexpected number of shark", tickNo, sharkCount);
+			} finally {
+				simulator.releaseWorldToPaint();
+			}
+		}
+	}
+
+	@Test
+	public void testSharkCantMoveAndStarve() {
+		Simulator simulator = new Simulator(
+				3 /* width */,
+				3 /* height */,
+				(short) 2 /* fish reproduction age */,
+				(short) 10 /* shark reproduction age */,
+				(short) 1 /* shark max hunger */);
+		for (int x = 0; x < 3; x++) {
+			for (int y = 0; y < 3; y++) {
+				simulator.setShark(x, y, (short) 1, (short) 1);
+			}
+		}
+
+		simulator.tick();
+
+		WorldInspector world = simulator.getWorldToPaint();
+		try {
+			int sharkCount = 0;
+			do {
+				if (world.isFish()) {
+					Assert.fail("Didn't expect a fish");
+				} else if (world.isShark()) {
+					sharkCount++;
+				}
+			} while (world.moveToNext() != WorldInspector.MOVE_RESULT.RESET);
+			Assert.assertEquals("Unexpected number of shark", 0, sharkCount);
 		} finally {
 			simulator.releaseWorldToPaint();
 		}
