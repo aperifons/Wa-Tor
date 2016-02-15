@@ -1,3 +1,4 @@
 <resources>
 	<string name="app_name">Wa-Tor</string>
+	<string name="wator_image_view_desc">Wa-Tor Display</string>
 </resources>
