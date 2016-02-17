@@ -19,7 +19,6 @@ package com.dirkgassen.wator.ui;
 
 import com.dirkgassen.wator.R;
 import com.dirkgassen.wator.simulator.Simulator;
-import com.dirkgassen.wator.simulator.WorldInspector;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -28,6 +27,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -38,29 +38,23 @@ import android.widget.ImageView;
 /**
  * @author dirk.
  */
-public class WatorDisplay extends Fragment {
-
-	private static final short FISH_REPRODUCTION_AGE = 12;
-	private static final short SHARK_REPRODUCTION_AGE = 17;
-	private static final short SHARK_MAX_HUNGER = 25;
-	private static final int WORLD_WIDTH = 400;
-	private static final int WORLD_HEIGHT = 300;
-	private static final int INITIAL_FISH = 600;
-	private static final int INITIAL_SHARK = 200;
-
-	private Simulator simulator;
-
-	private int fps = 30;
-
-	private Thread simulatorThread;
-
-	private Thread painterThread;
+public class WatorDisplay extends Fragment implements WatorDisplayHost.SimulatorObserver {
 
 	private Handler handler;
 
 	private ImageView watorDisplay;
 
-	Bitmap b;
+	int[] fishAgeColors;
+
+	int[] sharkAgeColors;
+
+	private int waterColor;
+
+	private WatorDisplayHost displayHost;
+
+	private Bitmap b;
+
+	private int[] pixels;
 
 	private int[] calculateIndividualAgeColors(int max, int youngColor, int oldColor) {
 		final int[] colors = new int[max];
@@ -91,132 +85,105 @@ public class WatorDisplay extends Fragment {
 	public void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		handler = new Handler();
-		simulator = new Simulator(
-				WORLD_WIDTH, WORLD_HEIGHT,
-				FISH_REPRODUCTION_AGE,
-				SHARK_REPRODUCTION_AGE, SHARK_MAX_HUNGER,
-				INITIAL_FISH, INITIAL_SHARK
-		);
-		b = Bitmap.createBitmap(simulator.getWorldWidth(), simulator.getWorldHeight(), Bitmap.Config.ARGB_8888);
+		waterColor = ContextCompat.getColor(this.getContext(), R.color.water);
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		b.recycle();
+		synchronized (this) {
+			b.recycle();
+		}
 	}
 
 	@Override
 	public void onPause() {
 		super.onPause();
-		synchronized(this) {
-			simulatorThread = null;
-			painterThread = null;
+		if (displayHost != null) {
+			displayHost.unregisterSimulatorObserver(this);
 		}
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		painterThread = new Thread(getString(R.string.painterThreadName)) {
+		if (displayHost != null) {
+			displayHost.registerSimulatorObserver(this);
+		}
+	}
+
+	@Override
+	public void onAttach(Context context) {
+		super.onAttach(context);
+		FragmentActivity hostActivity = getActivity();
+		if (hostActivity instanceof WatorDisplayHost) {
+			displayHost = (WatorDisplayHost) hostActivity;
+		} else {
+			displayHost = null;
+		}
+	}
+
+	@Override
+	public void worldUpdated(Simulator.WorldInspector world) {
+		Log.d("Wa-Tor", "Updating image");
+		long startUpdate = System.currentTimeMillis();
+		int fishCount = 0;
+		int sharkCount = 0;
+
+		int worldWidth = world.getWorldWidth();
+		int worldHeight = world.getWorldHeight();
+		int fishReproduceAge = world.getFishReproduceAge();
+		int sharkMaxHunger = world.getMaxSharkHunger();
+
+		if (b == null || b.getWidth() != worldWidth || b.getHeight() != worldHeight) {
+			b = Bitmap.createBitmap(worldWidth, worldHeight, Bitmap.Config.ARGB_8888);
+			pixels = new int[worldWidth * worldHeight];
+		}
+		if (fishAgeColors == null || fishAgeColors.length != fishReproduceAge) {
+			fishAgeColors = calculateIndividualAgeColors(
+					fishReproduceAge,
+					ContextCompat.getColor(getContext(), R.color.fish_young),
+					ContextCompat.getColor(getContext(), R.color.fish_old)
+			);
+		}
+		if (sharkAgeColors == null || sharkAgeColors.length != sharkMaxHunger) {
+			sharkAgeColors = calculateIndividualAgeColors(
+					sharkMaxHunger,
+					ContextCompat.getColor(getContext(), R.color.shark_young),
+					ContextCompat.getColor(getContext(), R.color.shark_old)
+			);
+		}
+
+		do {
+			if (world.isEmpty()) {
+				pixels[world.getCurrentPosition()] = waterColor;
+			} else if (world.isFish()) {
+				pixels[world.getCurrentPosition()] = fishAgeColors[world.getFishAge() - 1];
+				fishCount++;
+			} else {
+				pixels[world.getCurrentPosition()] = sharkAgeColors[world.getSharkHunger() - 1];
+				sharkCount++;
+			}
+		} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
+		Log.d("Wa-Tor", "Generating pixels " + (System.currentTimeMillis() - startUpdate) + " ms");
+		synchronized (WatorDisplay.this) {
+			if (b != null) {
+				int width = b.getWidth();
+				int height = b.getHeight();
+				b.setPixels(pixels, 0, width, 0, 0, width, height);
+			}
+		}
+		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				Context c = WatorDisplay.this.getContext();
-				// Set up the colors... we do some fancy interpolation in HSV color space,
-				// however, let's precalculate the colors.
-				// See
-				//   http://stackoverflow.com/questions/4414673/android-color-between-two-colors-based-on-percentage
-				// for details
-				final int[] fishAgeColors = calculateIndividualAgeColors(
-						FISH_REPRODUCTION_AGE,
-						ContextCompat.getColor(c, R.color.fish_young),
-						ContextCompat.getColor(c, R.color.fish_old)
-				);
-				final int[] sharkAgeColors = calculateIndividualAgeColors(
-						SHARK_MAX_HUNGER,
-						ContextCompat.getColor(c, R.color.shark_young),
-						ContextCompat.getColor(c, R.color.shark_old)
-				);
-				final int[] pixels = new int[simulator.getWorldWidth() * simulator.getWorldHeight()];
-				final int waterColor = ContextCompat.getColor(c, R.color.water);
-				try {
-					while (Thread.currentThread() == painterThread) {
-						Log.d("Wa-Tor", "Updating image");
-						long startUpdate = System.currentTimeMillis();
-						int fishCount = 0;
-						int sharkCount = 0;
-						WorldInspector world = simulator.getWorldToPaint();
-						try {
-							do {
-								if (world.isEmpty()) {
-									pixels[world.getCurrentPosition()] = waterColor;
-								} else  if (world.isFish()) {
-									pixels[world.getCurrentPosition()] = fishAgeColors[world.getFishAge() - 1];
-									fishCount++;
-								} else {
-									pixels[world.getCurrentPosition()] = sharkAgeColors[world.getSharkHunger() - 1];
-									sharkCount++;
-								}
-							} while (world.moveToNext() != WorldInspector.MOVE_RESULT.RESET);
-						} finally {
-							simulator.releaseWorldToPaint();
-						}
-						Log.d("Wa-Tor", "Generating pixels " + (System.currentTimeMillis() - startUpdate) + " ms");
-						synchronized(WatorDisplay.this) {
-							if (Thread.currentThread() == painterThread) {
-								b.setPixels(pixels, 0, simulator.getWorldWidth(), 0, 0, simulator.getWorldWidth(), simulator.getWorldHeight());
-							}
-						}
-						handler.post(new Runnable() {
-							@Override
-							public void run() {
-								watorDisplay.setImageBitmap(b);
-							}
-						});
-						Log.d("Wa-Tor", "Repainting took " + (System.currentTimeMillis() - startUpdate) + " ms");
-						Log.d("Wa-Tor", "Fish: " + fishCount + "; sharks: " + sharkCount);
-						if (fishCount == simulator.getWorldHeight() * simulator.getWorldWidth() || fishCount + sharkCount == 0) {
-							simulatorThread = null;
-						}
-						Log.d("Wa-Tor", "Waiting for next image update");
-						synchronized (this) {
-							wait();
-						}
-					}
-				} catch (InterruptedException e) {
-					painterThread = null;
-				}
+				watorDisplay.setImageBitmap(b);
 			}
-		};
-		painterThread.start();
-		simulatorThread = new Thread(getString(R.string.simulatorThreadName)) {
-			@Override
-			public void run() {
-				try {
-					while (Thread.currentThread() == simulatorThread) {
-						long startUpdate = System.currentTimeMillis();
-						simulator.tick();
-						synchronized(WatorDisplay.this) {
-							if (painterThread != null) {
-								//noinspection SynchronizeOnNonFinalField
-								synchronized (painterThread) {
-									painterThread.notify();
-								}
-							}
-						}
-						long duration = System.currentTimeMillis() - startUpdate;
-						Log.d("Wa-Tor", "World tick took " + duration + " ms");
-						long sleepTime = 1000 / fps - duration;
-						if (sleepTime < 100 /* ms */) {
-							sleepTime = 100 /* ms */;
-						}
-						Thread.sleep(sleepTime);
-					}
-				} catch (InterruptedException e) {
-					simulatorThread = null;
-				}
-			}
-		};
-		simulatorThread.start();
+		});
+		Log.d("Wa-Tor", "Repainting took " + (System.currentTimeMillis() - startUpdate) + " ms");
+	}
+
+	@Override
+	public void worldSizeUpdated(int width, int height) {
+		// TODO: Evaluate if this is still needed?
 	}
 }

@@ -17,16 +17,55 @@
 
 package com.dirkgassen.wator.ui;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.dirkgassen.wator.R;
+import com.dirkgassen.wator.simulator.Simulator;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 
 /**
  * @author dirk.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements WatorDisplayHost {
+
+	private static final short FISH_REPRODUCTION_AGE = 20;
+	private static final short SHARK_REPRODUCTION_AGE = 25;
+	private static final short SHARK_MAX_HUNGER = 30;
+	private static final int WORLD_WIDTH = 300;
+	private static final int WORLD_HEIGHT = 180;
+	private static final int INITIAL_FISH = 600;
+	private static final int INITIAL_SHARK = 200;
+
+	private final Set<SimulatorObserver> simulatorObservers = new HashSet<SimulatorObserver>();
+
+	private Simulator simulator;
+
+	private static final int FPS = 30;
+
+	private Thread simulatorThread;
+
+	private Thread worldUpdateNotifierThread;
+
+	private void worldGotUpdated() {
+		synchronized (simulatorObservers) {
+			if (simulatorObservers.size() > 0) {
+				Simulator.WorldInspector world = simulator.getWorldToPaint();
+				try {
+					for (SimulatorObserver observer : simulatorObservers) {
+						observer.worldUpdated(world);
+						world.reset();
+					}
+				} finally {
+					simulator.releaseWorldToPaint();
+				}
+			}
+		}
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -34,5 +73,105 @@ public class MainActivity extends AppCompatActivity {
 		setContentView(R.layout.main_layout);
 		Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolar);
 		setSupportActionBar(myToolbar);
+
+		simulator = new Simulator(
+				WORLD_WIDTH, WORLD_HEIGHT,
+				FISH_REPRODUCTION_AGE,
+				SHARK_REPRODUCTION_AGE, SHARK_MAX_HUNGER,
+				INITIAL_FISH, INITIAL_SHARK
+		);
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+
+		worldUpdateNotifierThread = new Thread(getString(R.string.painterThreadName)) {
+			@Override
+			public void run() {
+				Log.d("Wa-Tor", "Entering world update notifier thread");
+				try {
+					while (Thread.currentThread() == worldUpdateNotifierThread) {
+						long startUpdate = System.currentTimeMillis();
+						Log.d("Wa-Tor", "Notifying observers of world update");
+						worldGotUpdated();
+						Log.d("Wa-Tor", "Notifying observers took " + (System.currentTimeMillis() - startUpdate) + " ms; waiting for next update");
+						synchronized (this) {
+							wait();
+						}
+					}
+				} catch(InterruptedException e){
+					Log.d("Wa-Tor", "Got interrupted");
+					synchronized (this) {
+						worldUpdateNotifierThread = null;
+					}
+				}
+				Log.d("Wa-Tor", "Exiting world update notifier thread");
+			}
+		};
+
+		worldUpdateNotifierThread.start();
+		simulatorThread = new Thread(getString(R.string.simulatorThreadName)) {
+			@Override
+			public void run() {
+				try {
+					while (Thread.currentThread() == simulatorThread) {
+						long startUpdate = System.currentTimeMillis();
+						simulator.tick(1);
+
+						synchronized (MainActivity.this) {
+							if (worldUpdateNotifierThread != null) {
+								//noinspection SynchronizeOnNonFinalField
+								synchronized (worldUpdateNotifierThread) {
+									worldUpdateNotifierThread.notify();
+								}
+							}
+						}
+
+						long duration = System.currentTimeMillis() - startUpdate;
+						long sleepTime = 1000 / FPS - duration;
+						if (sleepTime < 10 /* ms */) {
+							sleepTime = 10 /* ms */;
+							Log.d("Wa-Tor", "World tick took " + duration + " ms: TOO SLOW! Sleeping " + sleepTime + " ms");
+						} else {
+							Log.d("Wa-Tor", "World tick took " + duration + " ms. Sleeping " + sleepTime + " ms");
+						}
+						Thread.sleep(sleepTime);
+					}
+				} catch (InterruptedException e) {
+					simulatorThread = null;
+				}
+			}
+		};
+		simulatorThread.start();
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		synchronized (this) {
+			simulatorThread = null;
+			worldUpdateNotifierThread = null;
+		}
+	}
+
+	@Override
+	public void registerSimulatorObserver(SimulatorObserver newObserver) {
+		synchronized (simulatorObservers) {
+			simulatorObservers.add(newObserver);
+		}
+
+	}
+
+	@Override
+	public void unregisterSimulatorObserver(SimulatorObserver goneObserver) {
+		synchronized (simulatorObservers) {
+			simulatorObservers.remove(goneObserver);
+		}
+	}
+
+	@Override
+	public Simulator.WorldInspector getWorld() {
+		return null;
 	}
 }

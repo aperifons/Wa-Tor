@@ -19,7 +19,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.dirkgassen.wator.simulator.Simulator;
-import com.dirkgassen.wator.simulator.WorldInspector;
 
 /**
  * @author dirk.
@@ -51,7 +50,7 @@ public class SimulatorTest {
 		// |   |   |   |   |   | 4
 		// +---+---+---+---+---+
 
-		WorldInspector world = simulator.getWorldToPaint();
+		Simulator.WorldInspector world = simulator.getWorldToPaint();
 		int emptyCellCount = 0;
 		int fishCellNo = -1;
 		do {
@@ -69,7 +68,7 @@ public class SimulatorTest {
 			} else {
 				emptyCellCount++;
 			}
-		} while(world.moveToNext() != WorldInspector.MOVE_RESULT.RESET);
+		} while(world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
 		Assert.assertFalse("There should be one fish", fishCellNo == -1);
 		Assert.assertEquals("Wrong number of empty cells", 24, emptyCellCount);
 	}
@@ -88,7 +87,7 @@ public class SimulatorTest {
 			simulator.tick();
 		}
 
-		WorldInspector world = simulator.getWorldToPaint();
+		Simulator.WorldInspector world = simulator.getWorldToPaint();
 		try {
 			int fishCount = 0;
 			do {
@@ -96,7 +95,7 @@ public class SimulatorTest {
 					fishCount++;
 					Assert.assertEquals("Wrong fish reproduction age", world.getFishAge(), 1);
 				}
-			} while (world.moveToNext() != WorldInspector.MOVE_RESULT.RESET);
+			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
 			Assert.assertEquals("Unexpected number of fish", 8, fishCount);
 		} finally {
 			simulator.releaseWorldToPaint();
@@ -118,7 +117,7 @@ public class SimulatorTest {
 		for (int tickNo = 2; tickNo >= 0; tickNo--) {
 			simulator.tick();
 
-			WorldInspector world = simulator.getWorldToPaint();
+			Simulator.WorldInspector world = simulator.getWorldToPaint();
 			try {
 				int sharkCount = 0;
 				do {
@@ -127,7 +126,7 @@ public class SimulatorTest {
 					} else if (world.isShark()) {
 						sharkCount++;
 					}
-				} while (world.moveToNext() != WorldInspector.MOVE_RESULT.RESET);
+				} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
 				Assert.assertEquals("Unexpected number of shark", tickNo, sharkCount);
 			} finally {
 				simulator.releaseWorldToPaint();
@@ -151,7 +150,7 @@ public class SimulatorTest {
 
 		simulator.tick();
 
-		WorldInspector world = simulator.getWorldToPaint();
+		Simulator.WorldInspector world = simulator.getWorldToPaint();
 		try {
 			int sharkCount = 0;
 			do {
@@ -160,7 +159,7 @@ public class SimulatorTest {
 				} else if (world.isShark()) {
 					sharkCount++;
 				}
-			} while (world.moveToNext() != WorldInspector.MOVE_RESULT.RESET);
+			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
 			Assert.assertEquals("Unexpected number of shark", 0, sharkCount);
 		} finally {
 			simulator.releaseWorldToPaint();
@@ -187,7 +186,7 @@ public class SimulatorTest {
 
 		simulator.tick();
 
-		WorldInspector world = simulator.getWorldToPaint();
+		Simulator.WorldInspector world = simulator.getWorldToPaint();
 		try {
 			int sharkCellNo = -1;
 			int emptyCellNo = -1;
@@ -201,7 +200,7 @@ public class SimulatorTest {
 					Assert.assertEquals("Found more than one empty cell", emptyCellNo, -1);
 					emptyCellNo = world.getCurrentPosition();
 				}
-			} while (world.moveToNext() != WorldInspector.MOVE_RESULT.RESET);
+			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
 			Assert.assertFalse("There should be one empty cell", emptyCellNo == -1);
 			Assert.assertFalse("There should still be one shark", sharkCellNo == -1);
 			Assert.assertNotEquals("Shark should have moved", 4, sharkCellNo);

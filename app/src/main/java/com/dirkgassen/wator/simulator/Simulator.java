@@ -23,28 +23,204 @@ import java.util.Random;
 /**
  * @author dirk.
  */
-public class Simulator {
+final public class Simulator {
+
+	public enum WORLD_INSPECTOR_MOVE_RESULT {
+		NEXT_CELL,
+		NEXT_ROW,
+		RESET
+	}
+
+	/**
+	 * @author dirk.
+	 */
+	public class WorldInspector {
+
+		private final short[] world;
+		private final int worldWidth;
+		private int currentNo;
+
+		final public void moveTo(int x, int y) {
+			currentNo = x + y * worldWidth;
+		}
+
+		final public WORLD_INSPECTOR_MOVE_RESULT moveToNext() {
+			if (currentNo == world.length - 1) {
+				currentNo = 0;
+				return WORLD_INSPECTOR_MOVE_RESULT.RESET;
+			}
+			currentNo++;
+			return currentNo % worldWidth == 0 ? WORLD_INSPECTOR_MOVE_RESULT.NEXT_ROW : WORLD_INSPECTOR_MOVE_RESULT.NEXT_CELL;
+		}
+
+		final public int getCurrentPosition() {
+			return currentNo;
+		}
+
+		final public int getCurrentX() {
+			return currentNo % worldWidth;
+		}
+
+		final public int getCurrentY() {
+			return currentNo / worldWidth;
+		}
+
+		final public boolean isFish() {
+			return world[currentNo] < 0;
+		}
+
+		final public boolean isShark() {
+			return world[currentNo] > 0;
+		}
+
+		final public boolean isEmpty() {
+			return world[currentNo] == 0;
+		}
+
+		final public short getFishAge() {
+			if (world[currentNo] >= 0) {
+				return 0;
+			}
+			return (short) -world[currentNo];
+		}
+
+		final public short getSharkAge() {
+			if (world[currentNo] <= 0) {
+				return 0;
+			}
+			return (short) (world[currentNo] & 255);
+		}
+
+		final public short getSharkHunger() {
+			if (world[currentNo] <= 0) {
+				return 0;
+			}
+			return (short) (world[currentNo] >> 8);
+		}
+
+		final public short getFishAge(int no) {
+			if (world[no] >= 0) {
+				return 0;
+			}
+			return (short) -world[no];
+		}
+
+		final public short getSharkAge(int no) {
+			if (world[no] <= 0) {
+				return 0;
+			}
+			return (short) (world[no] & 255);
+		}
+
+		final public short getSharkHunger(int no) {
+			if (world[no] <= 0) {
+				return 0;
+			}
+			return (short) (world[no] >> 8);
+		}
+
+		final public short getFishAge(int x, int y) {
+			return getFishAge(x + y * worldWidth);
+		}
+
+		final public short getSharkAge(int x, int y) {
+			return getSharkAge(x + y * worldWidth);
+		}
+
+		final public short getSharkHunger(int x, int y) {
+			return getSharkHunger(x + y * worldWidth);
+		}
+
+		final public void reset() {
+			currentNo = 0;
+		}
+
+		final public int getWorldWidth() {
+			return worldWidth;
+		}
+
+		final public int getWorldHeight() {
+			return worldHeight;
+		}
+
+		final public short getFishReproduceAge() {
+			return fishReproduceAge;
+		}
+
+		final public short getSharkReproduceAge() {
+			return sharkReproduceAge;
+		}
+
+		final public short getMaxSharkHunger() {
+			return maxSharkHunger;
+		}
+
+		protected WorldInspector(short[] world, int worldWidth) {
+			this.world = world;
+			this.worldWidth = worldWidth;
+			this.currentNo = 0;
+		}
+
+	}
+
+	class TickWorker implements Runnable {
+		private boolean active;
+		private int no;
+		private int end;
+		private Thread tickWorkerThread;
+
+		public synchronized boolean isActive() {
+			return active;
+		}
+
+		public synchronized void stop() {
+			tickWorkerThread = null;
+		}
+
+		public synchronized void work(int no, int end) {
+			this.no = no;
+			this.end = end;
+			notify();
+		}
+
+		@Override
+		public void run() {
+			try {
+				tickWorkerThread = Thread.currentThread();
+				while (tickWorkerThread == Thread.currentThread()) {
+					synchronized (this) {
+						wait();
+						active = true;
+					}
+					calculateNextWorld(no, end);
+				}
+			} catch (InterruptedException e) {
+				// Do nothing
+			}
+
+		}
+	}
 
 	private short[] currentWorld;
 	private short[] nextWorld;
 	private short[] worldToPaint;
 	private short[] spareWorld;
 	private final boolean[] cellProcessed;
-
-	public int getWorldWidth() {
-		return worldWidth;
-	}
-
-	public int getWorldHeight() {
-		return worldHeight;
-	}
+	private TickWorker[] tickWorkers;
 
 	private final int worldWidth;
 	private final int worldHeight;
-	private final int worldSize;
 	private final short fishReproduceAge;
 	private final short sharkReproduceAge;
 	private final short maxSharkHunger;
+
+	final public int getWorldWidth() {
+		return worldWidth;
+	}
+
+	final public int getWorldHeight() {
+		return worldHeight;
+	}
 
 
 	public Simulator(int worldWidth, int worldHeight, short fishReproduceAge, short sharkReproduceAge, short maxSharkHunger) {
@@ -52,9 +228,9 @@ public class Simulator {
 	}
 
 	public Simulator(int worldWidth, int worldHeight, short fishReproduceAge, short sharkReproduceAge, short maxSharkHunger, int initialFishCount, int initialSharkCount) {
+		int worldSize = worldWidth * worldHeight;
 		this.worldWidth = worldWidth;
 		this.worldHeight = worldHeight;
-		this.worldSize = worldWidth * worldHeight;
 		if (initialFishCount + initialSharkCount > worldSize) {
 			throw new IllegalArgumentException("Can't have " + initialFishCount + " fish and " + initialSharkCount + " sharks in a world with " + worldSize + " cells");
 		}
@@ -90,15 +266,15 @@ public class Simulator {
 		}
 	}
 
-	public void setFish(int x, int y) {
+	final public void setFish(int x, int y) {
 		setFish(x, y, (short) 1);
 	}
 
-	public void setShark(int x, int y) {
+	final public void setShark(int x, int y) {
 		setShark(x, y, (short) 1, (short) 1);
 	}
 
-	public void setFish(int x, int y, short currentReproduceAge) {
+	final public void setFish(int x, int y, short currentReproduceAge) {
 		if (x < 0 || x >= worldWidth) {
 			throw new IllegalArgumentException("X coordinate " + x + " is out of bounds (width = " + worldWidth + ")");
 		}
@@ -114,7 +290,7 @@ public class Simulator {
 		currentWorld[x + y * worldWidth] = (short) -currentReproduceAge;
 	}
 
-	public void setShark(int x, int y, short currentReproduceAge, short currentHunger) {
+	final public void setShark(int x, int y, short currentReproduceAge, short currentHunger) {
 		if (x < 0 || x >= worldWidth) {
 			throw new IllegalArgumentException("X coordinate " + x + " is out of bounds (width = " + worldWidth + ")");
 		}
@@ -130,7 +306,9 @@ public class Simulator {
 		currentWorld[x + y * worldWidth] = (short) ((currentHunger << 8) | currentReproduceAge);
 	}
 
-	private int calculateNeightbours(int x, int y, int[] neighbours) {
+	private void calculateNeightbours(int no, int[] neighbours) {
+		final int x = no % worldWidth;
+		final int y = no / worldWidth;
 		final int left   = x == 0               ? x - 1 + worldWidth  : x - 1;
 		final int right  = x == worldWidth  - 1 ? x + 1 - worldWidth  : x + 1;
 		final int top    = y == 0               ? y - 1 + worldHeight : y - 1;
@@ -143,34 +321,24 @@ public class Simulator {
 		neighbours[5] = right + bottom * worldWidth; // bottom right
 		neighbours[6] =     x + bottom * worldWidth; // bottom
 		neighbours[7] = left  + bottom * worldWidth; // bottom left
-		return x + y * worldWidth;
 	}
 
-	private void calculateNextWorld() {
-		// 1. age fish and shark
-		synchronized(this) {
-			System.arraycopy(currentWorld, 0, nextWorld, 0, worldSize);
-		}
-
-		Arrays.fill(cellProcessed, false);
-
-		// 2. move (and reproduce)
+	private void calculateNextWorld(int no, int end) {
 		Random random = new Random();
 		int neighbours[] = new int[8];
 		int fishNeighbourPos[] = new int[8];
 		int emptyNeighbourPos[] = new int[8];
-		for (int x = 0; x < worldWidth; x++) {
-			for (int y = 0; y < worldHeight; y++) {
-				int no = calculateNeightbours(x, y, neighbours);
-				if (!cellProcessed[no]) {
-					if (nextWorld[no] < 0) {
-						// Fish
-						calculateFish(random, no, neighbours, emptyNeighbourPos);
-					} else if (nextWorld[no] > 0) {
-						// Sharl
-						calculateShark(random, no, neighbours, emptyNeighbourPos, fishNeighbourPos);
-					}
+		for (; no < end; no++)  {
+			calculateNeightbours(no, neighbours);
+			if (!cellProcessed[no]) {
+				if (nextWorld[no] < 0) {
+					// Fish
+					calculateFish(random, no, neighbours, emptyNeighbourPos);
+				} else if (nextWorld[no] > 0) {
+					// Sharl
+					calculateShark(random, no, neighbours, emptyNeighbourPos, fishNeighbourPos);
 				}
+				cellProcessed[no] = true;
 			}
 		}
 	}
@@ -265,8 +433,55 @@ public class Simulator {
 		}
 	}
 
-	public void tick() {
-		calculateNextWorld();
+	final public void tick() {
+		tick(1);
+	}
+
+	final public void tick(int threads) {
+		long start = System.currentTimeMillis();
+		// Copy from current to next
+		synchronized (this) {
+			System.arraycopy(currentWorld, 0, nextWorld, 0, currentWorld.length);
+		}
+
+		// Mark all cells as unprocessed
+		Arrays.fill(cellProcessed, false);
+
+		// Do the tick
+		if (threads == 1) {
+			calculateNextWorld(0, nextWorld.length);
+		} else if (threads == 2) {
+			try {
+				final int bounds[] = new int[] {
+						0,
+						nextWorld.length / 4,
+						nextWorld.length / 2,
+						nextWorld.length / 4 * 3
+				};
+				Thread otherThread = new Thread() {
+					@Override
+					public void run() {
+						calculateNextWorld(bounds[2], bounds[3]);
+					}
+				};
+				otherThread.start();
+				calculateNextWorld(0, bounds[1]);
+				otherThread.join();
+
+				otherThread = new Thread() {
+					@Override
+					public void run() {
+						calculateNextWorld(bounds[3], nextWorld.length);
+					}
+				};
+				otherThread.start();
+				calculateNextWorld(bounds[1], bounds[2]);
+				otherThread.join();
+			} catch (InterruptedException e) {
+				// TODO: Handle?
+			}
+		}
+
 		synchronized(this) {
 			if (worldToPaint == currentWorld) {
 				currentWorld = nextWorld;
@@ -280,14 +495,14 @@ public class Simulator {
 		}
 	}
 
-	synchronized public WorldInspector getWorldToPaint() {
+	final synchronized public WorldInspector getWorldToPaint() {
 		if (worldToPaint == null) {
 			worldToPaint = currentWorld;
 		}
 		return new WorldInspector(worldToPaint, worldWidth);
 	}
 
-	synchronized public void releaseWorldToPaint() {
+	final synchronized public void releaseWorldToPaint() {
 		if (spareWorld == null) {
 			spareWorld = worldToPaint;
 		}
