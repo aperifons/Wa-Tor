@@ -93,6 +93,7 @@ public class WatorDisplay extends Fragment implements WatorDisplayHost.Simulator
 		super.onDestroy();
 		synchronized (this) {
 			b.recycle();
+			b = null;
 		}
 	}
 
@@ -125,10 +126,8 @@ public class WatorDisplay extends Fragment implements WatorDisplayHost.Simulator
 
 	@Override
 	public void worldUpdated(Simulator.WorldInspector world) {
-		Log.d("Wa-Tor", "Updating image");
+		if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Updating image"); }
 		long startUpdate = System.currentTimeMillis();
-		int fishCount = 0;
-		int sharkCount = 0;
 
 		int worldWidth = world.getWorldWidth();
 		int worldHeight = world.getWorldHeight();
@@ -136,10 +135,12 @@ public class WatorDisplay extends Fragment implements WatorDisplayHost.Simulator
 		int sharkMaxHunger = world.getMaxSharkHunger();
 
 		if (b == null || b.getWidth() != worldWidth || b.getHeight() != worldHeight) {
+			if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "(Re)creating bitmap/pixels"); }
 			b = Bitmap.createBitmap(worldWidth, worldHeight, Bitmap.Config.ARGB_8888);
 			pixels = new int[worldWidth * worldHeight];
 		}
 		if (fishAgeColors == null || fishAgeColors.length != fishReproduceAge) {
+			if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "(Re)creating fish colors"); }
 			fishAgeColors = calculateIndividualAgeColors(
 					fishReproduceAge,
 					ContextCompat.getColor(getContext(), R.color.fish_young),
@@ -147,6 +148,7 @@ public class WatorDisplay extends Fragment implements WatorDisplayHost.Simulator
 			);
 		}
 		if (sharkAgeColors == null || sharkAgeColors.length != sharkMaxHunger) {
+			if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "(Re)creating shark colors"); }
 			sharkAgeColors = calculateIndividualAgeColors(
 					sharkMaxHunger,
 					ContextCompat.getColor(getContext(), R.color.shark_young),
@@ -159,13 +161,11 @@ public class WatorDisplay extends Fragment implements WatorDisplayHost.Simulator
 				pixels[world.getCurrentPosition()] = waterColor;
 			} else if (world.isFish()) {
 				pixels[world.getCurrentPosition()] = fishAgeColors[world.getFishAge() - 1];
-				fishCount++;
 			} else {
 				pixels[world.getCurrentPosition()] = sharkAgeColors[world.getSharkHunger() - 1];
-				sharkCount++;
 			}
 		} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
-		Log.d("Wa-Tor", "Generating pixels " + (System.currentTimeMillis() - startUpdate) + " ms");
+		if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Generating pixels " + (System.currentTimeMillis() - startUpdate) + " ms"); }
 		synchronized (WatorDisplay.this) {
 			if (b != null) {
 				int width = b.getWidth();
@@ -176,10 +176,14 @@ public class WatorDisplay extends Fragment implements WatorDisplayHost.Simulator
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
-				watorDisplay.setImageBitmap(b);
+				synchronized(WatorDisplay.this) {
+					if (b != null) {
+						watorDisplay.setImageBitmap(b);
+					}
+				}
 			}
 		});
-		Log.d("Wa-Tor", "Repainting took " + (System.currentTimeMillis() - startUpdate) + " ms");
+		if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Repainting took " + (System.currentTimeMillis() - startUpdate) + " ms"); }
 	}
 
 	@Override

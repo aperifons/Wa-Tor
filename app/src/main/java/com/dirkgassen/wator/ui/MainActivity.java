@@ -86,27 +86,27 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 	protected void onResume() {
 		super.onResume();
 
-		worldUpdateNotifierThread = new Thread(getString(R.string.painterThreadName)) {
+		worldUpdateNotifierThread = new Thread(getString(R.string.worldUpdateNotifierThreadName)) {
 			@Override
 			public void run() {
-				Log.d("Wa-Tor", "Entering world update notifier thread");
+				if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Entering world update notifier thread"); }
 				try {
 					while (Thread.currentThread() == worldUpdateNotifierThread) {
 						long startUpdate = System.currentTimeMillis();
-						Log.d("Wa-Tor", "Notifying observers of world update");
+						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Notifying observers of world update"); }
 						worldGotUpdated();
-						Log.d("Wa-Tor", "Notifying observers took " + (System.currentTimeMillis() - startUpdate) + " ms; waiting for next update");
+						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Notifying observers took " + (System.currentTimeMillis() - startUpdate) + " ms; waiting for next update"); }
 						synchronized (this) {
 							wait();
 						}
 					}
 				} catch(InterruptedException e){
-					Log.d("Wa-Tor", "Got interrupted");
+					if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "World update notifier thread got interrupted"); }
 					synchronized (this) {
 						worldUpdateNotifierThread = null;
 					}
 				}
-				Log.d("Wa-Tor", "Exiting world update notifier thread");
+				if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Exiting world update notifier thread"); }
 			}
 		};
 
@@ -115,6 +115,7 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 			@Override
 			public void run() {
 				try {
+					if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Entering simulator thread"); }
 					while (Thread.currentThread() == simulatorThread) {
 						long startUpdate = System.currentTimeMillis();
 						simulator.tick(1);
@@ -132,15 +133,17 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 						long sleepTime = 1000 / FPS - duration;
 						if (sleepTime < 10 /* ms */) {
 							sleepTime = 10 /* ms */;
-							Log.d("Wa-Tor", "World tick took " + duration + " ms: TOO SLOW! Sleeping " + sleepTime + " ms");
+							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "World tick took " + duration + " ms: TOO SLOW! Sleeping " + sleepTime + " ms"); }
 						} else {
-							Log.d("Wa-Tor", "World tick took " + duration + " ms. Sleeping " + sleepTime + " ms");
+							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "World tick took " + duration + " ms. Sleeping " + sleepTime + " ms"); }
 						}
 						Thread.sleep(sleepTime);
 					}
 				} catch (InterruptedException e) {
+					if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Simulator thread got interrupted"); }
 					simulatorThread = null;
 				}
+				if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Exiting simulator thread"); }
 			}
 		};
 		simulatorThread.start();
@@ -150,8 +153,16 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 	protected void onPause() {
 		super.onPause();
 		synchronized (this) {
-			simulatorThread = null;
+			Thread t = worldUpdateNotifierThread;
 			worldUpdateNotifierThread = null;
+			if (t != null) {
+				t.interrupt();
+			}
+			t = simulatorThread;
+			simulatorThread = null;
+			if (t != null) {
+				t.interrupt();
+			}
 		}
 	}
 
