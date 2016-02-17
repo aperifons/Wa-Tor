@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 						observer.worldUpdated(world);
 						world.reset();
 					}
+					if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Fish: " + world.fishCount + "; sharks: " + world.sharkCount); }
 				} finally {
 					simulator.releaseWorldToPaint();
 				}
@@ -115,6 +116,9 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 			@Override
 			public void run() {
 				try {
+					long durations[] = new long[60];
+					long totalDuration = 0;
+					int currentDurationNo = 0;
 					if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Entering simulator thread"); }
 					while (Thread.currentThread() == simulatorThread) {
 						long startUpdate = System.currentTimeMillis();
@@ -130,12 +134,21 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 						}
 
 						long duration = System.currentTimeMillis() - startUpdate;
+						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) {
+							// Calculate some statistics
+							durations[currentDurationNo] = duration;
+							if (currentDurationNo == 0) {
+								currentDurationNo = durations.length - 1;
+							} else {
+								currentDurationNo--;
+							}
+							totalDuration = totalDuration + duration - durations[currentDurationNo];
+							Log.v("Wa-Tor", "World tick took " + duration + " ms (avg: " + (totalDuration / durations.length) + " ms)");
+						}
 						long sleepTime = 1000 / FPS - duration;
 						if (sleepTime < 10 /* ms */) {
 							sleepTime = 10 /* ms */;
-							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "World tick took " + duration + " ms: TOO SLOW! Sleeping " + sleepTime + " ms"); }
-						} else {
-							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "World tick took " + duration + " ms. Sleeping " + sleepTime + " ms"); }
+							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "World tick took TOO LONG! Sleeping " + sleepTime + " ms"); }
 						}
 						Thread.sleep(sleepTime);
 					}

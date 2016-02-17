@@ -36,6 +36,8 @@ final public class Simulator {
 	 */
 	public class WorldInspector {
 
+		public final int fishCount;
+		public final int sharkCount;
 		private final short[] world;
 		private final int worldWidth;
 		private int currentNo;
@@ -155,10 +157,12 @@ final public class Simulator {
 			return maxSharkHunger;
 		}
 
-		protected WorldInspector(short[] world, int worldWidth) {
+		protected WorldInspector(short[] world, int worldWidth, int fishCount, int sharkCount) {
 			this.world = world;
 			this.worldWidth = worldWidth;
 			this.currentNo = 0;
+			this.fishCount = fishCount;
+			this.sharkCount = sharkCount;
 		}
 
 	}
@@ -213,6 +217,9 @@ final public class Simulator {
 	private final short fishReproduceAge;
 	private final short sharkReproduceAge;
 	private final short maxSharkHunger;
+
+	private int currentFishCount;
+	private int currentSharkCount;
 
 	final public int getWorldWidth() {
 		return worldWidth;
@@ -483,6 +490,14 @@ final public class Simulator {
 		}
 
 		synchronized(this) {
+			currentFishCount = currentSharkCount = 0;
+			for (short worldCell : nextWorld) {
+				if (worldCell < 0) {
+					currentFishCount++;
+				} else if (worldCell > 0) {
+					currentSharkCount++;
+				}
+			}
 			if (worldToPaint == currentWorld) {
 				currentWorld = nextWorld;
 				nextWorld = spareWorld;
@@ -499,7 +514,7 @@ final public class Simulator {
 		if (worldToPaint == null) {
 			worldToPaint = currentWorld;
 		}
-		return new WorldInspector(worldToPaint, worldWidth);
+		return new WorldInspector(worldToPaint, worldWidth, currentFishCount, currentSharkCount);
 	}
 
 	final synchronized public void releaseWorldToPaint() {
