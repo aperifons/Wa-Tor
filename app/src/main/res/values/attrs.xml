@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ colors.xml is part of Wa-Tor (C) 2016 by Dirk Gassen.
+  ~ attrs.xml is part of Wa-Tor (C) 2016 by Dirk Gassen.
   ~
   ~ Wa-Tor is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
@@ -17,9 +17,15 @@
   -->
 
 <resources>
-	<color name="water">#ddfcff</color>
-	<color name="shark_young">#ff3232</color>"
-	<color name="shark_old">#7b0000</color>"
-	<color name="fish_young">#32ff32</color>"
-	<color name="fish_old">#63c772</color>"
+	<declare-styleable name="RollingGraphView">
+		<attr name="series1name"     format="string"/>
+		<attr name="series2name"     format="string"/>
+		<attr name="series3name"     format="string"/>
+		<attr name="series4name"     format="string"/>
+		<attr name="series1color"    format="color"/>
+		<attr name="series2color"    format="color"/>
+		<attr name="series3color"    format="color"/>
+		<attr name="series4color"    format="color"/>
+		<attr name="maxValues"       format="integer" />
+	</declare-styleable>
 </resources>

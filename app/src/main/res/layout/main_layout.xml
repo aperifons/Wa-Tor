@@ -33,11 +33,20 @@
 			tools:ignore="UnusedAttribute" />
 
 	<fragment
+			android:name="com.dirkgassen.wator.ui.WatorStatistics"
+			android:id="@+id/wator_statistics_fragment"
+			android:layout_width="match_parent"
+			android:layout_height="80dp"
+			android:layout_alignParentBottom="true"
+			tools:layout="@layout/fish_shark_history_graph"/>
+
+	<fragment
 			android:name="com.dirkgassen.wator.ui.WatorDisplay"
 			android:id="@+id/wator_display_fragment"
 			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-	        tools:layout_height="150dp"
-			tools:layout="@layout/wator_display" />
+			android:layout_height="fill_parent"
+			android:layout_above="@id/wator_statistics_fragment"
+			tools:layout_height="80dp"
+			tools:layout="@layout/wator_display"/>
 
 </RelativeLayout>

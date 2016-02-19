@@ -3,4 +3,6 @@
 	<string name="wator_image_view_desc">Wa-Tor Display</string>
 	<string name="worldUpdateNotifierThreadName">Wa-Tor World Update Notifier Thread</string>
 	<string name="simulatorThreadName">Wa-Tor Simulator Thread</string>
+	<string name="fish_dataseries_name">F</string>
+	<string name="shark_dataseries_name">S</string>
 </resources>

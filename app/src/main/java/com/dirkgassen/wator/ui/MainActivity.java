@@ -33,13 +33,13 @@ import android.util.Log;
  */
 public class MainActivity extends AppCompatActivity implements WatorDisplayHost {
 
-	private static final short FISH_REPRODUCTION_AGE = 20;
-	private static final short SHARK_REPRODUCTION_AGE = 25;
-	private static final short SHARK_MAX_HUNGER = 30;
+	private static final short FISH_REPRODUCTION_AGE = 25;
+	private static final short SHARK_REPRODUCTION_AGE = 15;
+	private static final short SHARK_MAX_HUNGER = 46;
 	private static final int WORLD_WIDTH = 300;
 	private static final int WORLD_HEIGHT = 180;
 	private static final int INITIAL_FISH = 600;
-	private static final int INITIAL_SHARK = 200;
+	private static final int INITIAL_SHARK = 400;
 
 	private final Set<SimulatorObserver> simulatorObservers = new HashSet<SimulatorObserver>();
 
