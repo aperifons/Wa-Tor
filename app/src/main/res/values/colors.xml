@@ -18,6 +18,7 @@
 
 <resources>
 	<color name="water">#ddfcff</color>
+	<color name="dark_water">#99eaff</color>
 	<color name="shark_young">#ff3232</color>"
 	<color name="shark_old">#7b0000</color>"
 	<color name="fish_young">#32ff32</color>"

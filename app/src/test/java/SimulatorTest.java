@@ -98,7 +98,7 @@ public class SimulatorTest {
 			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
 			Assert.assertEquals("Unexpected number of fish", 8, fishCount);
 		} finally {
-			simulator.releaseWorldToPaint();
+			world.release();
 		}
 	}
 
@@ -129,7 +129,7 @@ public class SimulatorTest {
 				} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
 				Assert.assertEquals("Unexpected number of shark", tickNo, sharkCount);
 			} finally {
-				simulator.releaseWorldToPaint();
+				world.release();
 			}
 		}
 	}
@@ -162,7 +162,7 @@ public class SimulatorTest {
 			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
 			Assert.assertEquals("Unexpected number of shark", 0, sharkCount);
 		} finally {
-			simulator.releaseWorldToPaint();
+			world.release();
 		}
 	}
 
@@ -207,7 +207,7 @@ public class SimulatorTest {
 			Assert.assertEquals("Shark should not be hungry", 1, world.getSharkHunger(sharkCellNo));
 			Assert.assertEquals("Shark should have aged", 2, world.getSharkAge(sharkCellNo));
 		} finally {
-			simulator.releaseWorldToPaint();
+			world.release();
 		}
 	}
 

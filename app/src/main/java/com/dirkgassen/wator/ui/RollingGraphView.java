@@ -29,7 +29,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.View;
@@ -48,6 +47,7 @@ public class RollingGraphView extends View {
 	private Bitmap rollingGraphBitmap;
 	private Handler handler;
 	private int maxValues;
+	private boolean horizontal;
 
 	public RollingGraphView(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -95,8 +95,71 @@ public class RollingGraphView extends View {
 					}
 				}
 			}
+
+			horizontal = a.getInt(R.styleable.RollingGraphView_android_orientation, 0) == 0;
 		} finally {
 			a.recycle();
+		}
+	}
+
+	private void paintSeriesHorizontal(Canvas c, Paint p, Rect nameBounds, float scale, int seriesNo, String seriesName, int width, int height, float maxValue) {
+		float x = width - nameBounds.width();
+		float y;
+		if (currentValue == -1) {
+			y = height - height / (seriesNames.length + 1) * (seriesNo + 1);
+		} else {
+			y = height - dataValues[currentValue][seriesNo] * height / maxValue;
+		}
+		c.drawText(seriesNames[seriesNo], x, y + nameBounds.height() / 2, p);
+
+		x -= 7 * scale;
+		c.drawLine(x, y, x + 5 * scale, y, p);
+		c.drawLine(x, y, x + 2 * scale, y + 2 * scale, p);
+		c.drawLine(x, y, x + 2 * scale, y - 2 * scale, p);
+		if (currentValue != -1) {
+			int no = currentValue;
+			do {
+				if (dataValues[no] == null) {
+					break;
+				}
+				float newX = x - 1;
+				float newY = height - dataValues[no][seriesNo] * height / maxValue;
+				c.drawLine(x, y, newX, newY, p);
+				x = newX;
+				y = newY;
+				no = no == 0 ? dataValues.length - 1 : no - 1;
+			} while (no != oldestValue);
+		}
+	}
+
+	private void paintSeriesVertical(Canvas c, Paint p, Rect nameBounds, float scale, int seriesNo, String seriesName, int width, int height, float maxValue) {
+		float y = nameBounds.height();
+		float x;
+		if (currentValue == -1) {
+			x = width / (seriesNames.length + 1) * (seriesNo + 1);
+		} else {
+			x = dataValues[currentValue][seriesNo] * width / maxValue;
+		}
+		c.drawText(seriesNames[seriesNo], x - nameBounds.width() / 2, y, p);
+
+		y += 7 * scale;
+		c.drawLine(x, y, x, y - 5 * scale, p);
+		c.drawLine(x, y, x - 2 * scale, y - 2 * scale, p);
+		c.drawLine(x, y, x + 2 * scale, y - 2 * scale, p);
+
+		if (currentValue != -1) {
+			int no = currentValue;
+			do {
+				if (dataValues[no] == null) {
+					break;
+				}
+				float newX = dataValues[no][seriesNo] * width / maxValue;
+				float newY = y + 1;
+				c.drawLine(x, y, newX, newY, p);
+				x = newX;
+				y = newY;
+				no = no == 0 ? dataValues.length - 1 : no - 1;
+			} while (no != oldestValue);
 		}
 	}
 
@@ -122,44 +185,21 @@ public class RollingGraphView extends View {
 				}
 			}
 		}
+
 		Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 		Canvas c = new Canvas(b);
-		Drawable background = getBackground();
-		background.setBounds(0, 0, width, height);
-		getBackground().draw(c);
-		for (int seriesNo = 0; seriesNo < seriesNames.length; seriesNo++) {
-			Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
-			p.setColor(seriesColors[seriesNo]);
-			p.setTextSize(14 * scale);
-			p.setShadowLayer(1f, 0f, 1f, Color.WHITE);
-			Rect nameBounds = new Rect();
-			p.getTextBounds(seriesNames[seriesNo], 0, seriesNames[seriesNo].length(), nameBounds);
-			float y;
-			if (currentValue == -1) {
-				y = height - height / (seriesNames.length + 1) * (seriesNo + 1);
-			} else {
-				y = height - dataValues[currentValue][seriesNo] * height / maxValue;
-			}
-			float x = width - nameBounds.width();
-			c.drawText(seriesNames[seriesNo], x, y + nameBounds.height() / 2, p);
 
-			x -= 5 * scale;
-			c.drawLine(x, y, x + 5 * scale, y, p);
-			c.drawLine(x, y, x + 2 * scale, y + 2 * scale, p);
-			c.drawLine(x, y, x + 2 * scale, y - 2 * scale, p);
-			if (currentValue != -1) {
-				int no = currentValue;
-				do {
-					if (dataValues[no] == null) {
-						break;
-					}
-					float newX = x - 1;
-					float newY = height - dataValues[no][seriesNo] * height / maxValue;
-					c.drawLine(x, y, newX, newY, p);
-					x = newX;
-					y = newY;
-					no = no == 0 ? dataValues.length - 1 : no - 1;
-				} while (no != oldestValue);
+		Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+		p.setTextSize(14 * scale);
+		p.setShadowLayer(1f, 0f, 1f, Color.WHITE);
+		Rect nameBounds = new Rect();
+		for (int seriesNo = 0; seriesNo < seriesNames.length; seriesNo++) {
+			p.setColor(seriesColors[seriesNo]);
+			p.getTextBounds(seriesNames[seriesNo], 0, seriesNames[seriesNo].length(), nameBounds);
+			if (horizontal) {
+				paintSeriesHorizontal(c, p, nameBounds, scale, seriesNo, seriesNames[seriesNo], width, height, maxValue);
+			} else {
+				paintSeriesVertical(c, p, nameBounds, scale, seriesNo, seriesNames[seriesNo], width, height, maxValue);
 			}
 		}
 		return b;

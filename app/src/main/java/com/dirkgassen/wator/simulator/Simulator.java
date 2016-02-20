@@ -165,6 +165,20 @@ final public class Simulator {
 			this.sharkCount = sharkCount;
 		}
 
+		public void release() {
+			synchronized(Simulator.this) {
+				if (worldPainters == 0) {
+					throw new IllegalAccessError("Nothing to release");
+				}
+				worldPainters--;
+				if (worldPainters == 0) {
+					if (spareWorld == null) {
+						spareWorld = worldToPaint;
+					}
+					worldToPaint = null;
+				}
+			}
+		}
 	}
 
 	class TickWorker implements Runnable {
@@ -209,6 +223,7 @@ final public class Simulator {
 	private short[] nextWorld;
 	private short[] worldToPaint;
 	private short[] spareWorld;
+	private int worldPainters;
 	private final boolean[] cellProcessed;
 	private TickWorker[] tickWorkers;
 
@@ -511,17 +526,11 @@ final public class Simulator {
 	}
 
 	final synchronized public WorldInspector getWorldToPaint() {
+		worldPainters++;
 		if (worldToPaint == null) {
 			worldToPaint = currentWorld;
 		}
 		return new WorldInspector(worldToPaint, worldWidth, currentFishCount, currentSharkCount);
-	}
-
-	final synchronized public void releaseWorldToPaint() {
-		if (spareWorld == null) {
-			spareWorld = worldToPaint;
-		}
-		worldToPaint = null;
 	}
 
 }

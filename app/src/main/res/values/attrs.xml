@@ -26,6 +26,9 @@
 		<attr name="series2color"    format="color"/>
 		<attr name="series3color"    format="color"/>
 		<attr name="series4color"    format="color"/>
-		<attr name="maxValues"       format="integer" />
+		<attr name="maxValues"       format="integer"/>
+		<attr name="android:orientation"/>
+		<attr name="android:background"/>
+		<attr name="android:backgroundTint"/>
 	</declare-styleable>
 </resources>

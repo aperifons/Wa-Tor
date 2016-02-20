@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ wator_display.xml is part of Wa-Tor (C) 2016 by Dirk Gassen.
+  ~ fish_shark_history_graph.xml is part of Wa-Tor (C) 2016 by Dirk Gassen.
   ~
   ~ Wa-Tor is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
@@ -16,15 +16,21 @@
   ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:custom="http://schemas.android.com/apk/res-auto"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
 
-	<ImageView
-			android:id="@+id/wator_2d_view"
-			android:layout_width="match_parent"
+	<com.dirkgassen.wator.ui.RollingGraphView
+			android:id="@+id/fish_shark_graph"
 			android:layout_height="match_parent"
+			android:layout_width="match_parent"
+			custom:series1name="@string/fish_dataseries_name"
+			custom:series2name="@string/shark_dataseries_name"
+			custom:series1color="@color/fish_old"
+			custom:series2color="@color/shark_young"
 			android:background="@color/dark_water"
-			android:contentDescription="@string/wator_image_view_desc" />
+			android:orientation="vertical"
 
-</RelativeLayout>
+	/>
+</LinearLayout>

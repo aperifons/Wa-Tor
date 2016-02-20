@@ -33,13 +33,13 @@ import android.util.Log;
  */
 public class MainActivity extends AppCompatActivity implements WatorDisplayHost {
 
-	private static final short FISH_REPRODUCTION_AGE = 25;
-	private static final short SHARK_REPRODUCTION_AGE = 15;
-	private static final short SHARK_MAX_HUNGER = 46;
-	private static final int WORLD_WIDTH = 300;
-	private static final int WORLD_HEIGHT = 180;
+	private static final short FISH_REPRODUCTION_AGE = 12;
+	private static final short SHARK_REPRODUCTION_AGE = 7;
+	private static final short SHARK_MAX_HUNGER = 18;
+	private static final int WORLD_WIDTH = 200;
+	private static final int WORLD_HEIGHT = 200;
 	private static final int INITIAL_FISH = 600;
-	private static final int INITIAL_SHARK = 400;
+	private static final int INITIAL_SHARK = 350;
 
 	private final Set<SimulatorObserver> simulatorObservers = new HashSet<SimulatorObserver>();
 
@@ -50,6 +50,11 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 	private Thread simulatorThread;
 
 	private Thread worldUpdateNotifierThread;
+
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+	}
 
 	private void worldGotUpdated() {
 		synchronized (simulatorObservers) {
@@ -62,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 					}
 					if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Fish: " + world.fishCount + "; sharks: " + world.sharkCount); }
 				} finally {
-					simulator.releaseWorldToPaint();
+					world.release();
 				}
 			}
 		}
@@ -72,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main_layout);
-		Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolar);
+		Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolbar);
 		setSupportActionBar(myToolbar);
 
 		simulator = new Simulator(
@@ -110,8 +115,8 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 				if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Exiting world update notifier thread"); }
 			}
 		};
-
 		worldUpdateNotifierThread.start();
+
 		simulatorThread = new Thread(getString(R.string.simulatorThreadName)) {
 			@Override
 			public void run() {

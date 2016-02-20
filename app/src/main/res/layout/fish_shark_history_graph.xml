@@ -29,6 +29,6 @@
 			custom:series2name="@string/shark_dataseries_name"
 			custom:series1color="@color/fish_old"
 			custom:series2color="@color/shark_young"
-			android:background="@color/water"
+			android:background="@color/dark_water"
 	/>
 </LinearLayout>
