@@ -32,6 +32,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 /**
@@ -127,6 +128,11 @@ public class RollingGraphView extends View {
 		if (currentValue == -1) {
 			y = height - height / (seriesNames.length + 1) * (seriesNo + 1);
 		} else {
+			if (dataValues == null) {
+				Log.e("Wa-Tor", "NO DATA VALUES although currentValue is " + currentValue);
+			} else if (dataValues[currentValue] == null) {
+				Log.e("Wa-Tor", "NO SERIES DATA although currentValue is " + currentValue);
+			}
 			y = height - dataValues[currentValue][seriesNo] * height / maxValue;
 		}
 		c.drawText(seriesNames[seriesNo], x, y + nameBounds.height() / 2, p);
@@ -182,7 +188,7 @@ public class RollingGraphView extends View {
 		}
 	}
 
-	private void updateRollingGraph() {
+	synchronized private void updateRollingGraph() {
 		int width = getWidth();
 		int height = getHeight();
 		if (width <= 0 || height <= 0) {
@@ -237,13 +243,16 @@ public class RollingGraphView extends View {
 		if (newValues.length != seriesNames.length) {
 			throw new InvalidParameterException("Invalid number of new series data points: " + newValues.length + " (expected: " + seriesNames.length);
 		}
-		currentValue = (currentValue + 1) % dataValues.length;
-		if (dataValues[currentValue] == null || dataValues[currentValue].length != newValues.length) {
-			dataValues[currentValue] = new float[newValues.length];
-		}
-		System.arraycopy(newValues, 0, dataValues[currentValue], 0, newValues.length);
-		if ((oldestValue + 1) % dataValues.length == currentValue) {
-			oldestValue = currentValue;
+		synchronized(this) {
+			currentValue = (currentValue + 1) % dataValues.length;
+			if (dataValues[currentValue] == null || dataValues[currentValue].length != newValues.length) {
+				dataValues[currentValue] = new float[newValues.length];
+			}
+			System.arraycopy(newValues, 0, dataValues[currentValue], 0, newValues.length);
+			dataTimes[currentValue] = System.currentTimeMillis();
+			if ((oldestValue + 1) % dataValues.length == currentValue) {
+				oldestValue = currentValue;
+			}
 		}
 		bitMapIsInvalid = true;
 		handler.post(invalidateRunner);

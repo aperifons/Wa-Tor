@@ -395,7 +395,7 @@ final public class Simulator {
 			cellProcessed[newNo] = true;
 		} else {
 			// can't move but age
-			nextWorld[no] = (short) (fishAge <= fishReproduceAge ? -fishReproduceAge : (fishAge - 1));
+			nextWorld[no] = (short) (fishAge <= fishReproduceAge ? -1 : (fishAge - 1));
 		}
 	}
 
@@ -453,6 +453,8 @@ final public class Simulator {
 					// can't move, just age
 					if (reproduceAge < sharkReproduceAge) {
 						reproduceAge++;
+					} else {
+						reproduceAge = 1;
 					}
 					nextWorld[no] = (short) ((hunger << 8) | reproduceAge);
 				}
