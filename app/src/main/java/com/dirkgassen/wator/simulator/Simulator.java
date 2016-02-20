@@ -39,7 +39,6 @@ final public class Simulator {
 		public final int fishCount;
 		public final int sharkCount;
 		private final short[] world;
-		private final int worldWidth;
 		private int currentNo;
 
 		final public void moveTo(int x, int y) {
@@ -59,12 +58,12 @@ final public class Simulator {
 			return currentNo;
 		}
 
-		final public int getCurrentX() {
-			return currentNo % worldWidth;
+		final public short getCurrentX() {
+			return (short) (currentNo % worldWidth);
 		}
 
-		final public int getCurrentY() {
-			return currentNo / worldWidth;
+		final public short getCurrentY() {
+			return (short) (currentNo / worldWidth);
 		}
 
 		final public boolean isFish() {
@@ -137,11 +136,11 @@ final public class Simulator {
 			currentNo = 0;
 		}
 
-		final public int getWorldWidth() {
+		final public short getWorldWidth() {
 			return worldWidth;
 		}
 
-		final public int getWorldHeight() {
+		final public short getWorldHeight() {
 			return worldHeight;
 		}
 
@@ -157,9 +156,8 @@ final public class Simulator {
 			return maxSharkHunger;
 		}
 
-		protected WorldInspector(short[] world, int worldWidth, int fishCount, int sharkCount) {
+		protected WorldInspector(short[] world, int fishCount, int sharkCount) {
 			this.world = world;
-			this.worldWidth = worldWidth;
 			this.currentNo = 0;
 			this.fishCount = fishCount;
 			this.sharkCount = sharkCount;
@@ -227,8 +225,8 @@ final public class Simulator {
 	private final boolean[] cellProcessed;
 	private TickWorker[] tickWorkers;
 
-	private final int worldWidth;
-	private final int worldHeight;
+	private final short worldWidth;
+	private final short worldHeight;
 	private final short fishReproduceAge;
 	private final short sharkReproduceAge;
 	private final short maxSharkHunger;
@@ -245,11 +243,11 @@ final public class Simulator {
 	}
 
 
-	public Simulator(int worldWidth, int worldHeight, short fishReproduceAge, short sharkReproduceAge, short maxSharkHunger) {
+	public Simulator(short worldWidth, short worldHeight, short fishReproduceAge, short sharkReproduceAge, short maxSharkHunger) {
 		this(worldWidth, worldHeight, fishReproduceAge, sharkReproduceAge, maxSharkHunger, 0, 0);
 	}
 
-	public Simulator(int worldWidth, int worldHeight, short fishReproduceAge, short sharkReproduceAge, short maxSharkHunger, int initialFishCount, int initialSharkCount) {
+	public Simulator(short worldWidth, short worldHeight, short fishReproduceAge, short sharkReproduceAge, short maxSharkHunger, int initialFishCount, int initialSharkCount) {
 		int worldSize = worldWidth * worldHeight;
 		this.worldWidth = worldWidth;
 		this.worldHeight = worldHeight;
@@ -530,7 +528,7 @@ final public class Simulator {
 		if (worldToPaint == null) {
 			worldToPaint = currentWorld;
 		}
-		return new WorldInspector(worldToPaint, worldWidth, currentFishCount, currentSharkCount);
+		return new WorldInspector(worldToPaint, currentFishCount, currentSharkCount);
 	}
 
 }

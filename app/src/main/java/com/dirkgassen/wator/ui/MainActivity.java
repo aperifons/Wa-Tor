@@ -33,11 +33,24 @@ import android.util.Log;
  */
 public class MainActivity extends AppCompatActivity implements WatorDisplayHost {
 
+	private static final String FISH_AGE_KEY = "fishAge";
+	private static final String SHARK_AGE_KEY = "sharkAge";
+	private static final String SHARK_HUNGER_KEY = "sharkHunger";
+	private static final String FISH_POSITIONS_X_KEY = "fishPositionsX";
+	private static final String FISH_POSITIONS_Y_KEY = "fishPositionsY";
+	private static final String FISH_REPRODUCTION_AGE_KEY = "fishReproductionAge";
+	private static final String SHARK_REPRODUCTION_AGE_KEY = "sharkReproductionAge";
+	private static final String SHARK_MAX_HUNGER_KEY = "fishMaxHunger";
+	private static final String SHARK_POSITIONS_X_KEY = "sharkPositionsX";
+	private static final String SHARK_POSITIONS_Y_KEY = "sharkPositionsY";
+	private static final String WORLD_WIDTH_KEY = "worldWidth";
+	private static final String WORLD_HEIGHT_KEY = "worldHeight";
+
 	private static final short FISH_REPRODUCTION_AGE = 12;
 	private static final short SHARK_REPRODUCTION_AGE = 7;
 	private static final short SHARK_MAX_HUNGER = 18;
-	private static final int WORLD_WIDTH = 200;
-	private static final int WORLD_HEIGHT = 200;
+	private static final short WORLD_WIDTH = 200;
+	private static final short WORLD_HEIGHT = 200;
 	private static final int INITIAL_FISH = 600;
 	private static final int INITIAL_SHARK = 350;
 
@@ -50,11 +63,6 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 	private Thread simulatorThread;
 
 	private Thread worldUpdateNotifierThread;
-
-	@Override
-	protected void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
-	}
 
 	private void worldGotUpdated() {
 		synchronized (simulatorObservers) {
@@ -74,18 +82,94 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 	}
 
 	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		Simulator.WorldInspector world = simulator.getWorldToPaint();
+		short[] fishAge = new short[world.fishCount];
+		short[] fishPosX = new short[world.fishCount];
+		short[] fishPosY = new short[world.fishCount];
+		short[] sharkAge = new short[world.sharkCount];
+		short[] sharkHunger = new short[world.sharkCount];
+		short[] sharkPosX = new short[world.sharkCount];
+		short[] sharkPosY = new short[world.sharkCount];
+		int fishNo = 0;
+		int sharkNo = 0;
+		do {
+			if (world.isFish()) {
+				fishAge[fishNo] = world.getFishAge();
+				fishPosX[fishNo] = world.getCurrentX();
+				fishPosY[fishNo++] = world.getCurrentY();
+			} else if (world.isShark()) {
+				sharkAge[sharkNo] = world.getSharkAge();
+				sharkHunger[sharkNo] = world.getSharkHunger();
+				sharkPosX[sharkNo] = world.getCurrentX();
+				sharkPosY[sharkNo++] = world.getCurrentY();
+			}
+		} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
+		outState.putShortArray(FISH_AGE_KEY, fishAge);
+		outState.putShortArray(FISH_POSITIONS_X_KEY, fishPosX);
+		outState.putShortArray(FISH_POSITIONS_Y_KEY, fishPosY);
+		outState.putShortArray(SHARK_AGE_KEY, sharkAge);
+		outState.putShortArray(SHARK_HUNGER_KEY, sharkHunger);
+		outState.putShortArray(SHARK_POSITIONS_X_KEY, sharkPosX);
+		outState.putShortArray(SHARK_POSITIONS_Y_KEY, sharkPosY);
+		outState.putShort(WORLD_WIDTH_KEY, world.getWorldWidth());
+		outState.putShort(WORLD_HEIGHT_KEY, world.getWorldHeight());
+		outState.putShort(FISH_REPRODUCTION_AGE_KEY, world.getFishReproduceAge());
+		outState.putShort(SHARK_REPRODUCTION_AGE_KEY, world.getSharkReproduceAge());
+		outState.putShort(SHARK_MAX_HUNGER_KEY, world.getMaxSharkHunger());
+		outState.putShort(SHARK_MAX_HUNGER_KEY, world.getMaxSharkHunger());
+		super.onSaveInstanceState(outState);
+	}
+
+	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main_layout);
 		Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolbar);
 		setSupportActionBar(myToolbar);
 
-		simulator = new Simulator(
-				WORLD_WIDTH, WORLD_HEIGHT,
-				FISH_REPRODUCTION_AGE,
-				SHARK_REPRODUCTION_AGE, SHARK_MAX_HUNGER,
-				INITIAL_FISH, INITIAL_SHARK
-		);
+		if (savedInstanceState == null) {
+			simulator = new Simulator(
+					WORLD_WIDTH, WORLD_HEIGHT,
+					FISH_REPRODUCTION_AGE,
+					SHARK_REPRODUCTION_AGE, SHARK_MAX_HUNGER,
+					INITIAL_FISH, INITIAL_SHARK
+			);
+		} else {
+			simulator = new Simulator(
+					savedInstanceState.getShort(WORLD_WIDTH_KEY), savedInstanceState.getShort(WORLD_HEIGHT_KEY),
+					savedInstanceState.getShort(FISH_REPRODUCTION_AGE_KEY),
+					savedInstanceState.getShort(SHARK_REPRODUCTION_AGE_KEY),
+					savedInstanceState.getShort(SHARK_MAX_HUNGER_KEY)
+			);
+			short[] fishAge = savedInstanceState.getShortArray(FISH_AGE_KEY);
+			if (fishAge != null) {
+				short[] fishPosX = savedInstanceState.getShortArray(FISH_POSITIONS_X_KEY);
+				if (fishPosX != null) {
+					short[] fishPosY = savedInstanceState.getShortArray(FISH_POSITIONS_Y_KEY);
+					if (fishPosY != null) {
+						for (int fishNo = 0; fishNo < fishAge.length; fishNo++) {
+							simulator.setFish(fishPosX[fishNo], fishPosY[fishNo], fishAge[fishNo]);
+						}
+					}
+				}
+			}
+			short[] sharkAge = savedInstanceState.getShortArray(SHARK_AGE_KEY);
+			if (sharkAge != null) {
+				short[] sharkHunger = savedInstanceState.getShortArray(SHARK_HUNGER_KEY);
+				if (sharkHunger != null) {
+					short[] sharkPosX = savedInstanceState.getShortArray(SHARK_POSITIONS_X_KEY);
+					if (sharkPosX != null) {
+						short[] sharkPosY = savedInstanceState.getShortArray(SHARK_POSITIONS_Y_KEY);
+						if (sharkPosY != null) {
+							for (int sharkNo = 0; sharkNo < sharkAge.length; sharkNo++) {
+								simulator.setShark(sharkPosX[sharkNo], sharkPosY[sharkNo], sharkAge[sharkNo], sharkHunger[sharkNo]);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	@Override

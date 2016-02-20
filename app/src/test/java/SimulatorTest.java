@@ -28,8 +28,8 @@ public class SimulatorTest {
 	@Test
 	public void testOneFishMoves() {
 		Simulator simulator = new Simulator(
-				5 /* width */,
-				5 /* height */,
+				(short) 5 /* width */,
+				(short) 5 /* height */,
 				(short) 2 /* fish reproduction age */,
 				(short) 2 /* shark reproduction age */,
 				(short) 2 /* shark max hunger */);
@@ -76,8 +76,8 @@ public class SimulatorTest {
 	@Test
 	public void testFishReproduce() {
 		Simulator simulator = new Simulator(
-				3 /* width */,
-				3 /* height */,
+				(short) 3 /* width */,
+				(short) 3 /* height */,
 				(short) 2 /* fish reproduction age */,
 				(short) 2 /* shark reproduction age */,
 				(short) 2 /* shark max hunger */);
@@ -105,8 +105,8 @@ public class SimulatorTest {
 	@Test
 	public void testSharkStarve() {
 		Simulator simulator = new Simulator(
-				3 /* width */,
-				3 /* height */,
+				(short) 3 /* width */,
+				(short) 3 /* height */,
 				(short) 2 /* fish reproduction age */,
 				(short) 10 /* shark reproduction age */,
 				(short) 3 /* shark max hunger */);
@@ -137,8 +137,8 @@ public class SimulatorTest {
 	@Test
 	public void testSharkCantMoveAndStarve() {
 		Simulator simulator = new Simulator(
-				3 /* width */,
-				3 /* height */,
+				(short) 3 /* width */,
+				(short) 3 /* height */,
 				(short) 2 /* fish reproduction age */,
 				(short) 10 /* shark reproduction age */,
 				(short) 1 /* shark max hunger */);
@@ -169,8 +169,8 @@ public class SimulatorTest {
 	@Test
 	public void testOneSharkFullOfFishMoves() {
 		Simulator simulator = new Simulator(
-				3 /* width */,
-				3 /* height */,
+				(short) 3 /* width */,
+				(short) 3 /* height */,
 				(short) 2 /* fish reproduction age */,
 				(short) 2 /* shark reproduction age */,
 				(short) 2 /* shark max hunger */);
