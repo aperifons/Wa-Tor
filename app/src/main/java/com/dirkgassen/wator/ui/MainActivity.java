@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 						observer.worldUpdated(world);
 						world.reset();
 					}
-					if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Fish: " + world.fishCount + "; sharks: " + world.sharkCount); }
+					if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Fish: " + world.getFishCount() + "; sharks: " + world.getSharkCount()); }
 				} finally {
 					world.release();
 				}
@@ -84,13 +84,15 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		Simulator.WorldInspector world = simulator.getWorldToPaint();
-		short[] fishAge = new short[world.fishCount];
-		short[] fishPosX = new short[world.fishCount];
-		short[] fishPosY = new short[world.fishCount];
-		short[] sharkAge = new short[world.sharkCount];
-		short[] sharkHunger = new short[world.sharkCount];
-		short[] sharkPosX = new short[world.sharkCount];
-		short[] sharkPosY = new short[world.sharkCount];
+		int fishCount = world.getFishCount();
+		int sharkCount = world.getSharkCount();
+		short[] fishAge = new short[fishCount];
+		short[] fishPosX = new short[fishCount];
+		short[] fishPosY = new short[fishCount];
+		short[] sharkAge = new short[sharkCount];
+		short[] sharkHunger = new short[sharkCount];
+		short[] sharkPosX = new short[sharkCount];
+		short[] sharkPosY = new short[sharkCount];
 		int fishNo = 0;
 		int sharkNo = 0;
 		do {

@@ -52,9 +52,20 @@ public class WatorDisplay extends Fragment implements WatorDisplayHost.Simulator
 
 	private WatorDisplayHost displayHost;
 
-	private Bitmap b;
+	private Bitmap planetBitmap;
 
 	private int[] pixels;
+
+	private Runnable updateImageRunner = new Runnable() {
+		@Override
+		public void run() {
+			synchronized (WatorDisplay.this) {
+				if (planetBitmap != null) {
+					watorDisplay.setImageBitmap(planetBitmap);
+				}
+			}
+		}
+	};
 
 	private int[] calculateIndividualAgeColors(int max, int youngColor, int oldColor) {
 		final int[] colors = new int[max];
@@ -92,8 +103,8 @@ public class WatorDisplay extends Fragment implements WatorDisplayHost.Simulator
 	public void onDestroy() {
 		super.onDestroy();
 		synchronized (this) {
-			b.recycle();
-			b = null;
+			planetBitmap.recycle();
+			planetBitmap = null;
 		}
 	}
 
@@ -134,9 +145,9 @@ public class WatorDisplay extends Fragment implements WatorDisplayHost.Simulator
 		int fishReproduceAge = world.getFishReproduceAge();
 		int sharkMaxHunger = world.getMaxSharkHunger();
 
-		if (b == null || b.getWidth() != worldWidth || b.getHeight() != worldHeight) {
+		if (planetBitmap == null || planetBitmap.getWidth() != worldWidth || planetBitmap.getHeight() != worldHeight) {
 			if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "(Re)creating bitmap/pixels"); }
-			b = Bitmap.createBitmap(worldWidth, worldHeight, Bitmap.Config.ARGB_8888);
+			planetBitmap = Bitmap.createBitmap(worldWidth, worldHeight, Bitmap.Config.ARGB_8888);
 			pixels = new int[worldWidth * worldHeight];
 		}
 		if (fishAgeColors == null || fishAgeColors.length != fishReproduceAge) {
@@ -167,22 +178,13 @@ public class WatorDisplay extends Fragment implements WatorDisplayHost.Simulator
 		} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
 		if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Generating pixels " + (System.currentTimeMillis() - startUpdate) + " ms"); }
 		synchronized (WatorDisplay.this) {
-			if (b != null) {
-				int width = b.getWidth();
-				int height = b.getHeight();
-				b.setPixels(pixels, 0, width, 0, 0, width, height);
+			if (planetBitmap != null) {
+				int width = planetBitmap.getWidth();
+				int height = planetBitmap.getHeight();
+				planetBitmap.setPixels(pixels, 0, width, 0, 0, width, height);
 			}
 		}
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
-				synchronized(WatorDisplay.this) {
-					if (b != null) {
-						watorDisplay.setImageBitmap(b);
-					}
-				}
-			}
-		});
+		handler.post(updateImageRunner);
 		if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Repainting took " + (System.currentTimeMillis() - startUpdate) + " ms"); }
 	}
 

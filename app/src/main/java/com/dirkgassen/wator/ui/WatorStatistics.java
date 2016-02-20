@@ -34,6 +34,8 @@ import android.view.ViewGroup;
  */
 public class WatorStatistics extends Fragment implements WatorDisplayHost.SimulatorObserver {
 
+	private final float[] newStatsValues = new float[2];
+
 	private RollingGraphView rollingGraphView;
 
 	private WatorDisplayHost displayHost;
@@ -75,12 +77,12 @@ public class WatorStatistics extends Fragment implements WatorDisplayHost.Simula
 
 	@Override
 	public void worldUpdated(Simulator.WorldInspector world) {
-		float[] seriesData = new float[] {
-				world.fishCount,
-				world.sharkCount
-		};
 		if (rollingGraphView != null) {
-			rollingGraphView.addData(seriesData);
+			synchronized (newStatsValues) {
+				newStatsValues[0] = world.getFishCount();
+				newStatsValues[1] = world.getSharkCount();
+				rollingGraphView.addData(newStatsValues);
+			}
 		}
 	}
 

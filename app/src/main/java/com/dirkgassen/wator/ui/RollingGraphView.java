@@ -29,6 +29,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.View;
@@ -45,9 +46,27 @@ public class RollingGraphView extends View {
 	private int oldestValue;
 	private int currentValue = -1; // No values yet
 	private Bitmap rollingGraphBitmap;
+	Canvas rollingGraphCanvas;
 	private Handler handler;
 	private int maxValues;
 	private boolean horizontal;
+	Paint seriesPaint;
+	private boolean bitMapIsInvalid;
+	Rect nameBounds;
+	private Runnable invalidateRunner = new Runnable() {
+		@Override
+		public void run() {
+			invalidate();
+		}
+	};
+
+	@Override
+	protected void onAttachedToWindow() {
+		super.onAttachedToWindow();
+		seriesPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		nameBounds = new Rect();
+	}
+
 
 	public RollingGraphView(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -102,7 +121,7 @@ public class RollingGraphView extends View {
 		}
 	}
 
-	private void paintSeriesHorizontal(Canvas c, Paint p, Rect nameBounds, float scale, int seriesNo, String seriesName, int width, int height, float maxValue) {
+	private void paintSeriesHorizontal(Canvas c, Paint p, Rect nameBounds, float scale, int seriesNo, int width, int height, float maxValue) {
 		float x = width - nameBounds.width();
 		float y;
 		if (currentValue == -1) {
@@ -132,7 +151,7 @@ public class RollingGraphView extends View {
 		}
 	}
 
-	private void paintSeriesVertical(Canvas c, Paint p, Rect nameBounds, float scale, int seriesNo, String seriesName, int width, int height, float maxValue) {
+	private void paintSeriesVertical(Canvas c, Paint p, Rect nameBounds, float scale, int seriesNo, int width, @SuppressWarnings("UnusedParameters") int height, float maxValue) {
 		float y = nameBounds.height();
 		float x;
 		if (currentValue == -1) {
@@ -163,11 +182,11 @@ public class RollingGraphView extends View {
 		}
 	}
 
-	private Bitmap drawRollingGraph() {
+	private void updateRollingGraph() {
 		int width = getWidth();
 		int height = getHeight();
 		if (width <= 0 || height <= 0) {
-			return null;
+			return;
 		}
 
 		Resources resources = getResources();
@@ -186,23 +205,25 @@ public class RollingGraphView extends View {
 			}
 		}
 
-		Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-		Canvas c = new Canvas(b);
+		if (rollingGraphBitmap == null || rollingGraphBitmap.getWidth() != width || rollingGraphBitmap.getHeight() != height) {
+			rollingGraphBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+			rollingGraphCanvas = new Canvas(rollingGraphBitmap);
+		}
 
-		Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
-		p.setTextSize(14 * scale);
-		p.setShadowLayer(1f, 0f, 1f, Color.WHITE);
-		Rect nameBounds = new Rect();
+		seriesPaint.setTextSize(14 * scale);
+		seriesPaint.setShadowLayer(1f, 0f, 1f, Color.WHITE);
+		Drawable background = getBackground();
+		background.setBounds(0, 0, width, height);
+		getBackground().draw(rollingGraphCanvas);
 		for (int seriesNo = 0; seriesNo < seriesNames.length; seriesNo++) {
-			p.setColor(seriesColors[seriesNo]);
-			p.getTextBounds(seriesNames[seriesNo], 0, seriesNames[seriesNo].length(), nameBounds);
+			seriesPaint.setColor(seriesColors[seriesNo]);
+			seriesPaint.getTextBounds(seriesNames[seriesNo], 0, seriesNames[seriesNo].length(), nameBounds);
 			if (horizontal) {
-				paintSeriesHorizontal(c, p, nameBounds, scale, seriesNo, seriesNames[seriesNo], width, height, maxValue);
+				paintSeriesHorizontal(rollingGraphCanvas, seriesPaint, nameBounds, scale, seriesNo, width, height, maxValue);
 			} else {
-				paintSeriesVertical(c, p, nameBounds, scale, seriesNo, seriesNames[seriesNo], width, height, maxValue);
+				paintSeriesVertical(rollingGraphCanvas, seriesPaint, nameBounds, scale, seriesNo, width, height, maxValue);
 			}
 		}
-		return b;
 	}
 
 	public void addData(float[] newValues) {
@@ -224,19 +245,14 @@ public class RollingGraphView extends View {
 		if ((oldestValue + 1) % dataValues.length == currentValue) {
 			oldestValue = currentValue;
 		}
-		rollingGraphBitmap = null;
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
-				invalidate();
-			}
-		});
+		bitMapIsInvalid = true;
+		handler.post(invalidateRunner);
 	}
 
 	@Override
 	protected void onDraw(Canvas canvas) {
-		if (rollingGraphBitmap == null) {
-			rollingGraphBitmap = drawRollingGraph();
+		if (bitMapIsInvalid) {
+			updateRollingGraph();
 		}
 		if (rollingGraphBitmap != null) {
 			canvas.drawBitmap(rollingGraphBitmap, 0, 0, null /* no paint? */);

@@ -211,4 +211,43 @@ public class SimulatorTest {
 		}
 	}
 
+	@Test
+	public void testSharkAndFishCount() throws InterruptedException {
+		final Simulator simulator = new Simulator(
+				(short) 100 /* width */,
+				(short) 100 /* height */,
+				(short) 2 /* fish reproduction age */,
+				(short) 4 /* shark reproduction age */,
+				(short) 3 /* shark max hunger */,
+				2000,
+				1500);
+
+		for (int tickNo = 0; tickNo < 100; tickNo++) {
+			final Simulator.WorldInspector world = simulator.getWorldToPaint();
+			try {
+				Thread backgroundTick = new Thread() {
+					@Override
+					public void run() {
+						simulator.tick();
+					}
+				};
+				backgroundTick.start();
+				int fish = 0;
+				int shark = 0;
+				do {
+					if (world.isFish()) {
+						fish++;
+					} else if (world.isShark()) {
+						shark++;
+					}
+				} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
+				Assert.assertEquals("Unexpected number of fish after " + tickNo + " ticks", fish, world.getFishCount());
+				Assert.assertEquals("Unexpected number of shark after " + tickNo + " ticks", shark, world.getSharkCount());
+				backgroundTick.join();
+			} finally {
+				world.release();
+			}
+		}
+	}
+
 }

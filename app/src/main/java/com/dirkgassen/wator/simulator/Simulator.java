@@ -36,9 +36,9 @@ final public class Simulator {
 	 */
 	public class WorldInspector {
 
-		public final int fishCount;
-		public final int sharkCount;
-		private final short[] world;
+		private int fishCount;
+		private int sharkCount;
+		private short[] world;
 		private int currentNo;
 
 		final public void moveTo(int x, int y) {
@@ -76,6 +76,14 @@ final public class Simulator {
 
 		final public boolean isEmpty() {
 			return world[currentNo] == 0;
+		}
+
+		final public int getFishCount() {
+			return fishCount;
+		}
+
+		final public int getSharkCount() {
+			return sharkCount;
 		}
 
 		final public short getFishAge() {
@@ -156,11 +164,20 @@ final public class Simulator {
 			return maxSharkHunger;
 		}
 
-		protected WorldInspector(short[] world, int fishCount, int sharkCount) {
-			this.world = world;
+		protected void setWorldToPaint(short[] newWorld) {
+			if (world == null || world.length != newWorld.length) {
+				world = new short[newWorld.length];
+			}
+			System.arraycopy(newWorld, 0, world, 0, newWorld.length);
+			fishCount = sharkCount = 0;
+			for (short worldCell : world) {
+				if (worldCell < 0) {
+					fishCount++;
+				} else if (worldCell > 0) {
+					sharkCount++;
+				}
+			}
 			this.currentNo = 0;
-			this.fishCount = fishCount;
-			this.sharkCount = sharkCount;
 		}
 
 		public void release() {
@@ -169,14 +186,9 @@ final public class Simulator {
 					throw new IllegalAccessError("Nothing to release");
 				}
 				worldPainters--;
-				if (worldPainters == 0) {
-					if (spareWorld == null) {
-						spareWorld = worldToPaint;
-					}
-					worldToPaint = null;
-				}
 			}
 		}
+
 	}
 
 	class TickWorker implements Runnable {
@@ -219,20 +231,16 @@ final public class Simulator {
 
 	private short[] currentWorld;
 	private short[] nextWorld;
-	private short[] worldToPaint;
-	private short[] spareWorld;
 	private int worldPainters;
 	private final boolean[] cellProcessed;
 	private TickWorker[] tickWorkers;
+	private WorldInspector worldToPaint = new WorldInspector();
 
 	private final short worldWidth;
 	private final short worldHeight;
 	private final short fishReproduceAge;
 	private final short sharkReproduceAge;
 	private final short maxSharkHunger;
-
-	private int currentFishCount;
-	private int currentSharkCount;
 
 	final public int getWorldWidth() {
 		return worldWidth;
@@ -265,7 +273,6 @@ final public class Simulator {
 		this.maxSharkHunger = maxSharkHunger;
 		this.currentWorld = new short[worldSize];
 		this.nextWorld = new short[worldSize];
-		this.spareWorld = new short[worldSize];
 		this.cellProcessed = new boolean[worldSize];
 		Random random = new Random();
 		while (initialFishCount-- > 0) {
@@ -294,7 +301,7 @@ final public class Simulator {
 		setShark(x, y, (short) 1, (short) 1);
 	}
 
-	final public void setFish(int x, int y, short currentReproduceAge) {
+	synchronized final public void setFish(int x, int y, short currentReproduceAge) {
 		if (x < 0 || x >= worldWidth) {
 			throw new IllegalArgumentException("X coordinate " + x + " is out of bounds (width = " + worldWidth + ")");
 		}
@@ -310,7 +317,7 @@ final public class Simulator {
 		currentWorld[x + y * worldWidth] = (short) -currentReproduceAge;
 	}
 
-	final public void setShark(int x, int y, short currentReproduceAge, short currentHunger) {
+	synchronized final public void setShark(int x, int y, short currentReproduceAge, short currentHunger) {
 		if (x < 0 || x >= worldWidth) {
 			throw new IllegalArgumentException("X coordinate " + x + " is out of bounds (width = " + worldWidth + ")");
 		}
@@ -458,7 +465,6 @@ final public class Simulator {
 	}
 
 	final public void tick(int threads) {
-		long start = System.currentTimeMillis();
 		// Copy from current to next
 		synchronized (this) {
 			System.arraycopy(currentWorld, 0, nextWorld, 0, currentWorld.length);
@@ -503,32 +509,18 @@ final public class Simulator {
 		}
 
 		synchronized(this) {
-			currentFishCount = currentSharkCount = 0;
-			for (short worldCell : nextWorld) {
-				if (worldCell < 0) {
-					currentFishCount++;
-				} else if (worldCell > 0) {
-					currentSharkCount++;
-				}
-			}
-			if (worldToPaint == currentWorld) {
-				currentWorld = nextWorld;
-				nextWorld = spareWorld;
-				spareWorld = null;
-			} else {
-				short[] tempWorld = currentWorld;
-				currentWorld = nextWorld;
-				nextWorld = tempWorld;
-			}
+			short[] tempWorld = currentWorld;
+			currentWorld = nextWorld;
+			nextWorld = tempWorld;
 		}
 	}
 
 	final synchronized public WorldInspector getWorldToPaint() {
-		worldPainters++;
-		if (worldToPaint == null) {
-			worldToPaint = currentWorld;
+		if (worldPainters == 0) {
+			worldToPaint.setWorldToPaint(currentWorld);
 		}
-		return new WorldInspector(worldToPaint, currentFishCount, currentSharkCount);
+		worldPainters++;
+		return worldToPaint;
 	}
 
 }
