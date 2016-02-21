@@ -301,33 +301,50 @@ final public class Simulator {
 		final int right  = x == worldWidth  - 1 ? x + 1 - worldWidth  : x + 1;
 		final int top    = y == 0               ? y - 1 + worldHeight : y - 1;
 		final int bottom = y == worldHeight - 1 ? y + 1 - worldHeight : y + 1;
-		neighbours[0] =  left +      y * worldWidth; // left
-		neighbours[1] =  left +    top * worldWidth; // top left
-		neighbours[2] =     x +    top * worldWidth; // top
-		neighbours[3] = right +    top * worldWidth; // top right
-		neighbours[4] = right +      y * worldWidth; // right
-		neighbours[5] = right + bottom * worldWidth; // bottom right
-		neighbours[6] =     x + bottom * worldWidth; // bottom
-		neighbours[7] = left  + bottom * worldWidth; // bottom left
+		if (neighbours.length == 4) {
+			neighbours[0] = left + y * worldWidth; // left
+			neighbours[1] = x + top * worldWidth; // top
+			neighbours[2] = right + y * worldWidth; // right
+			neighbours[3] = x + bottom * worldWidth; // bottom
+		} else {
+			neighbours[0] = left + y * worldWidth; // left
+			neighbours[1] = left + top * worldWidth; // top left
+			neighbours[2] = x + top * worldWidth; // top
+			neighbours[3] = right + top * worldWidth; // top right
+			neighbours[4] = right + y * worldWidth; // right
+			neighbours[5] = right + bottom * worldWidth; // bottom right
+			neighbours[6] = x + bottom * worldWidth; // bottom
+			neighbours[7] = left + bottom * worldWidth; // bottom left
+		}
 	}
 
-	private void calculateNextWorld(int no, int end) {
+	private void calculateNextWorld(int start, int end) {
 		Random random = new Random();
 		int neighbours[] = new int[8];
-		int fishNeighbourPos[] = new int[8];
-		int emptyNeighbourPos[] = new int[8];
-		for (; no < end; no++)  {
-			calculateNeightbours(no, neighbours);
-			if (!cellProcessed[no]) {
-				if (nextWorld[no] < 0) {
-					// Fish
-					calculateFish(random, no, neighbours, emptyNeighbourPos);
-				} else if (nextWorld[no] > 0) {
-					// Sharl
-					calculateShark(random, no, neighbours, emptyNeighbourPos, fishNeighbourPos);
+		int fishNeighbourPos[] = new int[neighbours.length];
+		int emptyNeighbourPos[] = new int[neighbours.length];
+		int offset = random.nextInt(end - start);
+		int delta = random.nextInt(4) + 11;
+		while (true) {
+			int startOffset = offset;
+			while (cellProcessed[start + offset]) {
+				offset = (offset + 1) % (end - start);
+				if (offset == startOffset) {
+					return; // all cells in our range processed
 				}
-				cellProcessed[no] = true;
 			}
+			int no = start + offset;
+			if (nextWorld[no] < 0) {
+				// Fish
+				calculateNeightbours(no, neighbours);
+				calculateFish(random, no, neighbours, emptyNeighbourPos);
+			} else if (nextWorld[no] > 0) {
+				// Sharl
+				calculateNeightbours(no, neighbours);
+				calculateShark(random, no, neighbours, emptyNeighbourPos, fishNeighbourPos);
+			}
+			cellProcessed[no] = true;
+			offset = (offset + delta) % (end - start);
 		}
 	}
 
