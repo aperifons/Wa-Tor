@@ -29,8 +29,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -219,8 +221,11 @@ public class RollingGraphView extends View {
 		seriesPaint.setTextSize(14 * scale);
 		seriesPaint.setShadowLayer(1f, 0f, 1f, Color.WHITE);
 		Drawable background = getBackground();
-		background.setBounds(0, 0, width, height);
-		getBackground().draw(rollingGraphCanvas);
+		if (background == null) {
+			background = new ColorDrawable(ContextCompat.getColor(getContext(), android.R.color.white));
+			background.setBounds(0, 0, width, height);
+		}
+		background.draw(rollingGraphCanvas);
 		for (int seriesNo = 0; seriesNo < seriesNames.length; seriesNo++) {
 			seriesPaint.setColor(seriesColors[seriesNo]);
 			seriesPaint.getTextBounds(seriesNames[seriesNo], 0, seriesNames[seriesNo].length(), nameBounds);

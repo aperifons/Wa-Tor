@@ -61,8 +61,6 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	private Simulator simulator;
 
-	private static final int FPS = 30;
-
 	private SimulatorRunnable simulatorRunnable;
 
 	private Thread worldUpdateNotifierThread;
@@ -77,6 +75,9 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 						world.reset();
 					}
 					if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Fish: " + world.getFishCount() + "; sharks: " + world.getSharkCount()); }
+					if (world.getSharkCount() + world.getFishCount() == 0 || world.getFishCount() == world.getWorldWidth() * world.getWorldHeight()) {
+						simulatorRunnable.stopTicking();
+					}
 				} finally {
 					world.release();
 				}
