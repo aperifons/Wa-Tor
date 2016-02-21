@@ -19,6 +19,8 @@ package com.dirkgassen.wator.ui;
 
 import com.dirkgassen.wator.R;
 import com.dirkgassen.wator.simulator.Simulator;
+import com.dirkgassen.wator.simulator.WorldObserver;
+import com.dirkgassen.wator.simulator.WorldHost;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -38,7 +40,7 @@ import android.widget.ImageView;
 /**
  * @author dirk.
  */
-public class WatorDisplay extends Fragment implements WatorDisplayHost.SimulatorObserver {
+public class WatorDisplay extends Fragment implements WorldObserver {
 
 	private Handler handler;
 
@@ -50,7 +52,7 @@ public class WatorDisplay extends Fragment implements WatorDisplayHost.Simulator
 
 	private int waterColor;
 
-	private WatorDisplayHost displayHost;
+	private WorldHost displayHost;
 
 	private Bitmap planetBitmap;
 
@@ -128,8 +130,8 @@ public class WatorDisplay extends Fragment implements WatorDisplayHost.Simulator
 	public void onAttach(Context context) {
 		super.onAttach(context);
 		FragmentActivity hostActivity = getActivity();
-		if (hostActivity instanceof WatorDisplayHost) {
-			displayHost = (WatorDisplayHost) hostActivity;
+		if (hostActivity instanceof WorldHost) {
+			displayHost = (WorldHost) hostActivity;
 		} else {
 			displayHost = null;
 		}
@@ -188,8 +190,4 @@ public class WatorDisplay extends Fragment implements WatorDisplayHost.Simulator
 		if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Repainting took " + (System.currentTimeMillis() - startUpdate) + " ms"); }
 	}
 
-	@Override
-	public void worldSizeUpdated(int width, int height) {
-		// TODO: Evaluate if this is still needed?
-	}
 }

@@ -1,5 +1,5 @@
 /*
- * WatorDisplayHost.java is part of Wa-Tor (C) 2016 by Dirk Gassen.
+ * SimulatorObserver.java is part of Wa-Tor (C) 2016 by Dirk Gassen.
  *
  * Wa-Tor is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,28 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dirkgassen.wator.ui;
-
-import com.dirkgassen.wator.simulator.Simulator;
+package com.dirkgassen.wator.simulator;
 
 /**
  * @author dirk.
  */
-public interface WatorDisplayHost {
+public interface WorldObserver {
 
-	interface SimulatorObserver {
-
-		void worldUpdated(Simulator.WorldInspector world);
-
-		void worldSizeUpdated(int width, int height);
-
-	}
-
-	void registerSimulatorObserver(SimulatorObserver newObserver);
-
-	void unregisterSimulatorObserver(SimulatorObserver goneObserver);
-
-	Simulator.WorldInspector getWorld();
-
+	void worldUpdated(Simulator.WorldInspector world);
 
 }

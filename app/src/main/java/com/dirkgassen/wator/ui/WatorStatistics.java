@@ -19,6 +19,8 @@ package com.dirkgassen.wator.ui;
 
 import com.dirkgassen.wator.R;
 import com.dirkgassen.wator.simulator.Simulator;
+import com.dirkgassen.wator.simulator.WorldObserver;
+import com.dirkgassen.wator.simulator.WorldHost;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -32,20 +34,20 @@ import android.view.ViewGroup;
 /**
  * @author dirk.
  */
-public class WatorStatistics extends Fragment implements WatorDisplayHost.SimulatorObserver {
+public class WatorStatistics extends Fragment implements WorldObserver {
 
 	private final float[] newStatsValues = new float[2];
 
 	private RollingGraphView rollingGraphView;
 
-	private WatorDisplayHost displayHost;
+	private WorldHost displayHost;
 
 	@Override
 	public void onAttach(Context context) {
 		super.onAttach(context);
 		FragmentActivity hostActivity = getActivity();
-		if (hostActivity instanceof WatorDisplayHost) {
-			displayHost = (WatorDisplayHost) hostActivity;
+		if (hostActivity instanceof WorldHost) {
+			displayHost = (WorldHost) hostActivity;
 		} else {
 			displayHost = null;
 		}
@@ -86,8 +88,4 @@ public class WatorStatistics extends Fragment implements WatorDisplayHost.Simula
 		}
 	}
 
-	@Override
-	public void worldSizeUpdated(int width, int height) {
-
-	}
 }

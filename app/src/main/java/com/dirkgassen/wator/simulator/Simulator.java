@@ -191,49 +191,10 @@ final public class Simulator {
 
 	}
 
-	class TickWorker implements Runnable {
-		private boolean active;
-		private int no;
-		private int end;
-		private Thread tickWorkerThread;
-
-		public synchronized boolean isActive() {
-			return active;
-		}
-
-		public synchronized void stop() {
-			tickWorkerThread = null;
-		}
-
-		public synchronized void work(int no, int end) {
-			this.no = no;
-			this.end = end;
-			notify();
-		}
-
-		@Override
-		public void run() {
-			try {
-				tickWorkerThread = Thread.currentThread();
-				while (tickWorkerThread == Thread.currentThread()) {
-					synchronized (this) {
-						wait();
-						active = true;
-					}
-					calculateNextWorld(no, end);
-				}
-			} catch (InterruptedException e) {
-				// Do nothing
-			}
-
-		}
-	}
-
 	private short[] currentWorld;
 	private short[] nextWorld;
 	private int worldPainters;
 	private final boolean[] cellProcessed;
-	private TickWorker[] tickWorkers;
 	private WorldInspector worldToPaint = new WorldInspector();
 
 	private final short worldWidth;

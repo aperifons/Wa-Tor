@@ -194,9 +194,7 @@ public class SimulatorTest {
 				if (world.isShark()) {
 					Assert.assertEquals("Found more than one shark", sharkCellNo, -1);
 					sharkCellNo = world.getCurrentPosition();
-				} else if (world.isFish()) {
-					Assert.assertTrue("Fish should have aged", world.getFishAge() > 1);
-				} else {
+				} else if (world.isEmpty()) {
 					Assert.assertEquals("Found more than one empty cell", emptyCellNo, -1);
 					emptyCellNo = world.getCurrentPosition();
 				}

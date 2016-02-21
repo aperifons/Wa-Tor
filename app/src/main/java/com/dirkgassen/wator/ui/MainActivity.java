@@ -22,6 +22,9 @@ import java.util.Set;
 
 import com.dirkgassen.wator.R;
 import com.dirkgassen.wator.simulator.Simulator;
+import com.dirkgassen.wator.simulator.SimulatorRunnable;
+import com.dirkgassen.wator.simulator.WorldObserver;
+import com.dirkgassen.wator.simulator.WorldHost;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -31,7 +34,7 @@ import android.util.Log;
 /**
  * @author dirk.
  */
-public class MainActivity extends AppCompatActivity implements WatorDisplayHost {
+public class MainActivity extends AppCompatActivity implements WorldHost, SimulatorRunnable.SimulatorRunnableObserver {
 
 	private static final String FISH_AGE_KEY = "fishAge";
 	private static final String SHARK_AGE_KEY = "sharkAge";
@@ -54,22 +57,22 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 	private static final int INITIAL_FISH = 600;
 	private static final int INITIAL_SHARK = 350;
 
-	private final Set<SimulatorObserver> simulatorObservers = new HashSet<SimulatorObserver>();
+	private final Set<WorldObserver> worldObservers = new HashSet<WorldObserver>();
 
 	private Simulator simulator;
 
 	private static final int FPS = 30;
 
-	private Thread simulatorThread;
+	private SimulatorRunnable simulatorRunnable;
 
 	private Thread worldUpdateNotifierThread;
 
-	private void worldGotUpdated() {
-		synchronized (simulatorObservers) {
-			if (simulatorObservers.size() > 0) {
+	private void worldUpdated() {
+		synchronized (worldObservers) {
+			if (worldObservers.size() > 0) {
 				Simulator.WorldInspector world = simulator.getWorldToPaint();
 				try {
-					for (SimulatorObserver observer : simulatorObservers) {
+					for (WorldObserver observer : worldObservers) {
 						observer.worldUpdated(world);
 						world.reset();
 					}
@@ -172,6 +175,9 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 				}
 			}
 		}
+
+		simulatorRunnable = new SimulatorRunnable(simulator);
+		simulatorRunnable.registerSimulatorRunnableObserver(this);
 	}
 
 	@Override
@@ -186,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 					while (Thread.currentThread() == worldUpdateNotifierThread) {
 						long startUpdate = System.currentTimeMillis();
 						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Notifying observers of world update"); }
-						worldGotUpdated();
+						worldUpdated();
 						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Notifying observers took " + (System.currentTimeMillis() - startUpdate) + " ms; waiting for next update"); }
 						synchronized (this) {
 							wait();
@@ -203,53 +209,7 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 		};
 		worldUpdateNotifierThread.start();
 
-		simulatorThread = new Thread(getString(R.string.simulatorThreadName)) {
-			@Override
-			public void run() {
-				try {
-					long durations[] = new long[60];
-					long totalDuration = 0;
-					int currentDurationNo = 0;
-					if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Entering simulator thread"); }
-					while (Thread.currentThread() == simulatorThread) {
-						long startUpdate = System.currentTimeMillis();
-						simulator.tick(1);
-
-						synchronized (MainActivity.this) {
-							if (worldUpdateNotifierThread != null) {
-								//noinspection SynchronizeOnNonFinalField
-								synchronized (worldUpdateNotifierThread) {
-									worldUpdateNotifierThread.notify();
-								}
-							}
-						}
-
-						long duration = System.currentTimeMillis() - startUpdate;
-						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) {
-							// Calculate some statistics
-							durations[currentDurationNo] = duration;
-							if (currentDurationNo == 0) {
-								currentDurationNo = durations.length - 1;
-							} else {
-								currentDurationNo--;
-							}
-							totalDuration = totalDuration + duration - durations[currentDurationNo];
-							Log.v("Wa-Tor", "World tick took " + duration + " ms (avg: " + (totalDuration / durations.length) + " ms)");
-						}
-						long sleepTime = 1000 / FPS - duration;
-						if (sleepTime < 10 /* ms */) {
-							sleepTime = 10 /* ms */;
-							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "World tick took TOO LONG! Sleeping " + sleepTime + " ms"); }
-						}
-						Thread.sleep(sleepTime);
-					}
-				} catch (InterruptedException e) {
-					if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Simulator thread got interrupted"); }
-					simulatorThread = null;
-				}
-				if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Exiting simulator thread"); }
-			}
-		};
+		Thread simulatorThread = new Thread(simulatorRunnable, getString(R.string.simulatorThreadName));
 		simulatorThread.start();
 	}
 
@@ -262,31 +222,32 @@ public class MainActivity extends AppCompatActivity implements WatorDisplayHost 
 			if (t != null) {
 				t.interrupt();
 			}
-			t = simulatorThread;
-			simulatorThread = null;
-			if (t != null) {
-				t.interrupt();
+			simulatorRunnable.stopTicking();
+		}
+	}
+
+	@Override
+	public void registerSimulatorObserver(WorldObserver newObserver) {
+		synchronized (worldObservers) {
+			worldObservers.add(newObserver);
+		}
+
+	}
+
+	@Override
+	public void unregisterSimulatorObserver(WorldObserver goneObserver) {
+		synchronized (worldObservers) {
+			worldObservers.remove(goneObserver);
+		}
+	}
+
+	@Override
+	synchronized public void simulatorUpdated(Simulator simulator) {
+		if (worldUpdateNotifierThread != null) {
+			//noinspection SynchronizeOnNonFinalField
+			synchronized (worldUpdateNotifierThread) {
+				worldUpdateNotifierThread.notify();
 			}
 		}
-	}
-
-	@Override
-	public void registerSimulatorObserver(SimulatorObserver newObserver) {
-		synchronized (simulatorObservers) {
-			simulatorObservers.add(newObserver);
-		}
-
-	}
-
-	@Override
-	public void unregisterSimulatorObserver(SimulatorObserver goneObserver) {
-		synchronized (simulatorObservers) {
-			simulatorObservers.remove(goneObserver);
-		}
-	}
-
-	@Override
-	public Simulator.WorldInspector getWorld() {
-		return null;
 	}
 }
