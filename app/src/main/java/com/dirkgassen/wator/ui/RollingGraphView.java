@@ -239,10 +239,10 @@ public class RollingGraphView extends View {
 
 	public void addData(float[] newValues) {
 		if (dataValues == null) {
-			if (maxValues == -1 && getWidth() == 0) {
+			if (maxValues == -1 && ((horizontal && getWidth() == 0) || (!horizontal && getHeight() == 0))) {
 				return;
 			}
-			dataValues = new float[maxValues == -1 ? getWidth() : maxValues][];
+			dataValues = new float[maxValues == -1 ? (horizontal ? getWidth() : getHeight()) : maxValues][];
 			dataTimes = new long[dataValues.length];
 		}
 		if (newValues.length != seriesNames.length) {

@@ -21,15 +21,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.dirkgassen.wator.R;
+import com.dirkgassen.wator.simulator.RollingAverage;
 import com.dirkgassen.wator.simulator.Simulator;
 import com.dirkgassen.wator.simulator.SimulatorRunnable;
-import com.dirkgassen.wator.simulator.WorldObserver;
 import com.dirkgassen.wator.simulator.WorldHost;
+import com.dirkgassen.wator.simulator.WorldObserver;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.widget.TextView;
 
 /**
  * @author dirk.
@@ -64,6 +66,16 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	private SimulatorRunnable simulatorRunnable;
 
 	private Thread worldUpdateNotifierThread;
+
+	private RollingAverage drawingAverageFps;
+
+	private TextView simulatorFpsTextView;
+
+	private TextView drawingFpsTextView;
+
+	private TextView simulatorFpsLabelTextView;
+
+	private TextView drawingFpsLabelTextView;
 
 	private void worldUpdated() {
 		synchronized (worldObservers) {
@@ -179,22 +191,35 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 		simulatorRunnable = new SimulatorRunnable(simulator);
 		simulatorRunnable.registerSimulatorRunnableObserver(this);
+
+		simulatorFpsTextView = (TextView) findViewById(R.id.fps_simulator);
+		drawingFpsTextView = (TextView) findViewById(R.id.fps_drawing);
+		simulatorFpsLabelTextView = (TextView) findViewById(R.id.label_fps_simulator);
+		drawingFpsLabelTextView = (TextView) findViewById(R.id.label_fps_drawing);
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 
+		drawingAverageFps = new RollingAverage();
+
 		worldUpdateNotifierThread = new Thread(getString(R.string.worldUpdateNotifierThreadName)) {
 			@Override
 			public void run() {
 				if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Entering world update notifier thread"); }
 				try {
+					long lastUpdateFinished = 0;
 					while (Thread.currentThread() == worldUpdateNotifierThread) {
 						long startUpdate = System.currentTimeMillis();
 						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Notifying observers of world update"); }
 						worldUpdated();
 						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Notifying observers took " + (System.currentTimeMillis() - startUpdate) + " ms; waiting for next update"); }
+						long now = System.currentTimeMillis();
+						if (lastUpdateFinished > 0 && drawingAverageFps != null) {
+							drawingAverageFps.add(now - lastUpdateFinished);
+						}
+						lastUpdateFinished = now;
 						synchronized (this) {
 							wait();
 						}

@@ -5,4 +5,6 @@
 	<string name="simulatorThreadName">Wa-Tor Simulator Thread</string>
 	<string name="fish_dataseries_name">F</string>
 	<string name="shark_dataseries_name">S</string>
+	<string name="fps_simulator_label">Sim:</string>
+	<string name="label_fps_drawing">Draw:</string>
 </resources>

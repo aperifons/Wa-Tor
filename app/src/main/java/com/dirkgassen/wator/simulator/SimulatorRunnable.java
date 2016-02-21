@@ -35,11 +35,7 @@ public class SimulatorRunnable implements Runnable {
 
 	private final Simulator simulator;
 
-	private long[] tickDurationHistory = new long[60];
-
-	private long tickDurationHistorySum = 0;
-
-	private int tickDurationHistoryCurrentNo = 0;
+	private final RollingAverage tickDuration = new RollingAverage();
 
 	private int targetFps = 30;
 
@@ -48,7 +44,7 @@ public class SimulatorRunnable implements Runnable {
 	private final Set<SimulatorRunnableObserver> simulatorObservers = new HashSet<SimulatorRunnableObserver>();
 
 	final public long getAvgFps() {
-		return tickDurationHistorySum / tickDurationHistory.length;
+		return 1000 / tickDuration.getAverage();
 	}
 
 	public void registerSimulatorRunnableObserver(SimulatorRunnableObserver newObserver) {
@@ -94,14 +90,8 @@ public class SimulatorRunnable implements Runnable {
 				long duration = System.currentTimeMillis() - startUpdate;
 				if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) {
 					// Calculate some statistics
-					tickDurationHistory[tickDurationHistoryCurrentNo] = duration;
-					if (tickDurationHistoryCurrentNo == 0) {
-						tickDurationHistoryCurrentNo = tickDurationHistory.length - 1;
-					} else {
-						tickDurationHistoryCurrentNo--;
-					}
-					tickDurationHistorySum = tickDurationHistorySum + duration - tickDurationHistory[tickDurationHistoryCurrentNo];
-					Log.v("Wa-Tor", "World tick took " + duration + " ms (avg: " + (getAvgFps()) + " ms)");
+					tickDuration.add(duration);
+					Log.v("Wa-Tor", "World tick took " + duration + " ms (avg: " + tickDuration.getAverage() + " ms)");
 				}
 				long sleepTime = 1000 / targetFps - duration;
 				if (sleepTime < 10 /* ms */) {
