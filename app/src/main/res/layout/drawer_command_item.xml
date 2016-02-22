@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ drawer_command_item.xml is part of Wa-Tor (C) 2016 by Dirk Gassen.
+  ~
+  ~ Wa-Tor is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Wa-Tor is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" xmlns:tools="http://schemas.android.com/tools"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
+
+	<ImageView
+			android:id="@+id/drawer_command_icon"
+			android:layout_width="40dp"
+			android:layout_height="40dp"
+			android:layout_alignParentLeft="true"
+			android:layout_alignParentStart="true"
+			android:layout_marginLeft="10dp"
+			android:layout_marginRight="20dp"
+			android:layout_marginStart="10dp"
+			android:layout_marginEnd="20dp"
+			android:layout_marginTop="5dp" />
+
+	<TextView
+			android:id="@+id/drawer_command_title"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:textSize="18sp"
+			android:gravity="center_vertical"
+			android:textColor="#000"
+			android:textStyle="bold"
+			android:layout_alignParentTop="true"
+			android:layout_toRightOf="@id/drawer_command_icon"
+			android:layout_toEndOf="@id/drawer_command_icon"
+			tools:text="Create New World" />
+
+	<TextView android:id="@+id/drawer_command_subtitle"
+	          android:layout_width="wrap_content"
+	          android:layout_height="wrap_content"
+	          android:layout_toRightOf="@id/drawer_command_icon"
+	          android:layout_toEndOf="@id/drawer_command_icon"
+	          android:layout_below="@id/drawer_command_title"
+	          android:layout_alignParentRight="true"
+	          android:layout_alignParentEnd="true"
+	          tools:text="Start a new world"/>
+
+</RelativeLayout>

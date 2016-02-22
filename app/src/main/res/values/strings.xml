@@ -7,4 +7,15 @@
 	<string name="shark_dataseries_name">S</string>
 	<string name="fps_simulator_label">Sim:</string>
 	<string name="label_fps_drawing">Draw:</string>
+	<string name="initial_fish_count_label">Initial no. of fish:</string>
+	<string name="fish_breed_time_label">Fish breed time:</string>
+	<string name="world_width_label">World width:</string>
+	<string name="world_height_label">World height:</string>
+	<string name="initial_shark_count_label">Initial no. of shark:</string>
+	<string name="shark_breed_time">Shark breed time:</string>
+	<string name="shark_starve_time_label">Shark breed time:</string>
+	<string name="world_size_label">World size:</string>
+	<string name="world_size_x_label">x</string>
+	<string name="open_drawer_description">Show options</string>
+	<string name="close_drawer_description">Close options</string>
 </resources>

@@ -17,7 +17,10 @@
 
 package com.dirkgassen.wator.ui;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.dirkgassen.wator.R;
@@ -28,15 +31,82 @@ import com.dirkgassen.wator.simulator.WorldHost;
 import com.dirkgassen.wator.simulator.WorldObserver;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.annotation.Nullable;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * @author dirk.
  */
+// Adding the hamburger menu: followed this tutorial:
+//     http://codetheory.in/android-navigation-drawer/
 public class MainActivity extends AppCompatActivity implements WorldHost, SimulatorRunnable.SimulatorRunnableObserver {
+
+	class DrawerCommandItem {
+		public final int icon;
+		public final String title;
+		public final String subtitle;
+
+		DrawerCommandItem(int icon, String title, String subtitle) {
+			this.icon = icon;
+			this.title = title;
+			this.subtitle = subtitle;
+		}
+	}
+
+	class DrawerListAdapter extends BaseAdapter {
+		private final List<DrawerCommandItem> drawerCommands;
+		private final LayoutInflater inflater;
+
+		@Override
+		public int getCount() {
+			return drawerCommands.size();
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return drawerCommands.get(position);
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return 0;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			if (convertView == null) {
+				convertView = inflater.inflate(R.layout.drawer_command_item, parent, false);
+			}
+			DrawerCommandItem item = drawerCommands.get(position);
+			((TextView) convertView.findViewById(R.id.drawer_command_title)).setText(item.title);
+			((TextView) convertView.findViewById(R.id.drawer_command_subtitle)).setText(item.subtitle);
+			((ImageView) convertView.findViewById(R.id.drawer_command_icon)).setImageResource(item.icon);
+			return convertView;
+		}
+
+		public DrawerListAdapter(List<DrawerCommandItem> drawerCommands) {
+			this.drawerCommands = drawerCommands;
+			inflater = LayoutInflater.from(MainActivity.this);
+		}
+
+	}
 
 	private static final String FISH_AGE_KEY = "fishAge";
 	private static final String SHARK_AGE_KEY = "sharkAge";
@@ -69,13 +139,25 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	private RollingAverage drawingAverageFps;
 
+	private TextView selectedFps;
+
+	private SeekBar fpsSeekBar;
+
 	private TextView simulatorFpsTextView;
 
 	private TextView drawingFpsTextView;
 
-	private TextView simulatorFpsLabelTextView;
+	private DrawerLayout drawerLayout;
 
-	private TextView drawingFpsLabelTextView;
+	private View drawerPane;
+
+	private ListView drawerList;
+
+	private ActionBarDrawerToggle drawerToggle;
+
+	private Handler handler;
+
+	private Runnable updateFpsRunnable;
 
 	private void worldUpdated() {
 		synchronized (worldObservers) {
@@ -95,6 +177,26 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 				}
 			}
 		}
+		// Note: not synchronizing here, but rather a rudimentary check to avoid posting if it's not
+		// necessary. If the drawer opens while we are executing and one of these fields change to non-null
+		// then the framerate will be update next time. If it's the other way around the updateFpsRunnable
+		// shoud synchronize and check again.
+		if (simulatorFpsTextView != null || drawingFpsTextView != null) {
+			handler.post(updateFpsRunnable);
+		}
+	}
+
+	private List<DrawerCommandItem> getDrawerCommands() {
+		DrawerCommandItem[] commands = new DrawerCommandItem[] {
+				new DrawerCommandItem(0, "Create New World", "Creates a new world")
+		};
+		List<DrawerCommandItem> commandList = new ArrayList<DrawerCommandItem>();
+		Collections.addAll(commandList, commands);
+		return commandList;
+	}
+
+	private void drawerCommandSelected(int position) {
+		Toast.makeText(this, "Drawer command " + position + " tapped", Toast.LENGTH_LONG).show();
 	}
 
 	@Override
@@ -145,6 +247,27 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		setContentView(R.layout.main_layout);
 		Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolbar);
 		setSupportActionBar(myToolbar);
+		// More info: http://codetheory.in/difference-between-setdisplayhomeasupenabled-sethomebuttonenabled-and-setdisplayshowhomeenabled/
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+		selectedFps = (TextView) findViewById(R.id.selected_fps);
+		fpsSeekBar = (SeekBar) findViewById(R.id.desired_fps);
+
+		handler = new Handler();
+		updateFpsRunnable = new Runnable() {
+			@Override
+			public void run() {
+				synchronized (MainActivity.this) {
+					if (simulatorFpsTextView != null) {
+						simulatorFpsTextView.setText(Long.toString(simulatorRunnable.getAvgFps()));
+					}
+					if (drawingFpsTextView != null) {
+						drawingFpsTextView.setText(Long.toString(1000 / drawingAverageFps.getAverage()));
+					}
+				}
+			}
+		};
+
 
 		if (savedInstanceState == null) {
 			simulator = new Simulator(
@@ -192,10 +315,73 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		simulatorRunnable = new SimulatorRunnable(simulator);
 		simulatorRunnable.registerSimulatorRunnableObserver(this);
 
-		simulatorFpsTextView = (TextView) findViewById(R.id.fps_simulator);
-		drawingFpsTextView = (TextView) findViewById(R.id.fps_drawing);
-		simulatorFpsLabelTextView = (TextView) findViewById(R.id.label_fps_simulator);
-		drawingFpsLabelTextView = (TextView) findViewById(R.id.label_fps_drawing);
+		drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+		drawerPane = findViewById(R.id.drawer_pane);
+		drawerList = (ListView) findViewById(R.id.drawer_commands);
+		drawerList.setAdapter(new DrawerListAdapter(getDrawerCommands()));
+		drawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				drawerCommandSelected(position);
+			}
+		});
+		drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open_drawer_description, R.string.close_drawer_description) {
+			@Override
+			public void onDrawerOpened(View drawerView) {
+				super.onDrawerOpened(drawerView);
+				invalidateOptionsMenu();
+				int targetFps = simulatorRunnable.getTargetFps();
+				fpsSeekBar.setProgress(targetFps);
+				if (targetFps == 0) {
+					selectedFps.setText("Paused");
+				} else {
+					selectedFps.setText(Integer.toString(targetFps));
+				}
+				synchronized (MainActivity.this) {
+					simulatorFpsTextView = (TextView) findViewById(R.id.fps_simulator);
+					drawingFpsTextView = (TextView) findViewById(R.id.fps_drawing);
+				}
+			}
+
+			@Override
+			public void onDrawerClosed(View drawerView) {
+				super.onDrawerClosed(drawerView);
+				invalidateOptionsMenu();
+				synchronized (MainActivity.this) {
+					simulatorFpsTextView = null;
+					drawingFpsTextView = null;
+				}
+			}
+		};
+		drawerLayout.setDrawerListener(drawerToggle);
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+//		// If the nav drawer is open, hide action items related to the content view
+//		boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
+//		menu.findItem(R.id.action_search).setVisible(!drawerOpen);
+		return super.onPrepareOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Pass the event to ActionBarDrawerToggle
+		// If it returns true, then it has handled
+		// the nav drawer indicator touch event
+		if (drawerToggle.onOptionsItemSelected(item)) {
+			return true;
+		}
+
+		//TODO: handle own action items
+
+		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+		super.onPostCreate(savedInstanceState);
+		drawerToggle.syncState();
 	}
 
 	@Override
@@ -218,6 +404,10 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 						long now = System.currentTimeMillis();
 						if (lastUpdateFinished > 0 && drawingAverageFps != null) {
 							drawingAverageFps.add(now - lastUpdateFinished);
+							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) {
+								Log.v("Wa-Tor", "Duration since last redraw" + (now - lastUpdateFinished) + " ms");
+								Log.v("Wa-Tor", "Notifying observers took " + (now - startUpdate) + " ms; waiting for next update");
+							}
 						}
 						lastUpdateFinished = now;
 						synchronized (this) {

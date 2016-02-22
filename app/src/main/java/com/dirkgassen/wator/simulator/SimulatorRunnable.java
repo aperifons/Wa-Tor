@@ -44,6 +44,10 @@ public class SimulatorRunnable implements Runnable {
 	private final Set<SimulatorRunnableObserver> simulatorObservers = new HashSet<SimulatorRunnableObserver>();
 
 	final public long getAvgFps() {
+		long avgDuration = tickDuration.getAverage();
+		if (avgDuration == 0) {
+			return 0;
+		}
 		return 1000 / tickDuration.getAverage();
 	}
 
@@ -88,9 +92,9 @@ public class SimulatorRunnable implements Runnable {
 					observer.simulatorUpdated(simulator);
 				}
 				long duration = System.currentTimeMillis() - startUpdate;
+				tickDuration.add(duration);
 				if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) {
 					// Calculate some statistics
-					tickDuration.add(duration);
 					Log.v("Wa-Tor", "World tick took " + duration + " ms (avg: " + tickDuration.getAverage() + " ms)");
 				}
 				long sleepTime = 1000 / targetFps - duration;
