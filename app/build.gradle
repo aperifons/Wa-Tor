@@ -44,6 +44,9 @@ if (project.hasProperty("signing.properties") && new File(project.property("sign
 				signingConfig signingConfigs.release
 			}
 		}
+		lintOptions {
+			abortOnError false
+		}
 	}
 }
 
