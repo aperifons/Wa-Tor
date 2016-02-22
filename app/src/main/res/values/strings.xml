@@ -9,8 +9,6 @@
 	<string name="label_fps_drawing">Draw:</string>
 	<string name="initial_fish_count_label">Initial no. of fish:</string>
 	<string name="fish_breed_time_label">Fish breed time:</string>
-	<string name="world_width_label">World width:</string>
-	<string name="world_height_label">World height:</string>
 	<string name="initial_shark_count_label">Initial no. of shark:</string>
 	<string name="shark_breed_time">Shark breed time:</string>
 	<string name="shark_starve_time_label">Shark breed time:</string>

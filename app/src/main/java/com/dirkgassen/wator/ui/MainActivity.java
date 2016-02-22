@@ -179,8 +179,8 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		}
 		// Note: not synchronizing here, but rather a rudimentary check to avoid posting if it's not
 		// necessary. If the drawer opens while we are executing and one of these fields change to non-null
-		// then the framerate will be update next time. If it's the other way around the updateFpsRunnable
-		// shoud synchronize and check again.
+		// then the frame rate will be update next time. If it's the other way around the updateFpsRunnable
+		// should synchronize and check again.
 		if (simulatorFpsTextView != null || drawingFpsTextView != null) {
 			handler.post(updateFpsRunnable);
 		}

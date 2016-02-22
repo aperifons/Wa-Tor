@@ -42,13 +42,12 @@ import android.widget.ImageView;
  */
 public class WatorDisplay extends Fragment implements WorldObserver {
 
-	private Handler handler;
 
 	private ImageView watorDisplay;
 
-	int[] fishAgeColors;
+	private int[] fishAgeColors;
 
-	int[] sharkAgeColors;
+	private int[] sharkAgeColors;
 
 	private int waterColor;
 
@@ -58,7 +57,8 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 
 	private int[] pixels;
 
-	private Runnable updateImageRunner = new Runnable() {
+	private Handler handler;
+	final private Runnable updateImageRunner = new Runnable() {
 		@Override
 		public void run() {
 			synchronized (WatorDisplay.this) {

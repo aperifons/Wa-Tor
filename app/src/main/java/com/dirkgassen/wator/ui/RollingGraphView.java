@@ -49,14 +49,14 @@ public class RollingGraphView extends View {
 	private int oldestValue;
 	private int currentValue = -1; // No values yet
 	private Bitmap rollingGraphBitmap;
-	Canvas rollingGraphCanvas;
-	private Handler handler;
+	private Canvas rollingGraphCanvas;
 	private int maxValues;
 	private boolean horizontal;
-	Paint seriesPaint;
+	private Paint seriesPaint;
 	private boolean bitMapIsInvalid;
-	Rect nameBounds;
-	private Runnable invalidateRunner = new Runnable() {
+	private Rect nameBounds;
+	final private Handler handler;
+	final private Runnable invalidateRunner = new Runnable() {
 		@Override
 		public void run() {
 			invalidate();

@@ -164,7 +164,7 @@ final public class Simulator {
 			return maxSharkHunger;
 		}
 
-		protected void setWorldToPaint(short[] newWorld) {
+		private void setWorldToPaint(short[] newWorld) {
 			if (world == null || world.length != newWorld.length) {
 				world = new short[newWorld.length];
 			}
@@ -294,7 +294,7 @@ final public class Simulator {
 		currentWorld[x + y * worldWidth] = (short) ((currentHunger << 8) | currentReproduceAge);
 	}
 
-	private void calculateNeightbours(int no, int[] neighbours) {
+	private void calculateNeighbours(int no, int[] neighbours) {
 		final int x = no % worldWidth;
 		final int y = no / worldWidth;
 		final int left   = x == 0               ? x - 1 + worldWidth  : x - 1;
@@ -336,11 +336,11 @@ final public class Simulator {
 			int no = start + offset;
 			if (nextWorld[no] < 0) {
 				// Fish
-				calculateNeightbours(no, neighbours);
+				calculateNeighbours(no, neighbours);
 				calculateFish(random, no, neighbours, emptyNeighbourPos);
 			} else if (nextWorld[no] > 0) {
 				// Sharl
-				calculateNeightbours(no, neighbours);
+				calculateNeighbours(no, neighbours);
 				calculateShark(random, no, neighbours, emptyNeighbourPos, fishNeighbourPos);
 			}
 			cellProcessed[no] = true;
