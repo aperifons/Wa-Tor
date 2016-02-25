@@ -16,4 +16,7 @@
 	<string name="world_size_x_label">x</string>
 	<string name="open_drawer_description">Show options</string>
 	<string name="close_drawer_description">Close options</string>
+	<string name="cancel">Cancel</string>
+	<string name="create_new_world">Create</string>
+	<string name="wator_logo_description">Wa-Tor Logo</string>
 </resources>

@@ -55,17 +55,19 @@
 				android:layout_below="@+id/main_toolbar"
 				android:layout_above="@id/wator_statistics_fragment"
 				tools:layout="@layout/wator_display"/>
-<!--
-		<fragment
+
+		<FrameLayout
 				android:name="com.dirkgassen.wator.ui.NewWorld"
 				android:id="@+id/new_world_fragment"
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:layout_alignParentBottom="true"
-				android:visibility="gone"
-				tools:layout="@layout/new_world"
+				android:alpha=".7"
+				android:background="@android:color/white"
+				android:layout_alignParentLeft="true"
+				android:layout_alignParentStart="true"
+				android:layout_centerVertical="true"
 		/>
--->
+
 	</RelativeLayout>
 
 	<!-- Second child: the navigation drawer -->
@@ -74,18 +76,28 @@
 			android:layout_width="280dp"
 			android:layout_height="match_parent"
 			android:background="#ffffffff"
-			android:padding="8dp"
 			android:layout_gravity="start"
 			tools:layout_gravity="">
+
+		<ImageView
+				android:id="@+id/wator_logo"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:background="@color/water"
+				android:scaleType="fitEnd"
+				android:src="@drawable/wator_logo"
+				android:padding="8dp"
+				android:contentDescription="@string/wator_logo_description"/>
 
 		<SeekBar
 				android:id="@+id/desired_fps"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
-				android:layout_alignParentTop="true"
+				android:layout_below="@id/wator_logo"
 				android:layout_alignParentLeft="true"
 				android:layout_alignParentStart="true"
-		        android:max="120"
+				android:layout_margin="16dp"
+				android:max="120"
 		/>
 
 		<TextView
@@ -94,6 +106,7 @@
 				android:layout_height="wrap_content"
 				android:layout_centerInParent="true"
 				android:layout_below="@id/desired_fps"
+				android:padding="8dp"
 				tools:text="30fps"/>
 
 		<TextView
@@ -103,6 +116,7 @@
 				android:layout_below="@id/selected_fps"
 				android:layout_alignParentLeft="true"
 				android:layout_alignParentStart="true"
+				android:padding="4dp"
 				android:text="@string/fps_simulator_label"
 		/>
 
@@ -114,6 +128,7 @@
 				android:layout_alignBaseline="@id/label_fps_simulator"
 				android:layout_toRightOf="@id/label_fps_simulator"
 				android:layout_toEndOf="@id/label_fps_simulator"
+				android:padding="4dp"
 				tools:text="20fps"
 		/>
 
@@ -124,6 +139,7 @@
 				android:layout_alignBaseline="@id/fps_simulator"
 				android:layout_alignParentRight="true"
 				android:layout_alignParentEnd="true"
+				android:padding="4dp"
 				tools:text="30fps"
 		/>
 
@@ -134,6 +150,7 @@
 				android:layout_alignBaseline="@id/fps_drawing"
 				android:layout_toLeftOf="@id/fps_drawing"
 				android:layout_toStartOf="@id/fps_drawing"
+				android:padding="4dp"
 				android:text="@string/label_fps_drawing"
 		/>
 
@@ -141,9 +158,10 @@
 				android:id="@+id/drawer_commands"
 				android:layout_width="match_parent"
 				android:layout_height="match_parent"
-				android:layout_below="@id/label_fps_drawing"
+				android:layout_below="@id/label_fps_simulator"
 				android:choiceMode="singleChoice"
-				tools:listitem="@layout/drawer_command_item"/>
+				android:padding="8dp"
+				tools:listitem="@layout/drawer_command_item" />
 
 	</RelativeLayout>
 </android.support.v4.widget.DrawerLayout>

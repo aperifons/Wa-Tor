@@ -18,24 +18,89 @@
 package com.dirkgassen.wator.ui;
 
 import com.dirkgassen.wator.R;
+import com.dirkgassen.wator.simulator.WorldHost;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 
 /**
  * @author dirk.
  */
 public class NewWorld extends Fragment {
 
+	interface WorldCreator {
+		void createWorld(short width, short height, short fishBreedTime, short sharkBreedTime, short sharkStarveTime, int initialFishCount, int initialSharkCount);
+		void cancelCreateWorld();
+	}
+
+	private EditText worldWidthEdit;
+	private EditText worldHeightEdit;
+	private EditText fishBreedEdit;
+	private EditText sharkBreedEdit;
+	private EditText sharkStarveEdit;
+	private EditText initialFishEdit;
+	private EditText initialSharkEdit;
+
+	private WorldCreator worldCreator;
+
+	private void createWorld() {
+		short worldWidth = Short.valueOf(worldWidthEdit.getText().toString());
+		short worldHeight = Short.valueOf(worldHeightEdit.getText().toString());
+		short fishBreedTime = Short.valueOf(fishBreedEdit.getText().toString());
+		short sharkBreedTime = Short.valueOf(sharkBreedEdit.getText().toString());
+		short sharkStarveTime = Short.valueOf(sharkStarveEdit.getText().toString());
+		short initialFishCount = Short.valueOf(initialFishEdit.getText().toString());
+		short initialSharkCount = Short.valueOf(initialSharkEdit.getText().toString());
+		worldCreator.createWorld(
+				worldWidth, worldHeight,
+				fishBreedTime,
+				sharkBreedTime, sharkStarveTime,
+				initialFishCount, initialSharkCount);
+	}
+
 	@Nullable
 	@Override
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.new_world, container, false /* attachToRoot */);
+		v.findViewById(R.id.create_new_world).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				createWorld();
+			}
+		});
+		v.findViewById(R.id.cancel_new_world).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				worldCreator.cancelCreateWorld();
+			}
+		});
+
+		worldWidthEdit = (EditText) v.findViewById(R.id.world_width);
+		worldHeightEdit = (EditText) v.findViewById(R.id.world_height);
+		fishBreedEdit = (EditText) v.findViewById(R.id.fish_breed_time);
+		sharkBreedEdit = (EditText) v.findViewById(R.id.shark_breed_time);
+		sharkStarveEdit = (EditText) v.findViewById(R.id.shark_starve);
+		initialFishEdit = (EditText) v.findViewById(R.id.initial_fish_count);
+		initialSharkEdit = (EditText) v.findViewById(R.id.initial_shark_count);
 		return v;
+	}
+
+	@Override
+	public void onAttach(Context context) {
+		super.onAttach(context);
+		FragmentActivity hostActivity = getActivity();
+		if (hostActivity instanceof WorldHost) {
+			worldCreator = (WorldCreator) hostActivity;
+		} else {
+			worldCreator = null;
+		}
 	}
 
 }

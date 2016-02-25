@@ -33,6 +33,9 @@ import com.dirkgassen.wator.simulator.WorldObserver;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -49,14 +52,13 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * @author dirk.
  */
 // Adding the hamburger menu: followed this tutorial:
 //     http://codetheory.in/android-navigation-drawer/
-public class MainActivity extends AppCompatActivity implements WorldHost, SimulatorRunnable.SimulatorRunnableObserver {
+public class MainActivity extends AppCompatActivity implements WorldHost, SimulatorRunnable.SimulatorRunnableObserver, NewWorld.WorldCreator {
 
 	class DrawerCommandItem {
 		public final int icon;
@@ -153,6 +155,8 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	private ListView drawerList;
 
+	private Fragment newWorldFragment;
+
 	private ActionBarDrawerToggle drawerToggle;
 
 	private Handler handler;
@@ -196,48 +200,102 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	}
 
 	private void drawerCommandSelected(int position) {
-		Toast.makeText(this, "Drawer command " + position + " tapped", Toast.LENGTH_LONG).show();
+		switch (position) {
+			case 0: // New world
+				drawerLayout.closeDrawers();
+				toggleNewWorldFragment();
+				break;
+		}
+	}
+
+	synchronized private void hideNewWorldFragment() {
+		if (newWorldFragment != null) {
+			FragmentManager fm = getSupportFragmentManager();
+			FragmentTransaction ft = fm.beginTransaction();
+			ft.remove(newWorldFragment);
+			newWorldFragment = null;
+			ft.commit();
+		}
+	}
+
+	synchronized private void toggleNewWorldFragment() {
+		FragmentManager fm = getSupportFragmentManager();
+		FragmentTransaction ft = fm.beginTransaction();
+		if (newWorldFragment == null) {
+			newWorldFragment = new NewWorld();
+			ft.add(R.id.new_world_fragment, newWorldFragment);
+		} else {
+			ft.remove(newWorldFragment);
+			newWorldFragment = null;
+		}
+		ft.commit();
+
+	}
+
+	@Override
+	public void createWorld(short width, short height, short fishBreedTime, short sharkBreedTime, short sharkStarveTime, int initialFishCount, int initialSharkCount) {
+		simulator = new Simulator(
+				width, height,
+				fishBreedTime,
+				sharkBreedTime, sharkStarveTime,
+				initialFishCount, initialSharkCount
+		);
+		simulatorRunnable.stopTicking();
+		simulatorRunnable = new SimulatorRunnable(simulator);
+		simulatorRunnable.registerSimulatorRunnableObserver(this);
+		Thread simulatorThread = new Thread(simulatorRunnable, getString(R.string.simulatorThreadName));
+		simulatorThread.start();
+		hideNewWorldFragment();
+	}
+
+	@Override
+	public void cancelCreateWorld() {
+		hideNewWorldFragment();
 	}
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		Simulator.WorldInspector world = simulator.getWorldToPaint();
-		int fishCount = world.getFishCount();
-		int sharkCount = world.getSharkCount();
-		short[] fishAge = new short[fishCount];
-		short[] fishPosX = new short[fishCount];
-		short[] fishPosY = new short[fishCount];
-		short[] sharkAge = new short[sharkCount];
-		short[] sharkHunger = new short[sharkCount];
-		short[] sharkPosX = new short[sharkCount];
-		short[] sharkPosY = new short[sharkCount];
-		int fishNo = 0;
-		int sharkNo = 0;
-		do {
-			if (world.isFish()) {
-				fishAge[fishNo] = world.getFishAge();
-				fishPosX[fishNo] = world.getCurrentX();
-				fishPosY[fishNo++] = world.getCurrentY();
-			} else if (world.isShark()) {
-				sharkAge[sharkNo] = world.getSharkAge();
-				sharkHunger[sharkNo] = world.getSharkHunger();
-				sharkPosX[sharkNo] = world.getCurrentX();
-				sharkPosY[sharkNo++] = world.getCurrentY();
-			}
-		} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
-		outState.putShortArray(FISH_AGE_KEY, fishAge);
-		outState.putShortArray(FISH_POSITIONS_X_KEY, fishPosX);
-		outState.putShortArray(FISH_POSITIONS_Y_KEY, fishPosY);
-		outState.putShortArray(SHARK_AGE_KEY, sharkAge);
-		outState.putShortArray(SHARK_HUNGER_KEY, sharkHunger);
-		outState.putShortArray(SHARK_POSITIONS_X_KEY, sharkPosX);
-		outState.putShortArray(SHARK_POSITIONS_Y_KEY, sharkPosY);
-		outState.putShort(WORLD_WIDTH_KEY, world.getWorldWidth());
-		outState.putShort(WORLD_HEIGHT_KEY, world.getWorldHeight());
-		outState.putShort(FISH_REPRODUCTION_AGE_KEY, world.getFishReproduceAge());
-		outState.putShort(SHARK_REPRODUCTION_AGE_KEY, world.getSharkReproduceAge());
-		outState.putShort(SHARK_MAX_HUNGER_KEY, world.getMaxSharkHunger());
-		outState.putShort(SHARK_MAX_HUNGER_KEY, world.getMaxSharkHunger());
+		try {
+			int fishCount = world.getFishCount();
+			int sharkCount = world.getSharkCount();
+			short[] fishAge = new short[fishCount];
+			short[] fishPosX = new short[fishCount];
+			short[] fishPosY = new short[fishCount];
+			short[] sharkAge = new short[sharkCount];
+			short[] sharkHunger = new short[sharkCount];
+			short[] sharkPosX = new short[sharkCount];
+			short[] sharkPosY = new short[sharkCount];
+			int fishNo = 0;
+			int sharkNo = 0;
+			do {
+				if (world.isFish()) {
+					fishAge[fishNo] = world.getFishAge();
+					fishPosX[fishNo] = world.getCurrentX();
+					fishPosY[fishNo++] = world.getCurrentY();
+				} else if (world.isShark()) {
+					sharkAge[sharkNo] = world.getSharkAge();
+					sharkHunger[sharkNo] = world.getSharkHunger();
+					sharkPosX[sharkNo] = world.getCurrentX();
+					sharkPosY[sharkNo++] = world.getCurrentY();
+				}
+			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
+			outState.putShortArray(FISH_AGE_KEY, fishAge);
+			outState.putShortArray(FISH_POSITIONS_X_KEY, fishPosX);
+			outState.putShortArray(FISH_POSITIONS_Y_KEY, fishPosY);
+			outState.putShortArray(SHARK_AGE_KEY, sharkAge);
+			outState.putShortArray(SHARK_HUNGER_KEY, sharkHunger);
+			outState.putShortArray(SHARK_POSITIONS_X_KEY, sharkPosX);
+			outState.putShortArray(SHARK_POSITIONS_Y_KEY, sharkPosY);
+			outState.putShort(WORLD_WIDTH_KEY, world.getWorldWidth());
+			outState.putShort(WORLD_HEIGHT_KEY, world.getWorldHeight());
+			outState.putShort(FISH_REPRODUCTION_AGE_KEY, world.getFishBreedTime());
+			outState.putShort(SHARK_REPRODUCTION_AGE_KEY, world.getSharkBreedTime());
+			outState.putShort(SHARK_MAX_HUNGER_KEY, world.getSharkStarveTime());
+			outState.putShort(SHARK_MAX_HUNGER_KEY, world.getSharkStarveTime());
+		} finally {
+			world.release();
+		}
 		super.onSaveInstanceState(outState);
 	}
 
@@ -262,7 +320,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 						simulatorFpsTextView.setText(Long.toString(simulatorRunnable.getAvgFps()));
 					}
 					if (drawingFpsTextView != null) {
-						drawingFpsTextView.setText(Long.toString(1000 / drawingAverageFps.getAverage()));
+						drawingFpsTextView.setText(Long.toString(drawingAverageFps.getAverage() == 0 ? 0 : 1000 / drawingAverageFps.getAverage()));
 					}
 				}
 			}
@@ -330,14 +388,14 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			public void onDrawerOpened(View drawerView) {
 				super.onDrawerOpened(drawerView);
 				invalidateOptionsMenu();
-				int targetFps = simulatorRunnable.getTargetFps();
-				fpsSeekBar.setProgress(targetFps);
-				if (targetFps == 0) {
-					selectedFps.setText("Paused");
-				} else {
-					selectedFps.setText(Integer.toString(targetFps));
-				}
 				synchronized (MainActivity.this) {
+					int targetFps = simulatorRunnable.getTargetFps();
+					fpsSeekBar.setProgress(targetFps);
+					if (targetFps == 0) {
+						selectedFps.setText("Paused");
+					} else {
+						selectedFps.setText(Integer.toString(targetFps));
+					}
 					simulatorFpsTextView = (TextView) findViewById(R.id.fps_simulator);
 					drawingFpsTextView = (TextView) findViewById(R.id.fps_drawing);
 				}
@@ -466,4 +524,5 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			}
 		}
 	}
+
 }

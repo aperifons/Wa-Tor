@@ -74,7 +74,7 @@ public class SimulatorTest {
 	}
 
 	@Test
-	public void testFishReproduce() {
+	public void testFishBreed() {
 		Simulator simulator = new Simulator(
 				(short) 3 /* width */,
 				(short) 3 /* height */,

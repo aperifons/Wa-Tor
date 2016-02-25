@@ -58,16 +58,8 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 	private int[] pixels;
 
 	private Handler handler;
-	final private Runnable updateImageRunner = new Runnable() {
-		@Override
-		public void run() {
-			synchronized (WatorDisplay.this) {
-				if (planetBitmap != null) {
-					watorDisplay.setImageBitmap(planetBitmap);
-				}
-			}
-		}
-	};
+
+	private Runnable updateImageRunner;
 
 	private int[] calculateIndividualAgeColors(int max, int youngColor, int oldColor) {
 		final int[] colors = new int[max];
@@ -98,6 +90,16 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 	public void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		handler = new Handler();
+		updateImageRunner = new Runnable() {
+			@Override
+			public void run() {
+				synchronized (WatorDisplay.this) {
+					if (planetBitmap != null) {
+						watorDisplay.setImageBitmap(planetBitmap);
+					}
+				}
+			}
+		};
 		waterColor = ContextCompat.getColor(this.getContext(), R.color.water);
 	}
 
@@ -144,26 +146,26 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 
 		int worldWidth = world.getWorldWidth();
 		int worldHeight = world.getWorldHeight();
-		int fishReproduceAge = world.getFishReproduceAge();
-		int sharkMaxHunger = world.getMaxSharkHunger();
+		int fishBreedTime = world.getFishBreedTime();
+		int sharkStarveTime = world.getSharkStarveTime();
 
 		if (planetBitmap == null || planetBitmap.getWidth() != worldWidth || planetBitmap.getHeight() != worldHeight) {
 			if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "(Re)creating bitmap/pixels"); }
 			planetBitmap = Bitmap.createBitmap(worldWidth, worldHeight, Bitmap.Config.ARGB_8888);
 			pixels = new int[worldWidth * worldHeight];
 		}
-		if (fishAgeColors == null || fishAgeColors.length != fishReproduceAge) {
+		if (fishAgeColors == null || fishAgeColors.length != fishBreedTime) {
 			if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "(Re)creating fish colors"); }
 			fishAgeColors = calculateIndividualAgeColors(
-					fishReproduceAge,
+					fishBreedTime,
 					ContextCompat.getColor(getContext(), R.color.fish_young),
 					ContextCompat.getColor(getContext(), R.color.fish_old)
 			);
 		}
-		if (sharkAgeColors == null || sharkAgeColors.length != sharkMaxHunger) {
+		if (sharkAgeColors == null || sharkAgeColors.length != sharkStarveTime) {
 			if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "(Re)creating shark colors"); }
 			sharkAgeColors = calculateIndividualAgeColors(
-					sharkMaxHunger,
+					sharkStarveTime,
 					ContextCompat.getColor(getContext(), R.color.shark_young),
 					ContextCompat.getColor(getContext(), R.color.shark_old)
 			);
