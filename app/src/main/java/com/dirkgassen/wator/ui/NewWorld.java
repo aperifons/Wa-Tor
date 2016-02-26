@@ -94,13 +94,13 @@ public class NewWorld extends Fragment {
 		if (worldParameters == null) {
 			worldParameters = new WorldParameters();
 		}
-		worldWidthEdit.setText(Short.toString(worldParameters.getWidth()));
-		worldHeightEdit.setText(Short.toString(worldParameters.getHeight()));
-		fishBreedEdit.setText(Short.toString(worldParameters.getFishBreedTime()));
-		sharkBreedEdit.setText(Short.toString(worldParameters.getSharkBreedTime()));
-		sharkStarveEdit.setText(Short.toString(worldParameters.getSharkStarveTime()));
-		initialFishEdit.setText(Integer.toString(worldParameters.getInitialFishCount()));
-		initialSharkEdit.setText(Integer.toString(worldParameters.getInitialSharkCount()));
+		worldWidthEdit.setText(String.format("%d", worldParameters.getWidth()));
+		worldHeightEdit.setText(String.format("%d", worldParameters.getHeight()));
+		fishBreedEdit.setText(String.format("%d", worldParameters.getFishBreedTime()));
+		sharkBreedEdit.setText(String.format("%d", worldParameters.getSharkBreedTime()));
+		sharkStarveEdit.setText(String.format("%d", worldParameters.getSharkStarveTime()));
+		initialFishEdit.setText(String.format("%d", worldParameters.getInitialFishCount()));
+		initialSharkEdit.setText(String.format("%d", worldParameters.getInitialSharkCount()));
 
 		return v;
 	}

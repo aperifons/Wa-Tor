@@ -384,7 +384,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 					currentSimFps.setVisibility(View.INVISIBLE);
 					currentSimFpsLabel.setVisibility(View.INVISIBLE);
 				} else {
-					selectedFps.setText(Integer.toString(newFps));
+					selectedFps.setText(String.format("%d", newFps));
 					currentDrawFps.setVisibility(View.VISIBLE);
 					currentDrawFpsLabel.setVisibility(View.VISIBLE);
 					currentSimFps.setVisibility(View.VISIBLE);
@@ -414,10 +414,10 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			public void run() {
 				synchronized (MainActivity.this) {
 					if (simulatorFpsTextView != null) {
-						simulatorFpsTextView.setText(Long.toString(simulatorRunnable.getAvgFps()));
+						simulatorFpsTextView.setText(String.format("%d", simulatorRunnable.getAvgFps()));
 					}
 					if (drawingFpsTextView != null) {
-						drawingFpsTextView.setText(Long.toString(drawingAverageFps.getAverage() == 0 ? 0 : 1000 / drawingAverageFps.getAverage()));
+						drawingFpsTextView.setText(String.format("%d", drawingAverageFps.getAverage() == 0 ? 0 : 1000 / drawingAverageFps.getAverage()));
 					}
 				}
 			}
