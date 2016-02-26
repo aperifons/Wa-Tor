@@ -19,6 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.dirkgassen.wator.simulator.Simulator;
+import com.dirkgassen.wator.simulator.WorldParameters;
 
 /**
  * @author dirk.
@@ -28,11 +29,15 @@ public class SimulatorTest {
 	@Test
 	public void testOneFishMoves() {
 		Simulator simulator = new Simulator(
-				(short) 5 /* width */,
-				(short) 5 /* height */,
-				(short) 2 /* fish reproduction age */,
-				(short) 2 /* shark reproduction age */,
-				(short) 2 /* shark max hunger */);
+				new WorldParameters()
+						.setWidth((short) 5)
+						.setHeight((short) 5)
+						.setFishBreedTime((short) 2)
+						.setSharkBreedTime((short) 2)
+						.setSharkStarveTime((short) 2)
+						.setInitialFishCount(0)
+						.setInitialSharkCount(0)
+		);
 		simulator.setFish(2, 2, (short) 1);
 
 		simulator.tick();
@@ -76,11 +81,15 @@ public class SimulatorTest {
 	@Test
 	public void testFishBreed() {
 		Simulator simulator = new Simulator(
-				(short) 3 /* width */,
-				(short) 3 /* height */,
-				(short) 2 /* fish reproduction age */,
-				(short) 2 /* shark reproduction age */,
-				(short) 2 /* shark max hunger */);
+				new WorldParameters()
+						.setWidth((short) 3)
+						.setHeight((short) 3)
+						.setFishBreedTime((short) 2)
+						.setSharkBreedTime((short) 2)
+						.setSharkStarveTime((short) 2)
+						.setInitialFishCount(0)
+						.setInitialSharkCount(0)
+		);
 		simulator.setFish(1, 1);
 
 		for (int tickNo = 0; tickNo < 6; tickNo++) {
@@ -105,11 +114,15 @@ public class SimulatorTest {
 	@Test
 	public void testSharkStarve() {
 		Simulator simulator = new Simulator(
-				(short) 3 /* width */,
-				(short) 3 /* height */,
-				(short) 2 /* fish reproduction age */,
-				(short) 10 /* shark reproduction age */,
-				(short) 3 /* shark max hunger */);
+				new WorldParameters()
+						.setWidth((short) 3)
+						.setHeight((short) 3)
+						.setFishBreedTime((short) 2)
+						.setSharkBreedTime((short) 10)
+						.setSharkStarveTime((short) 3)
+						.setInitialFishCount(0)
+						.setInitialSharkCount(0)
+		);
 		simulator.setShark(0, 0, (short) 1, (short) 3);
 		simulator.setShark(1, 1, (short) 1, (short) 1);
 		simulator.setShark(2, 2, (short) 1, (short) 2);
@@ -137,11 +150,15 @@ public class SimulatorTest {
 	@Test
 	public void testSharkCantMoveAndStarve() {
 		Simulator simulator = new Simulator(
-				(short) 3 /* width */,
-				(short) 3 /* height */,
-				(short) 2 /* fish reproduction age */,
-				(short) 10 /* shark reproduction age */,
-				(short) 1 /* shark max hunger */);
+				new WorldParameters()
+						.setWidth((short) 3)
+						.setHeight((short) 3)
+						.setFishBreedTime((short) 2)
+						.setSharkBreedTime((short) 10)
+						.setSharkStarveTime((short) 1)
+						.setInitialFishCount(0)
+						.setInitialSharkCount(0)
+		);
 		for (int x = 0; x < 3; x++) {
 			for (int y = 0; y < 3; y++) {
 				simulator.setShark(x, y, (short) 1, (short) 1);
@@ -169,11 +186,15 @@ public class SimulatorTest {
 	@Test
 	public void testOneSharkFullOfFishMoves() {
 		Simulator simulator = new Simulator(
-				(short) 3 /* width */,
-				(short) 3 /* height */,
-				(short) 2 /* fish reproduction age */,
-				(short) 2 /* shark reproduction age */,
-				(short) 2 /* shark max hunger */);
+				new WorldParameters()
+						.setWidth((short) 3)
+						.setHeight((short) 3)
+						.setFishBreedTime((short) 2)
+						.setSharkBreedTime((short) 2)
+						.setSharkStarveTime((short) 2)
+						.setInitialFishCount(0)
+						.setInitialSharkCount(0)
+		);
 		for (int x = 0; x < 3; x++) {
 			for (int y = 0; y < 3; y++) {
 				if (x == 1 && y == 1) {
@@ -212,13 +233,15 @@ public class SimulatorTest {
 	@Test
 	public void testSharkAndFishCount() throws InterruptedException {
 		final Simulator simulator = new Simulator(
-				(short) 100 /* width */,
-				(short) 100 /* height */,
-				(short) 2 /* fish reproduction age */,
-				(short) 4 /* shark reproduction age */,
-				(short) 3 /* shark max hunger */,
-				2000,
-				1500);
+				new WorldParameters()
+						.setWidth((short) 100)
+						.setHeight((short) 100)
+						.setFishBreedTime((short) 2)
+						.setSharkBreedTime((short) 4)
+						.setSharkStarveTime((short) 3)
+						.setInitialFishCount(2000)
+						.setInitialSharkCount(1500)
+		);
 
 		for (int tickNo = 0; tickNo < 100; tickNo++) {
 			final Simulator.WorldInspector world = simulator.getWorldToPaint();
@@ -245,6 +268,60 @@ public class SimulatorTest {
 			} finally {
 				world.release();
 			}
+		}
+	}
+
+	@Test
+	public void testSharkStarveNoMovement() {
+
+		final Simulator simulator = new Simulator(
+				new WorldParameters()
+				.setWidth((short) 3)
+				.setHeight((short) 3)
+				.setFishBreedTime((short) 2)
+				.setSharkBreedTime((short) 4)
+				.setSharkStarveTime((short) 3)
+				.setInitialFishCount(0)
+				.setInitialSharkCount(0)
+		);
+
+		for (int x = 0; x < 3; x++) {
+			for (int y = 0; y < 3; y++) {
+				simulator.setShark(x, y, (short) 1, (short) 1);
+			}
+		}
+
+		simulator.tick();
+		Simulator.WorldInspector world = simulator.getWorldToPaint();
+		try {
+			do {
+				Assert.assertTrue("World should be full of shark", world.isShark());
+				Assert.assertEquals("Wrong shark age", 2, world.getSharkAge());
+			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
+		} finally {
+			world.release();
+		}
+
+		simulator.tick();
+		world = simulator.getWorldToPaint();
+		try {
+			do {
+				Assert.assertTrue("World should be full of shark", world.isShark());
+				Assert.assertEquals("Wrong shark age", 3, world.getSharkAge());
+			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
+		} finally {
+			world.release();
+		}
+
+
+		simulator.tick();
+		world = simulator.getWorldToPaint();
+		try {
+			do {
+				Assert.assertTrue("World should be empty", world.isEmpty());
+			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
+		} finally {
+			world.release();
 		}
 	}
 

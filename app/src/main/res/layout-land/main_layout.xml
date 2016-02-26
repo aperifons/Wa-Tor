@@ -37,7 +37,7 @@
 				android:elevation="4dp"
 				android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
 				app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-				tools:ignore="UnusedAttribute"/>
+				tools:ignore="UnusedAttribute" />
 
 		<fragment
 				android:name="com.dirkgassen.wator.ui.WatorStatistics"
@@ -48,7 +48,7 @@
 				android:layout_alignParentRight="true"
 				android:layout_alignParentEnd="true"
 				tools:layout="@layout/fish_shark_history_graph"
-				tools:ignore="UnusedAttribute"/>
+				tools:ignore="UnusedAttribute" />
 
 		<fragment
 				android:name="com.dirkgassen.wator.ui.WatorDisplay"
@@ -59,7 +59,18 @@
 				android:layout_toStartOf="@id/wator_statistics_fragment"
 				android:layout_below="@id/main_toolbar"
 				android:layout_alignParentBottom="true"
-				tools:layout="@layout/wator_display"/>
+				tools:layout="@layout/wator_display" />
+
+		<FrameLayout
+				android:name="com.dirkgassen.wator.ui.NewWorld"
+				android:id="@+id/new_world_fragment"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:alpha=".8"
+				android:background="@android:color/white"
+				android:layout_below="@id/main_toolbar"
+				android:layout_centerHorizontal="true"
+				tools:layout="@id/new_world_fragment" />
 
 	</RelativeLayout>
 
@@ -69,19 +80,52 @@
 			android:layout_width="280dp"
 			android:layout_height="match_parent"
 			android:background="#ffffffff"
-			android:padding="8dp"
 			android:layout_gravity="start"
 			tools:layout_gravity="">
+
+		<ImageView
+				android:id="@+id/wator_logo"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:background="@color/dark_water"
+				android:scaleType="fitEnd"
+				android:src="@drawable/wator_logo"
+				android:padding="20dp"
+				android:contentDescription="@string/wator_logo_description"/>
+
+		<TextView
+				android:id="@+id/drawer_subtitle"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="@string/wator_synopsis"
+				android:textSize="12sp"
+				android:layout_alignBottom="@id/wator_logo"
+				android:layout_alignLeft="@id/wator_logo"
+				android:layout_alignStart="@id/wator_logo"
+				android:padding="10dp"
+				android:textColor="@android:color/white"/>
+
+		<TextView
+				android:id="@+id/drawer_title"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="@string/wator_name"
+				android:textColor="@android:color/white"
+				android:textSize="20sp"
+				android:padding="10dp"
+		        android:layout_above="@id/drawer_subtitle"
+				android:layout_alignLeft="@id/drawer_subtitle"
+				android:layout_alignStart="@id/drawer_subtitle" />
 
 		<SeekBar
 				android:id="@+id/desired_fps"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
-				android:layout_alignParentTop="true"
+				android:layout_below="@id/wator_logo"
 				android:layout_alignParentLeft="true"
 				android:layout_alignParentStart="true"
-				android:max="120"
-		/>
+				android:layout_margin="16dp"
+				android:max="120" />
 
 		<TextView
 				android:id="@+id/selected_fps"
@@ -89,6 +133,7 @@
 				android:layout_height="wrap_content"
 				android:layout_centerInParent="true"
 				android:layout_below="@id/desired_fps"
+				android:padding="4dp"
 				tools:text="30fps"/>
 
 		<TextView
@@ -98,8 +143,8 @@
 				android:layout_below="@id/selected_fps"
 				android:layout_alignParentLeft="true"
 				android:layout_alignParentStart="true"
-				android:text="@string/fps_simulator_label"
-		/>
+				android:padding="4dp"
+				android:text="@string/fps_simulator_label"/>
 
 		<TextView
 				android:id="@+id/fps_simulator"
@@ -109,8 +154,8 @@
 				android:layout_alignBaseline="@id/label_fps_simulator"
 				android:layout_toRightOf="@id/label_fps_simulator"
 				android:layout_toEndOf="@id/label_fps_simulator"
-				tools:text="20fps"
-		/>
+				android:padding="4dp"
+				tools:text="20fps"/>
 
 		<TextView
 				android:id="@+id/fps_drawing"
@@ -119,8 +164,8 @@
 				android:layout_alignBaseline="@id/fps_simulator"
 				android:layout_alignParentRight="true"
 				android:layout_alignParentEnd="true"
-				tools:text="30fps"
-		/>
+				android:padding="4dp"
+				tools:text="30fps"/>
 
 		<TextView
 				android:id="@+id/label_fps_drawing"
@@ -129,15 +174,16 @@
 				android:layout_alignBaseline="@id/fps_drawing"
 				android:layout_toLeftOf="@id/fps_drawing"
 				android:layout_toStartOf="@id/fps_drawing"
-				android:text="@string/label_fps_drawing"
-		/>
+				android:padding="4dp"
+				android:text="@string/label_fps_drawing"/>
 
 		<ListView
 				android:id="@+id/drawer_commands"
 				android:layout_width="match_parent"
 				android:layout_height="match_parent"
-				android:layout_below="@id/label_fps_drawing"
+				android:layout_below="@id/label_fps_simulator"
 				android:choiceMode="singleChoice"
+				android:padding="8dp"
 				tools:listitem="@layout/drawer_command_item"/>
 
 	</RelativeLayout>

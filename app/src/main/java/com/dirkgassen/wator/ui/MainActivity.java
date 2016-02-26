@@ -29,6 +29,7 @@ import com.dirkgassen.wator.simulator.Simulator;
 import com.dirkgassen.wator.simulator.SimulatorRunnable;
 import com.dirkgassen.wator.simulator.WorldHost;
 import com.dirkgassen.wator.simulator.WorldObserver;
+import com.dirkgassen.wator.simulator.WorldParameters;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -115,21 +116,16 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	private static final String SHARK_HUNGER_KEY = "sharkHunger";
 	private static final String FISH_POSITIONS_X_KEY = "fishPositionsX";
 	private static final String FISH_POSITIONS_Y_KEY = "fishPositionsY";
-	private static final String FISH_REPRODUCTION_AGE_KEY = "fishReproductionAge";
-	private static final String SHARK_REPRODUCTION_AGE_KEY = "sharkReproductionAge";
-	private static final String SHARK_MAX_HUNGER_KEY = "fishMaxHunger";
+	private static final String FISH_BREED_TIME_KEY = "fishReproductionAge";
+	private static final String SHARK_BREED_TIME_KEY = "sharkReproductionAge";
+	private static final String SHARK_STARVE_TIME_KEY = "fishMaxHunger";
 	private static final String SHARK_POSITIONS_X_KEY = "sharkPositionsX";
 	private static final String SHARK_POSITIONS_Y_KEY = "sharkPositionsY";
 	private static final String WORLD_WIDTH_KEY = "worldWidth";
 	private static final String WORLD_HEIGHT_KEY = "worldHeight";
+	private static final String INITIAL_FISH_COUNT_KEY = "initialFishCount";
+	private static final String INITIAL_SHARK_COUNT_KEY = "initialSharkCount";
 
-	private static final short FISH_REPRODUCTION_AGE = 12;
-	private static final short SHARK_REPRODUCTION_AGE = 7;
-	private static final short SHARK_MAX_HUNGER = 18;
-	private static final short WORLD_WIDTH = 200;
-	private static final short WORLD_HEIGHT = 200;
-	private static final int INITIAL_FISH = 600;
-	private static final int INITIAL_SHARK = 350;
 
 	private final Set<WorldObserver> worldObservers = new HashSet<WorldObserver>();
 
@@ -162,6 +158,8 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	private Handler handler;
 
 	private Runnable updateFpsRunnable;
+
+	private WorldParameters previousWorldParameters;
 
 	private void worldUpdated() {
 		synchronized (worldObservers) {
@@ -222,9 +220,11 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		FragmentManager fm = getSupportFragmentManager();
 		FragmentTransaction ft = fm.beginTransaction();
 		if (newWorldFragment == null) {
+			ft.setCustomAnimations(R.anim.slide_down, R.anim.slide_down);
 			newWorldFragment = new NewWorld();
 			ft.add(R.id.new_world_fragment, newWorldFragment);
 		} else {
+			ft.setCustomAnimations(R.anim.slide_up, R.anim.slide_up);
 			ft.remove(newWorldFragment);
 			newWorldFragment = null;
 		}
@@ -233,13 +233,17 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	}
 
 	@Override
-	public void createWorld(short width, short height, short fishBreedTime, short sharkBreedTime, short sharkStarveTime, int initialFishCount, int initialSharkCount) {
-		simulator = new Simulator(
-				width, height,
-				fishBreedTime,
-				sharkBreedTime, sharkStarveTime,
-				initialFishCount, initialSharkCount
-		);
+	public WorldParameters getPreviousWorldParameters() {
+		if (previousWorldParameters == null) {
+			return new WorldParameters();
+		}
+		return previousWorldParameters;
+	}
+
+	@Override
+	public void createWorld(WorldParameters worldParameters) {
+		previousWorldParameters = worldParameters;
+		simulator = new Simulator(worldParameters);
 		simulatorRunnable.stopTicking();
 		simulatorRunnable = new SimulatorRunnable(simulator);
 		simulatorRunnable.registerSimulatorRunnableObserver(this);
@@ -289,10 +293,15 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			outState.putShortArray(SHARK_POSITIONS_Y_KEY, sharkPosY);
 			outState.putShort(WORLD_WIDTH_KEY, world.getWorldWidth());
 			outState.putShort(WORLD_HEIGHT_KEY, world.getWorldHeight());
-			outState.putShort(FISH_REPRODUCTION_AGE_KEY, world.getFishBreedTime());
-			outState.putShort(SHARK_REPRODUCTION_AGE_KEY, world.getSharkBreedTime());
-			outState.putShort(SHARK_MAX_HUNGER_KEY, world.getSharkStarveTime());
-			outState.putShort(SHARK_MAX_HUNGER_KEY, world.getSharkStarveTime());
+			outState.putShort(FISH_BREED_TIME_KEY, world.getFishBreedTime());
+			outState.putShort(SHARK_BREED_TIME_KEY, world.getSharkBreedTime());
+			outState.putShort(SHARK_STARVE_TIME_KEY, world.getSharkStarveTime());
+
+			if (previousWorldParameters == null) {
+				previousWorldParameters = new WorldParameters();
+			}
+			outState.putInt(INITIAL_FISH_COUNT_KEY, previousWorldParameters.getInitialFishCount());
+			outState.putInt(INITIAL_SHARK_COUNT_KEY, previousWorldParameters.getInitialSharkCount());
 		} finally {
 			world.release();
 		}
@@ -329,18 +338,16 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 		if (savedInstanceState == null) {
 			simulator = new Simulator(
-					WORLD_WIDTH, WORLD_HEIGHT,
-					FISH_REPRODUCTION_AGE,
-					SHARK_REPRODUCTION_AGE, SHARK_MAX_HUNGER,
-					INITIAL_FISH, INITIAL_SHARK
+					new WorldParameters()
 			);
 		} else {
-			simulator = new Simulator(
-					savedInstanceState.getShort(WORLD_WIDTH_KEY), savedInstanceState.getShort(WORLD_HEIGHT_KEY),
-					savedInstanceState.getShort(FISH_REPRODUCTION_AGE_KEY),
-					savedInstanceState.getShort(SHARK_REPRODUCTION_AGE_KEY),
-					savedInstanceState.getShort(SHARK_MAX_HUNGER_KEY)
-			);
+			WorldParameters parameters = new WorldParameters()
+					.setWidth(savedInstanceState.getShort(WORLD_WIDTH_KEY))
+					.setHeight(savedInstanceState.getShort(WORLD_HEIGHT_KEY))
+					.setFishBreedTime(savedInstanceState.getShort(FISH_BREED_TIME_KEY))
+					.setSharkBreedTime(savedInstanceState.getShort(SHARK_BREED_TIME_KEY))
+					.setSharkStarveTime(savedInstanceState.getShort(SHARK_STARVE_TIME_KEY));
+			simulator = new Simulator(parameters);
 			short[] fishAge = savedInstanceState.getShortArray(FISH_AGE_KEY);
 			if (fishAge != null) {
 				short[] fishPosX = savedInstanceState.getShortArray(FISH_POSITIONS_X_KEY);
@@ -367,6 +374,16 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 						}
 					}
 				}
+			}
+
+			if (savedInstanceState.containsKey(INITIAL_FISH_COUNT_KEY) || savedInstanceState.containsKey(INITIAL_SHARK_COUNT_KEY)) {
+				if (savedInstanceState.containsKey(INITIAL_FISH_COUNT_KEY)) {
+					parameters.setInitialFishCount(savedInstanceState.getInt(INITIAL_FISH_COUNT_KEY));
+				}
+				if (savedInstanceState.containsKey(INITIAL_SHARK_COUNT_KEY)) {
+					parameters.setInitialSharkCount(savedInstanceState.getInt(INITIAL_SHARK_COUNT_KEY));
+				}
+				previousWorldParameters = parameters;
 			}
 		}
 
@@ -440,6 +457,8 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	protected void onPostCreate(@Nullable Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
 		drawerToggle.syncState();
+		FragmentManager fm = getSupportFragmentManager();
+		newWorldFragment = fm.findFragmentById(R.id.new_world_fragment);
 	}
 
 	@Override

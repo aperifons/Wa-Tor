@@ -216,31 +216,22 @@ final public class Simulator {
 	}
 
 
-	public Simulator(short worldWidth, short worldHeight, short fishBreedTime, short sharkBreedTime, short sharkStarveTime) {
-		this(worldWidth, worldHeight, fishBreedTime, sharkBreedTime, sharkStarveTime, 0, 0);
-	}
-
-	public Simulator(short worldWidth, short worldHeight, short fishBreedTime, short sharkBreedTime, short sharkStarveTime, int initialFishCount, int initialSharkCount) {
+	public Simulator(WorldParameters worldParameters) {
+		worldParameters.verify();
+		this.worldWidth = worldParameters.getWidth();
+		this.worldHeight = worldParameters.getHeight();
 		int worldSize = worldWidth * worldHeight;
-		this.worldWidth = worldWidth;
-		this.worldHeight = worldHeight;
-		if (initialFishCount + initialSharkCount > worldSize) {
-			throw new IllegalArgumentException("Can't have " + initialFishCount + " fish and " + initialSharkCount + " sharks in a world with " + worldSize + " cells");
-		}
-		if (sharkBreedTime > MAX_SHARK_BREED_TIME) {
-			throw new IllegalArgumentException("Shark reproduction age " + sharkBreedTime + " too large");
-		}
-		if (sharkStarveTime > MAX_SHARK_STARVE_TIME) {
-			throw new IllegalArgumentException("Shark max hunger " + sharkStarveTime + " too large");
-		}
-		this.fishBreedTime = fishBreedTime;
-		this.sharkBreedTime = sharkBreedTime;
-		this.sharkStarveTime = sharkStarveTime;
+		this.fishBreedTime = worldParameters.getFishBreedTime();
+		this.sharkBreedTime = worldParameters.getSharkBreedTime();
+		this.sharkStarveTime = worldParameters.getSharkStarveTime();
+
 		this.currentWorld = new short[worldSize];
 		this.nextWorld = new short[worldSize];
 		this.cellProcessed = new boolean[worldSize];
+
 		Random random = new Random();
-		while (initialFishCount-- > 0) {
+		int count = worldParameters.getInitialFishCount();
+		while (count-- > 0) {
 			int cellNo;
 			do {
 				cellNo = random.nextInt(worldSize);
@@ -248,7 +239,8 @@ final public class Simulator {
 			// Note: age is 1-based!
 			currentWorld[cellNo] = (short) (-random.nextInt(fishBreedTime) - 1);
 		}
-		while (initialSharkCount-- > 0) {
+		count = worldParameters.getInitialSharkCount();
+		while (count-- > 0) {
 			int cellNo;
 			do {
 				cellNo = random.nextInt(worldSize);
@@ -290,10 +282,13 @@ final public class Simulator {
 			throw new IllegalArgumentException("Y coordinate " + y + " is out of bounds (height = " + worldHeight + ")");
 		}
 		if (currentBreedTime <= 0) {
-			throw new IllegalArgumentException("Shark cannot have negative or zero reproduction age");
+			throw new IllegalArgumentException("Shark cannot have negative or zero breed age");
 		}
-		if (currentBreedTime > fishBreedTime) {
-			throw new IllegalArgumentException("Shark reproduction age " + currentBreedTime + " too old (max = " + sharkBreedTime + ")");
+		if (currentHunger <= 0) {
+			throw new IllegalArgumentException("Shark cannot have negative or zero hunger");
+		}
+		if (currentBreedTime > sharkBreedTime + 1) {
+			throw new IllegalArgumentException("Shark breed time " + currentBreedTime + " too old (max = " + sharkBreedTime + ")");
 		}
 		currentWorld[x + y * worldWidth] = (short) ((currentHunger << 8) | currentBreedTime);
 	}
@@ -393,38 +388,38 @@ final public class Simulator {
 				fishNeighbourPos[fishNeighbours++] = neighbourNo;
 			}
 		}
-		final short currentCompositeAge = nextWorld[no];
 		if (fishNeighbours > 0) {
 			// we can eat a fish :) so ignore the hunger
-			short currentBreedTime = (short) (currentCompositeAge & 255);
+			short currentBreedTime = (short) (nextWorld[no] & 255);
 			int newNo = fishNeighbourPos[fishNeighbours == 1 ? 0 : random.nextInt(fishNeighbours)];
+			final short compositeHunger = 1 << 8;
 			if (currentBreedTime > sharkBreedTime) {
 				// eat fish, reproduce and move
-				nextWorld[newNo] = (1 << 8) + 1;
-				nextWorld[no] = (1 << 8) + 1;
+				nextWorld[newNo] = compositeHunger | 1;
+				nextWorld[no] = compositeHunger | 1;
 			} else {
 				// just eat the fish, increase current breed time and move
-				nextWorld[newNo] = (short) ((1 << 8) | (currentBreedTime + 1));
+				nextWorld[newNo] = (short) (compositeHunger | (currentBreedTime + 1));
 				nextWorld[no] = 0;
 			}
 			cellProcessed[newNo] = true;
 		} else {
 			// can't eat a fish :/ so we need to check if we starve first
-			short hunger = (short) ((currentCompositeAge >> 8) & 255);
+			short hunger = (short) (nextWorld[no] >> 8);
 			if (hunger >= sharkStarveTime) {
 				// die
 				nextWorld[no] = 0;
 			} else {
-				hunger = (short) ((hunger + 1) & 127);
 				// starve a bit...
-				short currentBreedTime = (short) (currentCompositeAge & 255);
+				hunger++;
+				short currentBreedTime = (short) (nextWorld[no] & 255);
 				if (emptyNeighbours > 0) {
 					// ... and move
 					int newNo = emptyNeighbourPos[emptyNeighbours == 1 ? 0 : random.nextInt(emptyNeighbours)];
 					if (currentBreedTime >= sharkBreedTime) {
 						// reproduce and move
 						nextWorld[newNo] = (short) ((hunger << 8) | 1);
-						nextWorld[no] = (short) ((hunger << 8) | 1);
+						nextWorld[no] = (short) ((1 << 8) | 1);
 					} else {
 						// just move
 						nextWorld[newNo] = (short) ((hunger << 8) | (currentBreedTime + 1));

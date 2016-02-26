@@ -11,7 +11,7 @@
 	<string name="fish_breed_time_label">Fish breed time:</string>
 	<string name="initial_shark_count_label">Initial no. of shark:</string>
 	<string name="shark_breed_time">Shark breed time:</string>
-	<string name="shark_starve_time_label">Shark breed time:</string>
+	<string name="shark_starve_time_label">Shark starve time:</string>
 	<string name="world_size_label">World size:</string>
 	<string name="world_size_x_label">x</string>
 	<string name="open_drawer_description">Show options</string>
@@ -19,4 +19,6 @@
 	<string name="cancel">Cancel</string>
 	<string name="create_new_world">Create</string>
 	<string name="wator_logo_description">Wa-Tor Logo</string>
+	<string name="wator_name">Wa-Tor</string>
+	<string name="wator_synopsis">An eco system simulator</string>
 </resources>

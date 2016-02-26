@@ -19,6 +19,7 @@ package com.dirkgassen.wator.ui;
 
 import com.dirkgassen.wator.R;
 import com.dirkgassen.wator.simulator.WorldHost;
+import com.dirkgassen.wator.simulator.WorldParameters;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -36,7 +37,8 @@ import android.widget.EditText;
 public class NewWorld extends Fragment {
 
 	interface WorldCreator {
-		void createWorld(short width, short height, short fishBreedTime, short sharkBreedTime, short sharkStarveTime, int initialFishCount, int initialSharkCount);
+		WorldParameters getPreviousWorldParameters();
+		void createWorld(WorldParameters worldParameters);
 		void cancelCreateWorld();
 	}
 
@@ -51,18 +53,16 @@ public class NewWorld extends Fragment {
 	private WorldCreator worldCreator;
 
 	private void createWorld() {
-		short worldWidth = Short.valueOf(worldWidthEdit.getText().toString());
-		short worldHeight = Short.valueOf(worldHeightEdit.getText().toString());
-		short fishBreedTime = Short.valueOf(fishBreedEdit.getText().toString());
-		short sharkBreedTime = Short.valueOf(sharkBreedEdit.getText().toString());
-		short sharkStarveTime = Short.valueOf(sharkStarveEdit.getText().toString());
-		short initialFishCount = Short.valueOf(initialFishEdit.getText().toString());
-		short initialSharkCount = Short.valueOf(initialSharkEdit.getText().toString());
 		worldCreator.createWorld(
-				worldWidth, worldHeight,
-				fishBreedTime,
-				sharkBreedTime, sharkStarveTime,
-				initialFishCount, initialSharkCount);
+				new WorldParameters()
+						.setWidth(Short.valueOf(worldWidthEdit.getText().toString()))
+						.setHeight(Short.valueOf(worldHeightEdit.getText().toString()))
+						.setFishBreedTime(Short.valueOf(fishBreedEdit.getText().toString()))
+						.setSharkBreedTime(Short.valueOf(sharkBreedEdit.getText().toString()))
+						.setSharkStarveTime(Short.valueOf(sharkStarveEdit.getText().toString()))
+						.setInitialFishCount(Short.valueOf(initialFishEdit.getText().toString()))
+						.setInitialSharkCount(Short.valueOf(initialSharkEdit.getText().toString()))
+		);
 	}
 
 	@Nullable
@@ -89,6 +89,19 @@ public class NewWorld extends Fragment {
 		sharkStarveEdit = (EditText) v.findViewById(R.id.shark_starve);
 		initialFishEdit = (EditText) v.findViewById(R.id.initial_fish_count);
 		initialSharkEdit = (EditText) v.findViewById(R.id.initial_shark_count);
+
+		WorldParameters worldParameters = worldCreator.getPreviousWorldParameters();
+		if (worldParameters == null) {
+			worldParameters = new WorldParameters();
+		}
+		worldWidthEdit.setText(Short.toString(worldParameters.getWidth()));
+		worldHeightEdit.setText(Short.toString(worldParameters.getHeight()));
+		fishBreedEdit.setText(Short.toString(worldParameters.getFishBreedTime()));
+		sharkBreedEdit.setText(Short.toString(worldParameters.getSharkBreedTime()));
+		sharkStarveEdit.setText(Short.toString(worldParameters.getSharkStarveTime()));
+		initialFishEdit.setText(Integer.toString(worldParameters.getInitialFishCount()));
+		initialSharkEdit.setText(Integer.toString(worldParameters.getInitialSharkCount()));
+
 		return v;
 	}
 
