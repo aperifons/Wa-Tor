@@ -273,7 +273,6 @@ public class SimulatorTest {
 
 	@Test
 	public void testSharkStarveNoMovement() {
-
 		final Simulator simulator = new Simulator(
 				new WorldParameters()
 				.setWidth((short) 3)
@@ -320,6 +319,53 @@ public class SimulatorTest {
 			do {
 				Assert.assertTrue("World should be empty", world.isEmpty());
 			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
+		} finally {
+			world.release();
+		}
+	}
+
+	@Test
+	public void createWorldTest() {
+		final Simulator simulator = new Simulator(
+				new WorldParameters()
+						.setWidth((short) 100)
+						.setHeight((short) 100)
+						.setFishBreedTime((short) 2)
+						.setSharkBreedTime((short) 4)
+						.setSharkStarveTime((short) 3)
+						.setInitialFishCount(500)
+						.setInitialSharkCount(500)
+		);
+
+		Simulator.WorldInspector world = simulator.getWorldToPaint();
+		try {
+			int fishCount = 0;
+			int sharkCount = 0;
+			int emptyCount = 0;
+			do {
+				if (world.isFish()) {
+					short fishAge = world.getFishAge();
+					Assert.assertTrue("Unexpected fish age " + fishAge, fishAge > 0 && fishAge <= 2);
+					Assert.assertEquals("Shouldn't have returned a shark age", 0, world.getSharkAge());
+					Assert.assertEquals("Shouldn't have returned shark hunger", 0, world.getSharkHunger());
+					fishCount++;
+				} else if (world.isShark()) {
+					short sharkAge = world.getSharkAge();
+					short sharkHunger = world.getSharkHunger();
+					Assert.assertTrue("Unexpected shark age " + sharkAge, sharkAge > 0 && sharkAge <= 4);
+					Assert.assertTrue("Unexpected shark hunger " + sharkHunger, sharkHunger > 0 && sharkHunger <= 3);
+					Assert.assertEquals("Shouldn't have returned a fish age", 0, world.getFishAge());
+					sharkCount++;
+				} else {
+					Assert.assertTrue("Hm, cell should be either fish, or shark or empty", world.isEmpty());
+					emptyCount++;
+				}
+			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
+			Assert.assertEquals("Total number of individuals + empty cells should have been equal to world size", world.getWorldWidth() * world.getWorldHeight(), fishCount + sharkCount + emptyCount);
+			Assert.assertEquals("Unexpected number of fish", 500, fishCount);
+			Assert.assertEquals("Unexpected number of shark", 500, sharkCount);
+			Assert.assertEquals("Unexpected fish count reported by world", 500, world.getFishCount());
+			Assert.assertEquals("Unexpected shark count reported by world", 500, world.getSharkCount());
 		} finally {
 			world.release();
 		}
