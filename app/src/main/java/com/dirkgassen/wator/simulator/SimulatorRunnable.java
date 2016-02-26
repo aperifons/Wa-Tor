@@ -68,8 +68,13 @@ public class SimulatorRunnable implements Runnable {
 		return targetFps;
 	}
 
-	public void setTargetFps(int newTargetFps) {
+	synchronized public boolean setTargetFps(int newTargetFps) {
+		if (newTargetFps == targetFps) {
+			return false;
+		}
+		boolean needToStartNewThread = targetFps == 0;
 		targetFps = newTargetFps;
+		return needToStartNewThread;
 	}
 
 	public void stopTicking() {
@@ -97,14 +102,20 @@ public class SimulatorRunnable implements Runnable {
 					// Calculate some statistics
 					Log.v("Wa-Tor", "World tick took " + duration + " ms (avg: " + tickDuration.getAverage() + " ms)");
 				}
-				long sleepTime = 1000 / targetFps - duration;
-				if (sleepTime < 10 /* ms */) {
-					sleepTime = 10 /* ms */;
-					if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) {
-						Log.v("Wa-Tor", "World tick took TOO LONG! Sleeping " + sleepTime + " ms");
+				synchronized (this) {
+					if (targetFps == 0) {
+						simulatorTickThread = null;
+					} else {
+						long sleepTime = 1000 / targetFps - duration;
+						if (sleepTime < 10 /* ms */) {
+							sleepTime = 10 /* ms */;
+							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) {
+								Log.v("Wa-Tor", "World tick took TOO LONG! Sleeping " + sleepTime + " ms");
+							}
+						}
+						Thread.sleep(sleepTime);
 					}
 				}
-				Thread.sleep(sleepTime);
 			}
 		} catch (InterruptedException e) {
 			if (Log.isLoggable("Wa-Tor", Log.DEBUG)) {

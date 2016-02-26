@@ -61,6 +61,7 @@ import android.widget.TextView;
 //     http://codetheory.in/android-navigation-drawer/
 public class MainActivity extends AppCompatActivity implements WorldHost, SimulatorRunnable.SimulatorRunnableObserver, NewWorld.WorldCreator {
 
+
 	class DrawerCommandItem {
 		public final int icon;
 		public final String title;
@@ -111,6 +112,10 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	}
 
+	private static final int fpsValues[] = new int[] {
+			0, // paused
+			1, 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 30, 35, 40, 45, 50, 60, 80, 100
+	};
 	private static final String FISH_AGE_KEY = "fishAge";
 	private static final String SHARK_AGE_KEY = "sharkAge";
 	private static final String SHARK_HUNGER_KEY = "sharkHunger";
@@ -125,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	private static final String WORLD_HEIGHT_KEY = "worldHeight";
 	private static final String INITIAL_FISH_COUNT_KEY = "initialFishCount";
 	private static final String INITIAL_SHARK_COUNT_KEY = "initialSharkCount";
+	private static final String TARGET_FPS_KEY = "targetFps";
 
 
 	private final Set<WorldObserver> worldObservers = new HashSet<WorldObserver>();
@@ -138,6 +144,15 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	private RollingAverage drawingAverageFps;
 
 	private TextView selectedFps;
+
+	private TextView currentDrawFpsLabel;
+
+	private TextView currentSimFpsLabel;
+
+	private TextView currentSimFps;
+
+	private TextView currentDrawFps;
+
 
 	private SeekBar fpsSeekBar;
 
@@ -242,13 +257,16 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	@Override
 	public void createWorld(WorldParameters worldParameters) {
+		int targetFps = simulatorRunnable != null ? simulatorRunnable.getTargetFps() : -1;
 		previousWorldParameters = worldParameters;
 		simulator = new Simulator(worldParameters);
 		simulatorRunnable.stopTicking();
 		simulatorRunnable = new SimulatorRunnable(simulator);
+		if (targetFps >= 0) {
+			simulatorRunnable.setTargetFps(targetFps);
+		}
 		simulatorRunnable.registerSimulatorRunnableObserver(this);
-		Thread simulatorThread = new Thread(simulatorRunnable, getString(R.string.simulatorThreadName));
-		simulatorThread.start();
+		startSimulatorThread();
 		hideNewWorldFragment();
 	}
 
@@ -261,36 +279,63 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	protected void onSaveInstanceState(Bundle outState) {
 		Simulator.WorldInspector world = simulator.getWorldToPaint();
 		try {
-			int fishCount = world.getFishCount();
-			int sharkCount = world.getSharkCount();
-			short[] fishAge = new short[fishCount];
-			short[] fishPosX = new short[fishCount];
-			short[] fishPosY = new short[fishCount];
-			short[] sharkAge = new short[sharkCount];
-			short[] sharkHunger = new short[sharkCount];
-			short[] sharkPosX = new short[sharkCount];
-			short[] sharkPosY = new short[sharkCount];
+			final int fishCount = world.getFishCount();
+			final int sharkCount = world.getSharkCount();
+			final short[] fishAge;
+			final short[] fishPosX;
+			final short[] fishPosY;
+			if (fishCount == 0) {
+				fishAge = fishPosX = fishPosY = null;
+			} else {
+				fishAge = new short[fishCount];
+				fishPosX = new short[fishCount];
+				fishPosY = new short[fishCount];
+			}
+			final short[] sharkAge;
+			final short[] sharkHunger;
+			final short[] sharkPosX;
+			final short[] sharkPosY;
+			if (sharkCount == 0) {
+				sharkAge = sharkHunger = sharkPosX = sharkPosY = null;
+			} else {
+				sharkAge = new short[sharkCount];
+				sharkHunger = new short[sharkCount];
+				sharkPosX = new short[sharkCount];
+				sharkPosY = new short[sharkCount];
+			}
+
 			int fishNo = 0;
 			int sharkNo = 0;
 			do {
 				if (world.isFish()) {
+					//noinspection ConstantConditions
 					fishAge[fishNo] = world.getFishAge();
+					//noinspection ConstantConditions
 					fishPosX[fishNo] = world.getCurrentX();
+					//noinspection ConstantConditions
 					fishPosY[fishNo++] = world.getCurrentY();
 				} else if (world.isShark()) {
+					//noinspection ConstantConditions
 					sharkAge[sharkNo] = world.getSharkAge();
+					//noinspection ConstantConditions
 					sharkHunger[sharkNo] = world.getSharkHunger();
+					//noinspection ConstantConditions
 					sharkPosX[sharkNo] = world.getCurrentX();
+					//noinspection ConstantConditions
 					sharkPosY[sharkNo++] = world.getCurrentY();
 				}
 			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
-			outState.putShortArray(FISH_AGE_KEY, fishAge);
-			outState.putShortArray(FISH_POSITIONS_X_KEY, fishPosX);
-			outState.putShortArray(FISH_POSITIONS_Y_KEY, fishPosY);
-			outState.putShortArray(SHARK_AGE_KEY, sharkAge);
-			outState.putShortArray(SHARK_HUNGER_KEY, sharkHunger);
-			outState.putShortArray(SHARK_POSITIONS_X_KEY, sharkPosX);
-			outState.putShortArray(SHARK_POSITIONS_Y_KEY, sharkPosY);
+			if (fishCount > 0) {
+				outState.putShortArray(FISH_AGE_KEY, fishAge);
+				outState.putShortArray(FISH_POSITIONS_X_KEY, fishPosX);
+				outState.putShortArray(FISH_POSITIONS_Y_KEY, fishPosY);
+			}
+			if (sharkCount > 0) {
+				outState.putShortArray(SHARK_AGE_KEY, sharkAge);
+				outState.putShortArray(SHARK_HUNGER_KEY, sharkHunger);
+				outState.putShortArray(SHARK_POSITIONS_X_KEY, sharkPosX);
+				outState.putShortArray(SHARK_POSITIONS_Y_KEY, sharkPosY);
+			}
 			outState.putShort(WORLD_WIDTH_KEY, world.getWorldWidth());
 			outState.putShort(WORLD_HEIGHT_KEY, world.getWorldHeight());
 			outState.putShort(FISH_BREED_TIME_KEY, world.getFishBreedTime());
@@ -302,6 +347,10 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			}
 			outState.putInt(INITIAL_FISH_COUNT_KEY, previousWorldParameters.getInitialFishCount());
 			outState.putInt(INITIAL_SHARK_COUNT_KEY, previousWorldParameters.getInitialSharkCount());
+
+			if (simulatorRunnable != null) {
+				outState.putInt(TARGET_FPS_KEY, simulatorRunnable.getTargetFps());
+			}
 		} finally {
 			world.release();
 		}
@@ -318,7 +367,46 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 		selectedFps = (TextView) findViewById(R.id.selected_fps);
+		currentSimFps = (TextView) findViewById(R.id.fps_simulator);
+		currentSimFpsLabel = (TextView) findViewById(R.id.label_fps_simulator);
+		currentDrawFps = (TextView) findViewById(R.id.fps_drawing);
+		currentDrawFpsLabel = (TextView) findViewById(R.id.label_fps_drawing);
 		fpsSeekBar = (SeekBar) findViewById(R.id.desired_fps);
+		fpsSeekBar.setMax(fpsValues.length-1);
+		fpsSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				final int newFps = fpsValues[progress];
+				if (newFps == 0) {
+					selectedFps.setText(R.string.paused);
+					currentDrawFps.setVisibility(View.INVISIBLE);
+					currentDrawFpsLabel.setVisibility(View.INVISIBLE);
+					currentSimFps.setVisibility(View.INVISIBLE);
+					currentSimFpsLabel.setVisibility(View.INVISIBLE);
+				} else {
+					selectedFps.setText(Integer.toString(newFps));
+					currentDrawFps.setVisibility(View.VISIBLE);
+					currentDrawFpsLabel.setVisibility(View.VISIBLE);
+					currentSimFps.setVisibility(View.VISIBLE);
+					currentSimFpsLabel.setVisibility(View.VISIBLE);
+				}
+				if (fromUser) {
+					if (simulatorRunnable.setTargetFps(newFps)) {
+						startSimulatorThread();
+					}
+				}
+			}
+
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {
+				// Unused, don't do anything here
+			}
+
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {
+				// Unused, don't do anything here
+			}
+		});
 
 		handler = new Handler();
 		updateFpsRunnable = new Runnable() {
@@ -346,7 +434,9 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 					.setHeight(savedInstanceState.getShort(WORLD_HEIGHT_KEY))
 					.setFishBreedTime(savedInstanceState.getShort(FISH_BREED_TIME_KEY))
 					.setSharkBreedTime(savedInstanceState.getShort(SHARK_BREED_TIME_KEY))
-					.setSharkStarveTime(savedInstanceState.getShort(SHARK_STARVE_TIME_KEY));
+					.setSharkStarveTime(savedInstanceState.getShort(SHARK_STARVE_TIME_KEY))
+					.setInitialFishCount(0)
+					.setInitialSharkCount(0);
 			simulator = new Simulator(parameters);
 			short[] fishAge = savedInstanceState.getShortArray(FISH_AGE_KEY);
 			if (fishAge != null) {
@@ -385,9 +475,13 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 				}
 				previousWorldParameters = parameters;
 			}
+
 		}
 
 		simulatorRunnable = new SimulatorRunnable(simulator);
+		if (savedInstanceState != null && savedInstanceState.containsKey(TARGET_FPS_KEY)) {
+			simulatorRunnable.setTargetFps(savedInstanceState.getInt(TARGET_FPS_KEY));
+		}
 		simulatorRunnable.registerSimulatorRunnableObserver(this);
 
 		drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -407,11 +501,11 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 				invalidateOptionsMenu();
 				synchronized (MainActivity.this) {
 					int targetFps = simulatorRunnable.getTargetFps();
-					fpsSeekBar.setProgress(targetFps);
-					if (targetFps == 0) {
-						selectedFps.setText("Paused");
-					} else {
-						selectedFps.setText(Integer.toString(targetFps));
+					for (int no = 0; no < fpsValues.length; no++) {
+						if (fpsValues[no] >= targetFps) {
+							fpsSeekBar.setProgress(no);
+							break;
+						}
 					}
 					simulatorFpsTextView = (TextView) findViewById(R.id.fps_simulator);
 					drawingFpsTextView = (TextView) findViewById(R.id.fps_drawing);
@@ -502,6 +596,10 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		};
 		worldUpdateNotifierThread.start();
 
+		startSimulatorThread();
+	}
+
+	private void startSimulatorThread() {
 		Thread simulatorThread = new Thread(simulatorRunnable, getString(R.string.simulatorThreadName));
 		simulatorThread.start();
 	}
