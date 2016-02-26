@@ -65,7 +65,8 @@
 				android:background="@android:color/white"
 				android:layout_below="@id/main_toolbar"
 				android:layout_centerHorizontal="true"
-				tools:layout="@id/new_world_fragment" />
+				tools:layout="@id/new_world_fragment"
+				tools:ignore="UnusedAttribute" />
 
 	</RelativeLayout>
 

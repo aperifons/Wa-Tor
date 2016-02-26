@@ -498,7 +498,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			@Override
 			public void onDrawerOpened(View drawerView) {
 				super.onDrawerOpened(drawerView);
-				invalidateOptionsMenu();
+				supportInvalidateOptionsMenu();
 				synchronized (MainActivity.this) {
 					int targetFps = simulatorRunnable.getTargetFps();
 					for (int no = 0; no < fpsValues.length; no++) {
@@ -515,7 +515,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			@Override
 			public void onDrawerClosed(View drawerView) {
 				super.onDrawerClosed(drawerView);
-				invalidateOptionsMenu();
+				supportInvalidateOptionsMenu();
 				synchronized (MainActivity.this) {
 					simulatorFpsTextView = null;
 					drawingFpsTextView = null;
