@@ -17,6 +17,8 @@
 
 package com.dirkgassen.wator.ui;
 
+import java.util.Locale;
+
 import com.dirkgassen.wator.R;
 import com.dirkgassen.wator.simulator.WorldHost;
 import com.dirkgassen.wator.simulator.WorldParameters;
@@ -94,13 +96,13 @@ public class NewWorld extends Fragment {
 		if (worldParameters == null) {
 			worldParameters = new WorldParameters();
 		}
-		worldWidthEdit.setText(String.format("%d", worldParameters.getWidth()));
-		worldHeightEdit.setText(String.format("%d", worldParameters.getHeight()));
-		fishBreedEdit.setText(String.format("%d", worldParameters.getFishBreedTime()));
-		sharkBreedEdit.setText(String.format("%d", worldParameters.getSharkBreedTime()));
-		sharkStarveEdit.setText(String.format("%d", worldParameters.getSharkStarveTime()));
-		initialFishEdit.setText(String.format("%d", worldParameters.getInitialFishCount()));
-		initialSharkEdit.setText(String.format("%d", worldParameters.getInitialSharkCount()));
+		worldWidthEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getWidth()));
+		worldHeightEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getHeight()));
+		fishBreedEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getFishBreedTime()));
+		sharkBreedEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getSharkBreedTime()));
+		sharkStarveEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getSharkStarveTime()));
+		initialFishEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getInitialFishCount()));
+		initialSharkEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getInitialSharkCount()));
 
 		return v;
 	}

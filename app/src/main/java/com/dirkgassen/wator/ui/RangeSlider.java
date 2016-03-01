@@ -17,6 +17,8 @@
 
 package com.dirkgassen.wator.ui;
 
+import java.util.Locale;
+
 import com.dirkgassen.wator.R;
 
 import android.content.Context;
@@ -245,7 +247,7 @@ public class RangeSlider extends View {
 
 		canvas.drawLine(paddingLeft + thumbSize / 2, sliderY, getWidth() - paddingRight - thumbSize / 2, sliderY, sliderPaint);
 
-		String valueString = String.format("%d", value);
+		String valueString = String.format(Locale.getDefault(), "%d", value);
 		final float valueWidth = (thumbTextPaint.measureText(valueString, 0, valueString.length()));
 
 		float thumbTip = positionFromValue(paddingLeft, paddingRight);

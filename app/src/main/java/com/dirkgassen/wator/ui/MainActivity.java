@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import com.dirkgassen.wator.R;
@@ -384,7 +385,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 					currentSimFps.setVisibility(View.INVISIBLE);
 					currentSimFpsLabel.setVisibility(View.INVISIBLE);
 				} else {
-					selectedFps.setText(String.format("%d", newFps));
+					selectedFps.setText(String.format(Locale.getDefault(), "%d", newFps));
 					currentDrawFps.setVisibility(View.VISIBLE);
 					currentDrawFpsLabel.setVisibility(View.VISIBLE);
 					currentSimFps.setVisibility(View.VISIBLE);
@@ -414,10 +415,10 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			public void run() {
 				synchronized (MainActivity.this) {
 					if (simulatorFpsTextView != null) {
-						simulatorFpsTextView.setText(String.format("%d", simulatorRunnable.getAvgFps()));
+						simulatorFpsTextView.setText(String.format(Locale.getDefault(), "%d", simulatorRunnable.getAvgFps()));
 					}
 					if (drawingFpsTextView != null) {
-						drawingFpsTextView.setText(String.format("%d", drawingAverageFps.getAverage() == 0 ? 0 : 1000 / drawingAverageFps.getAverage()));
+						drawingFpsTextView.setText(String.format(Locale.getDefault(), "%d", drawingAverageFps.getAverage() == 0 ? 0 : 1000 / drawingAverageFps.getAverage()));
 					}
 				}
 			}
