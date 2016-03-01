@@ -17,7 +17,7 @@
   -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
+              xmlns:tools="http://schemas.android.com/tools" xmlns:app="http://schemas.android.com/apk/res-auto"
               android:orientation="vertical"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content">
@@ -32,10 +32,12 @@
 		/>
 		<EditText
 				android:id="@+id/world_width"
-				android:layout_width="60dp"
+				android:layout_width="80dp"
 				android:layout_height="wrap_content"
 				android:inputType="number"
-				tools:text="200"/>
+				android:textAlignment="center"
+				tools:text="200"
+				tools:ignore="RtlCompat,UnusedAttribute"/>
 		<TextView
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
@@ -43,124 +45,100 @@
 		/>
 		<EditText
 				android:id="@+id/world_height"
-				android:layout_width="40dp"
+				android:layout_width="80dp"
 				android:layout_height="wrap_content"
 				android:inputType="number"
+				android:textAlignment="center"
 				tools:text="100"
-		/>
+				tools:ignore="RtlCompat,UnusedAttribute"/>
 	</LinearLayout>
 
-	<LinearLayout
+	<TableLayout
+			android:id="@+id/left_column"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:orientation="horizontal"
-			android:baselineAligned="false">
-		<RelativeLayout
-				android:id="@+id/left_column"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_weight="1">
-			<EditText
-					android:id="@+id/initial_fish_count"
-					android:layout_width="40dp"
-					android:layout_height="wrap_content"
-					android:layout_alignParentRight="true"
-					android:layout_alignParentEnd="true"
-					android:inputType="number"
-					tools:text="200"/>
-			<EditText
-					android:id="@+id/fish_breed_time"
-					android:layout_width="40dp"
-					android:layout_height="wrap_content"
-					android:layout_alignParentRight="true"
-					android:layout_alignParentEnd="true"
-					android:layout_below="@id/initial_fish_count"
-					android:inputType="number"
-					tools:text="3"
-			/>
+			android:stretchColumns="1,3">
+		<TableRow>
 			<TextView
 					android:id="@+id/initial_fish_count_label"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:text="@string/initial_fish_count_label"
-					android:layout_toLeftOf="@id/initial_fish_count"
-					android:layout_toStartOf="@id/initial_fish_count"
-					android:layout_alignBaseline="@id/initial_fish_count"
-			/>
-			<TextView
-					android:id="@+id/fish_breed_time_label"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text="@string/fish_breed_time_label"
-					android:layout_toLeftOf="@id/fish_breed_time"
-					android:layout_toStartOf="@id/fish_breed_time"
-					android:layout_alignBaseline="@id/fish_breed_time"
-			/>
-		</RelativeLayout>
-
-		<RelativeLayout
-				android:id="@+id/right_column"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_weight="1">
-			<EditText
-					android:id="@+id/initial_shark_count"
-					android:layout_width="40dp"
-					android:layout_height="wrap_content"
-					android:layout_alignParentRight="true"
-					android:layout_alignParentEnd="true"
-					android:inputType="number"
-					tools:text="100"
 			/>
 			<EditText
-					android:id="@+id/shark_breed_time"
+					android:id="@+id/initial_fish_count"
 					android:layout_width="40dp"
 					android:layout_height="wrap_content"
-					android:layout_alignParentRight="true"
-					android:layout_alignParentEnd="true"
-					android:layout_below="@id/initial_shark_count"
 					android:inputType="number"
-					tools:text="10"
-			/>
-			<EditText
-					android:id="@+id/shark_starve"
-					android:layout_width="40dp"
-					android:layout_height="wrap_content"
-					android:layout_alignParentRight="true"
-					android:layout_alignParentEnd="true"
-					android:layout_below="@id/shark_breed_time"
-					android:inputType="number"
-					tools:text="3"
-			/>
+					android:textAlignment="textEnd"
+					tools:text="200"
+					tools:ignore="RtlCompat,UnusedAttribute"/>
 			<TextView
 					android:id="@+id/initial_shark_count_label"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:text="@string/initial_shark_count_label"
-					android:layout_toLeftOf="@id/initial_shark_count"
-					android:layout_toStartOf="@id/initial_shark_count"
-					android:layout_alignBaseline="@id/initial_shark_count"
 			/>
+			<EditText
+					android:id="@+id/initial_shark_count"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:inputType="number"
+					android:textAlignment="textEnd"
+					tools:text="100"
+					tools:ignore="RtlCompat,UnusedAttribute"/>
+		</TableRow>
+		<TableRow>
+			<TextView
+					android:id="@+id/fish_breed_time_label"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/fish_breed_time_label"
+			/>
+			<EditText
+					android:id="@+id/fish_breed_time"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:inputType="number"
+					android:textAlignment="textEnd"
+					tools:text="3"
+					tools:ignore="RtlCompat,UnusedAttribute"/>
 			<TextView
 					android:id="@+id/shark_breed_time_label"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:text="@string/shark_breed_time"
-					android:layout_toLeftOf="@id/shark_breed_time"
-					android:layout_toStartOf="@id/shark_breed_time"
-					android:layout_alignBaseline="@id/shark_breed_time"
 			/>
+			<EditText
+					android:id="@+id/shark_breed_time"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:inputType="number"
+					android:textAlignment="textEnd"
+					tools:text="10"
+					tools:ignore="RtlCompat,UnusedAttribute"/>
+		</TableRow>
+		<TableRow>
+			<FrameLayout tools:ignore="UselessLeaf"/>
+			<FrameLayout tools:ignore="UselessLeaf"/>
 			<TextView
 					android:id="@+id/shark_starve_label"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:text="@string/shark_starve_time_label"
-					android:layout_toLeftOf="@id/shark_starve"
-					android:layout_toStartOf="@id/shark_starve"
-					android:layout_alignBaseline="@id/shark_starve"
+					android:layout_column="2"
 			/>
-		</RelativeLayout>
-	</LinearLayout>
+			<EditText
+					android:id="@+id/shark_starve"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:inputType="number"
+					android:textAlignment="textEnd"
+					android:layout_column="3"
+					tools:text="3"
+					tools:ignore="RtlCompat,UnusedAttribute"/>
+		</TableRow>
+	</TableLayout>
 
 	<LinearLayout
 			android:layout_width="wrap_content"
@@ -178,5 +156,16 @@
 				android:layout_height="wrap_content"
 				android:text="@string/create_new_world"/>
 	</LinearLayout>
+
+	<com.dirkgassen.wator.ui.RangeSlider
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			app:minValue="1"
+			app:maxValue="200"
+			android:value="1"
+			android:padding="10dp"
+			android:textSize="14sp"
+			android:color="@color/fish_old"
+	/>
 
 </LinearLayout>

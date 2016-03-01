@@ -31,4 +31,16 @@
 		<attr name="android:background"/>
 		<attr name="android:backgroundTint"/>
 	</declare-styleable>
+
+	<declare-styleable name="RangeSlider">
+		<attr name="minValue" format="integer" />
+		<attr name="maxValue" format="integer" />
+		<attr name="thumbPadding" format="dimension" />
+		<attr name="android:value" />
+		<attr name="logarithmic" format="boolean"/>
+		<attr name="android:textSize"/>
+		<attr name="android:fontFamily"/>
+		<attr name="android:color" />
+		<attr name="android:textColor" />
+	</declare-styleable>
 </resources>

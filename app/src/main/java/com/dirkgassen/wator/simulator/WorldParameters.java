@@ -24,10 +24,10 @@ public class WorldParameters {
 	private short width = 300;
 	private short height = 200;
 	private int initialFishCount = 600;
-	private int initialSharkCount = 450;
+	private int initialSharkCount = 550;
 	private short fishBreedTime = 14;
 	private short sharkBreedTime = 12;
-	private short sharkStarveTime = 15;
+	private short sharkStarveTime = 7;
 	private short sharkNewbornHunger = -50;
 
 	public short getWidth() {
