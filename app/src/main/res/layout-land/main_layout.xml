@@ -127,6 +127,8 @@
 				android:layout_below="@id/wator_logo"
 				android:value="30"
 				app:thumbFormat="@string/fps_format"
+				app:thumbPadding="4dp"
+				app:sliderThickness="12dp"
 				app:valueSet="@string/desired_fps_value_set"
 				android:padding="10dp"
 				android:textSize="12sp"

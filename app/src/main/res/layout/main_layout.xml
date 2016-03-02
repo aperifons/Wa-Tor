@@ -126,7 +126,7 @@
 				app:sliderThickness="12dp"
 				app:valueSet="@string/desired_fps_value_set"
 				android:padding="10dp"
-				android:textSize="14sp"
+				android:textSize="12sp"
 				android:color="@color/fish_old" />
 
 		<TextView
