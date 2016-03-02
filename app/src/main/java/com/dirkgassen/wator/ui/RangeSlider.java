@@ -40,6 +40,8 @@ import android.view.ViewDebug;
  */
 public class RangeSlider extends View {
 
+	private static final int MAX_CLICK_DURATION = 1000;
+
 	interface OnValueChangeListener {
 
 		void onValueChange(RangeSlider slider, int oldVal, int newVal);
@@ -55,7 +57,6 @@ public class RangeSlider extends View {
 	private int maxValue;
 	private boolean logarithmic;
 	private float thumbPadding;
-	private float sliderThickness;
 	private int value;
 	private String thumbFormat;
 	private int[] valueSet;
@@ -68,6 +69,7 @@ public class RangeSlider extends View {
 	private int activePointerId = -1;
 	private int valueBeforeDragging;
 	private boolean isDragging = false;
+	private long touchEventStartTime;
 
 	synchronized private void updateValue(int newValue) {
 		int oldValue = value;
@@ -76,6 +78,36 @@ public class RangeSlider extends View {
 		if (onValueChangeListener != null) {
 			onValueChangeListener.onValueChange(this, oldValue, newValue);
 		}
+	}
+
+	private float distance(float x1, float y1, float x2, float y2) {
+		float dx = x1 - x2;
+		float dy = y1 - y2;
+		float distanceInPx = (float) Math.sqrt(dx * dx + dy * dy);
+		return pxToDp(distanceInPx);
+	}
+
+	private float pxToDp(float px) {
+		return px / getResources().getDisplayMetrics().density;
+	}
+
+	private int clampValue(int value) {
+		if (valueSet != null) {
+			if (value < 0) {
+				return valueSet[0];
+			} else if (value >= valueSet.length) {
+				return valueSet[valueSet.length - 1];
+			} else {
+				return valueSet[value];
+			}
+		}
+		if (value < minValue) {
+			return minValue;
+		}
+		if (value > maxValue) {
+			return maxValue;
+		}
+		return value;
 	}
 
 	private float positionFromValue(int paddingLeft, int paddingRight) {
@@ -93,23 +125,13 @@ public class RangeSlider extends View {
 
 	private int valueFromPosition(float position, int paddingLeft, int paddingRight) {
 		if (valueSet != null) {
-			int newValueIndex = (int) ((position - paddingLeft - thumbSize / 2) * (valueSet.length - 1) / (getWidth() - paddingLeft - paddingRight - thumbSize));
-			if (newValueIndex < 0) {
-				return valueSet[0];
-			} else if (newValueIndex >= valueSet.length) {
-				return valueSet[valueSet.length - 1];
-			} else {
-				return valueSet[newValueIndex];
-			}
+			return clampValue(
+					(int) ((position - paddingLeft - thumbSize / 2) * (valueSet.length - 1) / (getWidth() - paddingLeft - paddingRight - thumbSize))
+			);
 		}
-		int newValue = (int) ((position - paddingLeft - thumbSize / 2) * (maxValue - minValue) / (getWidth() - paddingLeft - paddingRight - thumbSize) + minValue);
-		if (newValue < minValue) {
-			return minValue;
-		}
-		if (newValue > maxValue) {
-			return maxValue;
-		}
-		return newValue;
+		return clampValue(
+				(int) ((position - paddingLeft - thumbSize / 2) * (maxValue - minValue) / (getWidth() - paddingLeft - paddingRight - thumbSize) + minValue)
+		);
 	}
 
 	private void calculateThumbSize() {
@@ -197,6 +219,56 @@ public class RangeSlider extends View {
 		calculateThumbSize();
 	}
 
+	//TODO: This should be implemented in the view hosting this RangeSlider, maybe an OnRequestValueListener or somesuch?
+//	@Override
+//	public boolean performClick() {
+//		super.performClick();
+//
+//		final Context c = this.getContext();
+//		final AlertDialog.Builder alert = new AlertDialog.Builder(c);
+//		final EditText input = new EditText(c);
+//		input.setHint(R.string.fps);
+//		input.setInputType(InputType.TYPE_CLASS_NUMBER);
+//		alert
+//				.setView(input)
+//				.setTitle(getContext().getString(R.string.enter_new_fps_title))
+//				.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+//					public void onClick(DialogInterface dialog, int whichButton) {
+//						try {
+//							int enteredValue = Integer.valueOf(input.getText().toString().trim());
+//							int newValue;
+//							if (valueSet != null) {
+//								newValue = valueSet[valueSet.length-1];
+//								for (int searchValue : valueSet) {
+//									if (enteredValue <= searchValue) {
+//										newValue = searchValue;
+//										break;
+//									}
+//								}
+//							} else {
+//								newValue = clampValue(enteredValue);
+//							}
+//							if (newValue != enteredValue) {
+//								Toast.makeText(c, c.getString(R.string.entered_value_adjusted, newValue), Toast.LENGTH_LONG).show();
+//							}
+//							if (newValue != value) {
+//								updateValue(newValue);
+//							}
+//						} catch (NumberFormatException e) {
+//							Toast.makeText(c, R.string.invalid_value, Toast.LENGTH_SHORT).show();
+//						}
+//					}
+//				})
+//				.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+//					public void onClick(DialogInterface dialog, int whichButton) {
+//						dialog.cancel();
+//					}
+//				})
+//				.show();
+//
+//		return true;
+//	}
+
 	@Override
 	public boolean onTouchEvent(@NonNull MotionEvent event) {
 		if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Got touch event: " + event); }
@@ -204,6 +276,7 @@ public class RangeSlider extends View {
 		int paddingRight = getPaddingRight();
 		switch (event.getAction() & MotionEvent.ACTION_MASK) {
 			case MotionEvent.ACTION_DOWN:
+				touchEventStartTime = System.currentTimeMillis();
 				valueBeforeDragging = value;
 				activePointerId = event.getPointerId(0);
 				float valuePos = positionFromValue(paddingLeft, paddingRight);
@@ -212,6 +285,7 @@ public class RangeSlider extends View {
 					int newValue = valueFromPosition(x, paddingLeft, paddingRight);
 					if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Starting to drag thumb OUTSIDE of thumb"); }
 					if (newValue != value) {
+						touchEventStartTime = 0L; // Not a click
 						updateValue(newValue);
 					}
 					touchOffset = 0f;
@@ -224,15 +298,19 @@ public class RangeSlider extends View {
 			case MotionEvent.ACTION_MOVE:
 				if (activePointerId != -1) {
 					final int pointerIndex = event.findPointerIndex(activePointerId);
-					float current = event.getX(pointerIndex) - touchOffset;
-					int newValue = valueFromPosition(current, paddingLeft, paddingRight);
+					float currentPos = event.getX(pointerIndex) - touchOffset;
+					int newValue = valueFromPosition(currentPos, paddingLeft, paddingRight);
 					if (newValue != value) {
 						if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Got new value " + newValue + " (old = " + value + ")"); }
+						touchEventStartTime = 0L; // Not a click
 						updateValue(newValue);
 					}
 				}
 				return true;
 			case MotionEvent.ACTION_UP:
+				if (touchEventStartTime > 0L && System.currentTimeMillis() - touchEventStartTime < MAX_CLICK_DURATION) {
+					performClick();
+				}
 				isDragging = false;
 				break;
 			case MotionEvent.ACTION_CANCEL:

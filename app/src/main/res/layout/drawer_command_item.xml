@@ -32,7 +32,8 @@
 			android:layout_marginRight="20dp"
 			android:layout_marginStart="10dp"
 			android:layout_marginEnd="20dp"
-			android:layout_marginTop="5dp" />
+			android:layout_marginTop="5dp"
+			android:contentDescription="@string/drawer_command_icon_description" />
 
 	<TextView
 			android:id="@+id/drawer_command_title"
