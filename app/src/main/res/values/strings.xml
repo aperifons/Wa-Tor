@@ -27,6 +27,5 @@
 	<string name="drawer_command_icon_description">action icon</string>
 	<string name="invalid_value">Invalid value</string>
 	<string name="entered_value_adjusted">"Entered value adjusted to %1$d"</string>
-	<string name="enter_new_fps_title">Enter New FPS</string>
-	<string name="fps">Frames Per Second</string>
+	<string name="enter_new_value_title">Enter A New Value</string>
 </resources>

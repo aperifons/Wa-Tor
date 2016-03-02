@@ -22,6 +22,7 @@ import java.util.Locale;
 import com.dirkgassen.wator.R;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -29,11 +30,15 @@ import android.graphics.Path;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
+import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewDebug;
+import android.widget.EditText;
+import android.widget.Toast;
 
 /**
  * @author dirk.
@@ -219,55 +224,54 @@ public class RangeSlider extends View {
 		calculateThumbSize();
 	}
 
-	//TODO: This should be implemented in the view hosting this RangeSlider, maybe an OnRequestValueListener or somesuch?
-//	@Override
-//	public boolean performClick() {
-//		super.performClick();
-//
-//		final Context c = this.getContext();
-//		final AlertDialog.Builder alert = new AlertDialog.Builder(c);
-//		final EditText input = new EditText(c);
-//		input.setHint(R.string.fps);
-//		input.setInputType(InputType.TYPE_CLASS_NUMBER);
-//		alert
-//				.setView(input)
-//				.setTitle(getContext().getString(R.string.enter_new_fps_title))
-//				.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-//					public void onClick(DialogInterface dialog, int whichButton) {
-//						try {
-//							int enteredValue = Integer.valueOf(input.getText().toString().trim());
-//							int newValue;
-//							if (valueSet != null) {
-//								newValue = valueSet[valueSet.length-1];
-//								for (int searchValue : valueSet) {
-//									if (enteredValue <= searchValue) {
-//										newValue = searchValue;
-//										break;
-//									}
-//								}
-//							} else {
-//								newValue = clampValue(enteredValue);
-//							}
-//							if (newValue != enteredValue) {
-//								Toast.makeText(c, c.getString(R.string.entered_value_adjusted, newValue), Toast.LENGTH_LONG).show();
-//							}
-//							if (newValue != value) {
-//								updateValue(newValue);
-//							}
-//						} catch (NumberFormatException e) {
-//							Toast.makeText(c, R.string.invalid_value, Toast.LENGTH_SHORT).show();
-//						}
-//					}
-//				})
-//				.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-//					public void onClick(DialogInterface dialog, int whichButton) {
-//						dialog.cancel();
-//					}
-//				})
-//				.show();
-//
-//		return true;
-//	}
+	@Override
+	public boolean performClick() {
+		super.performClick();
+
+		final Context c = this.getContext();
+		final AlertDialog.Builder alert = new AlertDialog.Builder(c);
+		final EditText input = new EditText(c);
+		input.setHint(R.string.fps);
+		input.setInputType(InputType.TYPE_CLASS_NUMBER);
+		alert
+				.setView(input)
+				.setTitle(getContext().getString(R.string.enter_new_value_title))
+				.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+						try {
+							int enteredValue = Integer.valueOf(input.getText().toString().trim());
+							int newValue;
+							if (valueSet != null) {
+								newValue = valueSet[valueSet.length-1];
+								for (int searchValue : valueSet) {
+									if (enteredValue <= searchValue) {
+										newValue = searchValue;
+										break;
+									}
+								}
+							} else {
+								newValue = clampValue(enteredValue);
+							}
+							if (newValue != enteredValue) {
+								Toast.makeText(c, c.getString(R.string.entered_value_adjusted, newValue), Toast.LENGTH_LONG).show();
+							}
+							if (newValue != value) {
+								updateValue(newValue);
+							}
+						} catch (NumberFormatException e) {
+							Toast.makeText(c, R.string.invalid_value, Toast.LENGTH_SHORT).show();
+						}
+					}
+				})
+				.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+						dialog.cancel();
+					}
+				})
+				.show();
+
+		return true;
+	}
 
 	@Override
 	public boolean onTouchEvent(@NonNull MotionEvent event) {
