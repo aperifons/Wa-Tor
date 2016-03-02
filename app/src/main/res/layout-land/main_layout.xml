@@ -118,30 +118,25 @@
 				android:layout_alignLeft="@id/drawer_subtitle"
 				android:layout_alignStart="@id/drawer_subtitle" />
 
-		<SeekBar
+		<com.dirkgassen.wator.ui.RangeSlider
 				android:id="@+id/desired_fps"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
-				android:layout_below="@id/wator_logo"
 				android:layout_alignParentLeft="true"
 				android:layout_alignParentStart="true"
-				android:layout_margin="16dp"
-				android:max="120" />
-
-		<TextView
-				android:id="@+id/selected_fps"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_centerInParent="true"
-				android:layout_below="@id/desired_fps"
-				android:padding="4dp"
-				tools:text="30fps"/>
+				android:layout_below="@id/wator_logo"
+				android:value="30"
+				app:thumbFormat="@string/fps_format"
+				app:valueSet="@string/desired_fps_value_set"
+				android:padding="10dp"
+				android:textSize="12sp"
+				android:color="@color/fish_old" />
 
 		<TextView
 				android:id="@+id/label_fps_simulator"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_below="@id/selected_fps"
+				android:layout_below="@id/desired_fps"
 				android:layout_alignParentLeft="true"
 				android:layout_alignParentStart="true"
 				android:padding="4dp"
@@ -189,4 +184,3 @@
 
 	</RelativeLayout>
 </android.support.v4.widget.DrawerLayout>
-

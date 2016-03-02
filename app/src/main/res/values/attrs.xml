@@ -36,8 +36,11 @@
 		<attr name="minValue" format="integer" />
 		<attr name="maxValue" format="integer" />
 		<attr name="thumbPadding" format="dimension" />
+		<attr name="thumbFormat" format="string" />
+		<attr name="sliderThickness" format="dimension" />
 		<attr name="android:value" />
 		<attr name="logarithmic" format="boolean"/>
+		<attr name="valueSet" format="string"/>
 		<attr name="android:textSize"/>
 		<attr name="android:fontFamily"/>
 		<attr name="android:color" />

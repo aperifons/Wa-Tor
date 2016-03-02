@@ -55,7 +55,10 @@ public class RangeSlider extends View {
 	private int maxValue;
 	private boolean logarithmic;
 	private float thumbPadding;
+	private float sliderThickness;
 	private int value;
+	private String thumbFormat;
+	private int[] valueSet;
 
 	private float thumbSize;
 
@@ -76,10 +79,29 @@ public class RangeSlider extends View {
 	}
 
 	private float positionFromValue(int paddingLeft, int paddingRight) {
+		if (valueSet != null) {
+			for (int no = 0; no < valueSet.length; no++) {
+				if (value <= valueSet[no]) {
+					if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Found current value " + value + " @ position " + no); }
+					return (getWidth() - paddingLeft - paddingRight - thumbSize) * ((float) no) / (valueSet.length - 1) + paddingLeft + thumbSize / 2;
+				}
+			}
+			return paddingLeft + thumbSize / 2;
+		}
 		return (getWidth() - paddingLeft - paddingRight - thumbSize) * ((float) value - minValue) / (maxValue - minValue) + paddingLeft + thumbSize / 2;
 	}
 
 	private int valueFromPosition(float position, int paddingLeft, int paddingRight) {
+		if (valueSet != null) {
+			int newValueIndex = (int) ((position - paddingLeft - thumbSize / 2) * (valueSet.length - 1) / (getWidth() - paddingLeft - paddingRight - thumbSize));
+			if (newValueIndex < 0) {
+				return valueSet[0];
+			} else if (newValueIndex >= valueSet.length) {
+				return valueSet[valueSet.length - 1];
+			} else {
+				return valueSet[newValueIndex];
+			}
+		}
 		int newValue = (int) ((position - paddingLeft - thumbSize / 2) * (maxValue - minValue) / (getWidth() - paddingLeft - paddingRight - thumbSize) + minValue);
 		if (newValue < minValue) {
 			return minValue;
@@ -91,28 +113,23 @@ public class RangeSlider extends View {
 	}
 
 	private void calculateThumbSize() {
-		final String demoValue;
-		if (maxValue < 10) {
-			demoValue = "9";
-		} else if (maxValue < 100) {
-			demoValue = "99";
-		} else if (maxValue < 1000) {
-			demoValue = "999";
-		} else if (maxValue < 10000) {
-			demoValue = "9999";
-		} else if (maxValue < 100000) {
-			demoValue = "99999";
-		} else if (maxValue < 1000000) {
-			demoValue = "999999";
-		} else if (maxValue < 10000000) {
-			demoValue = "9999999";
-		} else if (maxValue < 100000000) {
-			demoValue = "99999999";
-		} else if (maxValue < 1000000000) {
-			demoValue = "999999999";
+		final int maxValue;
+		if (valueSet != null) {
+			maxValue = valueSet[valueSet.length-1];
 		} else {
-			demoValue = "9999999999";
+			maxValue = this.maxValue;
 		}
+		final String demoValue = String.format(Locale.getDefault(), thumbFormat,
+				maxValue < 10 ? 9
+						: maxValue < 100 ? 99
+						: maxValue < 1000 ? 999
+						: maxValue < 10000 ? 9999
+						: maxValue < 100000 ? 99999
+						: maxValue < 1000000 ? 999999
+						: maxValue < 10000000 ? 9999999
+						: maxValue < 100000000 ? 99999999
+						: 999999999
+		);
 		final float valueWidth = (thumbTextPaint.measureText(demoValue, 0, demoValue.length()));
 		final float valueTotalHeight = (-thumbTextPaint.ascent() + thumbTextPaint.descent());
 		float size = (valueWidth > valueTotalHeight ? valueWidth : valueTotalHeight) + 2 * thumbPadding;
@@ -134,12 +151,28 @@ public class RangeSlider extends View {
 				0, 0);
 
 		try {
-			value = a.getInt(R.styleable.RangeSlider_android_value, 0);
 			minValue = a.getInt(R.styleable.RangeSlider_minValue, 0);
 			maxValue = a.getInt(R.styleable.RangeSlider_maxValue, 100);
 			logarithmic = a.getBoolean(R.styleable.RangeSlider_logarithmic, false);
 
 			thumbPadding = a.getDimension(R.styleable.RangeSlider_thumbPadding, 3 * getResources().getDisplayMetrics().density);
+
+			thumbFormat = a.getString(R.styleable.RangeSlider_thumbFormat);
+			if (thumbFormat == null) {
+				thumbFormat = "%d";
+			}
+
+			String valueSetString = a.getString(R.styleable.RangeSlider_valueSet);
+			if (valueSetString == null) {
+				value = a.getInt(R.styleable.RangeSlider_android_value, minValue);
+			} else {
+				String[] values = valueSetString.split(",");
+				valueSet = new int[values.length];
+				for (int no = 0; no < values.length; no++) {
+					valueSet[no] = Integer.valueOf(values[no]);
+				}
+				value = a.getInt(R.styleable.RangeSlider_android_value, valueSet[0]);
+			}
 
 			thumbTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 			thumbTextPaint.setTextSize(a.getDimension(R.styleable.RangeSlider_android_textSize, 12));
@@ -151,7 +184,8 @@ public class RangeSlider extends View {
 			thumbBackgroundPaint.setColor(a.getColor(R.styleable.RangeSlider_android_color, ContextCompat.getColor(getContext(), android.R.color.black)));
 
 			sliderPaint = new Paint();
-			sliderPaint.setStrokeWidth(2);
+			sliderPaint.setStrokeWidth(a.getDimension(R.styleable.RangeSlider_sliderThickness, 2));
+			sliderPaint.setStrokeCap(Paint.Cap.ROUND);
 			sliderPaint.setColor(thumbBackgroundPaint.getColor());
 		} finally {
 			a.recycle();
@@ -247,7 +281,7 @@ public class RangeSlider extends View {
 
 		canvas.drawLine(paddingLeft + thumbSize / 2, sliderY, getWidth() - paddingRight - thumbSize / 2, sliderY, sliderPaint);
 
-		String valueString = String.format(Locale.getDefault(), "%d", value);
+		String valueString = String.format(Locale.getDefault(), thumbFormat, value);
 		final float valueWidth = (thumbTextPaint.measureText(valueString, 0, valueString.length()));
 
 		float thumbTip = positionFromValue(paddingLeft, paddingRight);

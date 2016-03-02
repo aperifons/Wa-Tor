@@ -54,7 +54,7 @@
 				android:layout_height="fill_parent"
 				android:layout_below="@+id/main_toolbar"
 				android:layout_above="@id/wator_statistics_fragment"
-				tools:layout="@layout/wator_display" />
+				tools:layout="@layout/wator_display"/>
 
 		<FrameLayout
 				android:name="com.dirkgassen.wator.ui.NewWorld"
@@ -66,7 +66,7 @@
 				android:layout_below="@id/main_toolbar"
 				android:layout_centerHorizontal="true"
 				tools:layout="@id/new_world_fragment"
-				tools:ignore="UnusedAttribute" />
+				tools:ignore="UnusedAttribute"/>
 
 	</RelativeLayout>
 
@@ -109,34 +109,31 @@
 				android:textColor="@android:color/white"
 				android:textSize="20sp"
 				android:padding="10dp"
-		        android:layout_above="@id/drawer_subtitle"
+				android:layout_above="@id/drawer_subtitle"
 				android:layout_alignLeft="@id/drawer_subtitle"
-				android:layout_alignStart="@id/drawer_subtitle" />
+				android:layout_alignStart="@id/drawer_subtitle"/>
 
-		<SeekBar
+		<com.dirkgassen.wator.ui.RangeSlider
 				android:id="@+id/desired_fps"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
-				android:layout_below="@id/wator_logo"
 				android:layout_alignParentLeft="true"
 				android:layout_alignParentStart="true"
-				android:layout_margin="16dp"
-				android:max="120"/>
-
-		<TextView
-				android:id="@+id/selected_fps"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_centerInParent="true"
-				android:layout_below="@id/desired_fps"
-				android:padding="4dp"
-				tools:text="30fps"/>
+				android:layout_below="@id/wator_logo"
+				android:value="30"
+				app:thumbFormat="@string/fps_format"
+				app:thumbPadding="4dp"
+				app:sliderThickness="12dp"
+				app:valueSet="@string/desired_fps_value_set"
+				android:padding="10dp"
+				android:textSize="14sp"
+				android:color="@color/fish_old" />
 
 		<TextView
 				android:id="@+id/label_fps_simulator"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_below="@id/selected_fps"
+				android:layout_below="@id/desired_fps"
 				android:layout_alignParentLeft="true"
 				android:layout_alignParentStart="true"
 				android:padding="4dp"

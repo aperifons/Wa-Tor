@@ -46,13 +46,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SeekBar;
 import android.widget.TextView;
 
 /**
@@ -113,10 +113,6 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	}
 
-	private static final int fpsValues[] = new int[] {
-			0, // paused
-			1, 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 30, 35, 40, 45, 50, 60, 80, 100
-	};
 	private static final String FISH_AGE_KEY = "fishAge";
 	private static final String SHARK_AGE_KEY = "sharkAge";
 	private static final String SHARK_HUNGER_KEY = "sharkHunger";
@@ -144,8 +140,6 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	private RollingAverage drawingAverageFps;
 
-	private TextView selectedFps;
-
 	private TextView currentDrawFpsLabel;
 
 	private TextView currentSimFpsLabel;
@@ -155,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	private TextView currentDrawFps;
 
 
-	private SeekBar fpsSeekBar;
+	private RangeSlider desiredFpsSlider;
 
 	private TextView simulatorFpsTextView;
 
@@ -367,45 +361,45 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		// More info: http://codetheory.in/difference-between-setdisplayhomeasupenabled-sethomebuttonenabled-and-setdisplayshowhomeenabled/
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-		selectedFps = (TextView) findViewById(R.id.selected_fps);
 		currentSimFps = (TextView) findViewById(R.id.fps_simulator);
 		currentSimFpsLabel = (TextView) findViewById(R.id.label_fps_simulator);
 		currentDrawFps = (TextView) findViewById(R.id.fps_drawing);
 		currentDrawFpsLabel = (TextView) findViewById(R.id.label_fps_drawing);
-		fpsSeekBar = (SeekBar) findViewById(R.id.desired_fps);
-		fpsSeekBar.setMax(fpsValues.length-1);
-		fpsSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+		desiredFpsSlider = (RangeSlider) findViewById(R.id.desired_fps);
+		desiredFpsSlider.setOnTouchListener(new View.OnTouchListener() {
 			@Override
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				final int newFps = fpsValues[progress];
-				if (newFps == 0) {
-					selectedFps.setText(R.string.paused);
+			public boolean onTouch(View v, MotionEvent event) {
+				switch (event.getAction()) {
+					case MotionEvent.ACTION_DOWN:
+						v.getParent().requestDisallowInterceptTouchEvent(true);
+						break;
+					case MotionEvent.ACTION_UP:
+						v.getParent().requestDisallowInterceptTouchEvent(false);
+						break;
+				}
+				v.onTouchEvent(event);
+				return true;
+			}
+		});
+		desiredFpsSlider.setOnValueChangeListener(new RangeSlider.OnValueChangeListener() {
+			@Override
+			public void onValueChange(RangeSlider slider, int oldVal, int newVal) {
+				if (newVal == 0) {
 					currentDrawFps.setVisibility(View.INVISIBLE);
 					currentDrawFpsLabel.setVisibility(View.INVISIBLE);
 					currentSimFps.setVisibility(View.INVISIBLE);
 					currentSimFpsLabel.setVisibility(View.INVISIBLE);
 				} else {
-					selectedFps.setText(String.format(Locale.getDefault(), "%d", newFps));
 					currentDrawFps.setVisibility(View.VISIBLE);
 					currentDrawFpsLabel.setVisibility(View.VISIBLE);
 					currentSimFps.setVisibility(View.VISIBLE);
 					currentSimFpsLabel.setVisibility(View.VISIBLE);
 				}
-				if (fromUser) {
-					if (simulatorRunnable.setTargetFps(newFps)) {
-						startSimulatorThread();
-					}
+//				if (fromUser) {
+				if (simulatorRunnable.setTargetFps(newVal)) {
+					startSimulatorThread();
 				}
-			}
-
-			@Override
-			public void onStartTrackingTouch(SeekBar seekBar) {
-				// Unused, don't do anything here
-			}
-
-			@Override
-			public void onStopTrackingTouch(SeekBar seekBar) {
-				// Unused, don't do anything here
+//				}
 			}
 		});
 
@@ -501,13 +495,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 				super.onDrawerOpened(drawerView);
 				supportInvalidateOptionsMenu();
 				synchronized (MainActivity.this) {
-					int targetFps = simulatorRunnable.getTargetFps();
-					for (int no = 0; no < fpsValues.length; no++) {
-						if (fpsValues[no] >= targetFps) {
-							fpsSeekBar.setProgress(no);
-							break;
-						}
-					}
+					desiredFpsSlider.setValue(simulatorRunnable.getTargetFps());
 					simulatorFpsTextView = (TextView) findViewById(R.id.fps_simulator);
 					drawingFpsTextView = (TextView) findViewById(R.id.fps_drawing);
 				}
