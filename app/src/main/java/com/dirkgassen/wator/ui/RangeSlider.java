@@ -231,7 +231,6 @@ public class RangeSlider extends View {
 		final Context c = this.getContext();
 		final AlertDialog.Builder alert = new AlertDialog.Builder(c);
 		final EditText input = new EditText(c);
-		input.setHint(R.string.fps);
 		input.setInputType(InputType.TYPE_CLASS_NUMBER);
 		alert
 				.setView(input)
