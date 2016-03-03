@@ -38,7 +38,6 @@
 	<string name="wator_logo_description">Wa-Tor Logo</string>
 	<string name="wator_name">Wa-Tor</string>
 	<string name="wator_synopsis">An eco system simulator</string>
-	<string name="paused">Paused</string>
 	<string name="desired_fps_value_set" translatable="false">0,1,2,4,6,8,10,12,14,16,20,24,30,35,40,45,50,60,80,100</string>
 	<string name="fps_format">%d fps</string>
 	<string name="drawer_command_icon_description">action icon</string>

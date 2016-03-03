@@ -25,6 +25,7 @@
 	<string name="enter_new_value_title">Neuen Wert Eingeben</string>
 	<string name="entered_value_adjusted">Eingabe nach %1$d angepaßt</string>
 	<string name="fish_breed_time_label">Fischbrutzeit:</string>
+	<string name="initial_shark_count_label">Anfangszahl Haie:</string>
 	<string name="fish_dataseries_name">F</string>
 	<string name="fps_format">%d fps</string>
 	<string name="initial_fish_count_label">Anfangszahl Fische:</string>
@@ -32,7 +33,6 @@
 	<string name="invalid_value">Ungültiger Wert</string>
 	<string name="label_fps_drawing">Zeichnen:</string>
 	<string name="open_drawer_description">Optionen anzeigen</string>
-	<string name="paused">Pausiert</string>
 	<string name="shark_breed_time_label">Haibrutzeit:</string>
 	<string name="shark_dataseries_name">H</string>
 	<string name="shark_starve_time_label">Haihunger:</string>
