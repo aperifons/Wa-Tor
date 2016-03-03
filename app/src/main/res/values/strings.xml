@@ -44,4 +44,6 @@
 	<string name="invalid_value">Invalid value</string>
 	<string name="entered_value_adjusted">Entered value adjusted to %1$d</string>
 	<string name="enter_new_value_title">Enter A New Value</string>
+	<string name="create_new_world_command">Create New World</string>
+	<string name="create_new_world_description">Creates a new world with new parameters</string>
 </resources>

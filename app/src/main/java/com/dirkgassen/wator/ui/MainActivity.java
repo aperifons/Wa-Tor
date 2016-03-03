@@ -200,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	private List<DrawerCommandItem> getDrawerCommands() {
 		DrawerCommandItem[] commands = new DrawerCommandItem[] {
-				new DrawerCommandItem(0, "Create New World", "Creates a new world")
+				new DrawerCommandItem(0, getString(R.string.create_new_world_command), getString(R.string.create_new_world_description))
 		};
 		List<DrawerCommandItem> commandList = new ArrayList<DrawerCommandItem>();
 		Collections.addAll(commandList, commands);

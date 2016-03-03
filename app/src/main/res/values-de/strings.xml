@@ -42,4 +42,6 @@
 	<string name="wator_synopsis">Ein Umweltsimulator</string>
 	<string name="world_size_label">Weltgröße:</string>
 	<string name="world_size_x_label">x</string>
+	<string name="create_new_world_command">Neue Welt</string>
+	<string name="create_new_world_description">Started mit einer neuen Welt mit wählbaren Parametern</string>
 </resources>

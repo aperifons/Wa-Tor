@@ -162,7 +162,7 @@
 					android:layout_column="3"
 					android:ems="3"
 					android:singleLine="true"
-					android:imeOptions="flagNavigateNext"
+					android:imeOptions="actionDone"
 					tools:text="3"
 					tools:ignore="RtlCompat,UnusedAttribute"/>
 		</TableRow>
