@@ -1,3 +1,20 @@
+<!--
+  ~ strings.xml is part of Wa-Tor (C) 2016 by Dirk Gassen.
+  ~
+  ~ Wa-Tor is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ Wa-Tor is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
 <resources>
 	<string name="app_name">Wa-Tor</string>
 	<string name="wator_image_view_desc">Wa-Tor Display</string>
@@ -28,11 +45,4 @@
 	<string name="invalid_value">Invalid value</string>
 	<string name="entered_value_adjusted">Entered value adjusted to %1$d</string>
 	<string name="enter_new_value_title">Enter A New Value</string>
-	<string name="world_width">World width</string>
-	<string name="world_height">World height</string>
-	<string name="initial_no_of_fish">Initial # of fish</string>
-	<string name="fish_breed_time">Fish breed time</string>
-	<string name="initial_no_of_shark">Initial # of shark</string>
-	<string name="shark_breed_time">Shark breed time</string>
-	<string name="shark_starve_time">Shark starve time</string>
 </resources>
