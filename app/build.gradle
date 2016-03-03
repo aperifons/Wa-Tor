@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'jacoco'
 project.ext.set("archivesBaseName", "Wa-Tor")
 
 android {
@@ -118,7 +119,6 @@ task convertDrawables() {
 				}
 				if (mustUpdate) {
 					println 'Updating ' + outFile.absolutePath + ' from ' + file.absolutePath + ' (dpi: ' + resolution.dpi + ')'
-					def stdout = new ByteArrayInputStream()
 					exec {
 						commandLine(
 								"/usr/bin/inkscape",
