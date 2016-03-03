@@ -2,6 +2,10 @@
 /local.properties
 /.idea/workspace.xml
 /.idea/libraries
+/.idea/dictionaries
 .DS_Store
 /build
 /captures
+/app/src/main/res/drawable-*/wator_logo.png
+/app/lib/junit-*.jar
+/app/lib/hamcrest-*.jar

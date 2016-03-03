@@ -1,8 +1,8 @@
 <resources>
 	<string name="app_name">Wa-Tor</string>
 	<string name="wator_image_view_desc">Wa-Tor Display</string>
-	<string name="worldUpdateNotifierThreadName">Wa-Tor World Update Notifier Thread</string>
-	<string name="simulatorThreadName">Wa-Tor Simulator Thread</string>
+	<string name="worldUpdateNotifierThreadName" translatable="false">Wa-Tor World Update Notifier Thread</string>
+	<string name="simulatorThreadName" translatable="false">Wa-Tor Simulator Thread</string>
 	<string name="fish_dataseries_name">F</string>
 	<string name="shark_dataseries_name">S</string>
 	<string name="fps_simulator_label">Sim:</string>
@@ -10,7 +10,7 @@
 	<string name="initial_fish_count_label">Initial no. of fish:</string>
 	<string name="fish_breed_time_label">Fish breed time:</string>
 	<string name="initial_shark_count_label">Initial no. of shark:</string>
-	<string name="shark_breed_time">Shark breed time:</string>
+	<string name="shark_breed_time_label">Shark breed time:</string>
 	<string name="shark_starve_time_label">Shark starve time:</string>
 	<string name="world_size_label">World size:</string>
 	<string name="world_size_x_label">x</string>
@@ -22,10 +22,17 @@
 	<string name="wator_name">Wa-Tor</string>
 	<string name="wator_synopsis">An eco system simulator</string>
 	<string name="paused">Paused</string>
-	<string name="desired_fps_value_set">0,1,2,4,6,8,10,12,14,16,20,24,30,35,40,45,50,60,80,100</string>
+	<string name="desired_fps_value_set" translatable="false">0,1,2,4,6,8,10,12,14,16,20,24,30,35,40,45,50,60,80,100</string>
 	<string name="fps_format">%d fps</string>
 	<string name="drawer_command_icon_description">action icon</string>
 	<string name="invalid_value">Invalid value</string>
-	<string name="entered_value_adjusted">"Entered value adjusted to %1$d"</string>
+	<string name="entered_value_adjusted">Entered value adjusted to %1$d</string>
 	<string name="enter_new_value_title">Enter A New Value</string>
+	<string name="world_width">World width</string>
+	<string name="world_height">World height</string>
+	<string name="initial_no_of_fish">Initial # of fish</string>
+	<string name="fish_breed_time">Fish breed time</string>
+	<string name="initial_no_of_shark">Initial # of shark</string>
+	<string name="shark_breed_time">Shark breed time</string>
+	<string name="shark_starve_time">Shark starve time</string>
 </resources>

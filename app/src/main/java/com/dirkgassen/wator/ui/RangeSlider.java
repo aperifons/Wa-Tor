@@ -139,6 +139,18 @@ public class RangeSlider extends View {
 		);
 	}
 
+	private int getMaxDigits() {
+		return maxValue < 10 ? 1
+				: maxValue < 100 ? 2
+				: maxValue < 1000 ? 3
+				: maxValue < 10000 ? 4
+				: maxValue < 100000 ? 5
+				: maxValue < 1000000 ? 6
+				: maxValue < 10000000 ? 7
+				: maxValue < 100000000 ? 8
+				: 9;
+	}
+
 	private void calculateThumbSize() {
 		final int maxValue;
 		if (valueSet != null) {
@@ -232,6 +244,7 @@ public class RangeSlider extends View {
 		final AlertDialog.Builder alert = new AlertDialog.Builder(c);
 		final EditText input = new EditText(c);
 		input.setInputType(InputType.TYPE_CLASS_NUMBER);
+		input.setEms(getMaxDigits());
 		alert
 				.setView(input)
 				.setTitle(getContext().getString(R.string.enter_new_value_title))

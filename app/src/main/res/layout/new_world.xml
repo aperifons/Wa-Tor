@@ -20,7 +20,8 @@
               xmlns:tools="http://schemas.android.com/tools"
               android:orientation="vertical"
               android:layout_width="wrap_content"
-              android:layout_height="wrap_content">
+              android:layout_height="wrap_content"
+              android:padding="4dp">
 	<LinearLayout
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
@@ -32,23 +33,32 @@
 		/>
 		<EditText
 				android:id="@+id/world_width"
-				android:layout_width="80dp"
+				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:inputType="number"
 				android:textAlignment="center"
+				android:ems="4"
+				android:nextFocusForward="@+id/world_height"
+				android:singleLine="true"
+				android:imeOptions="flagNavigateNext"
 				tools:text="200"
-				tools:ignore="RtlCompat,UnusedAttribute"/>
+				tools:ignore="RtlCompat,UnusedAttribute">
+			<requestFocus/>
+		</EditText>
 		<TextView
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:text="@string/world_size_x_label"
-		/>
+				android:text="@string/world_size_x_label"/>
 		<EditText
 				android:id="@+id/world_height"
-				android:layout_width="80dp"
+				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:inputType="number"
 				android:textAlignment="center"
+				android:ems="4"
+				android:singleLine="true"
+				android:imeOptions="flagNavigateNext"
+				android:nextFocusForward="@+id/initial_fish_count"
 				tools:text="100"
 				tools:ignore="RtlCompat,UnusedAttribute"/>
 	</LinearLayout>
@@ -67,10 +77,14 @@
 			/>
 			<EditText
 					android:id="@+id/initial_fish_count"
-					android:layout_width="40dp"
+					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:inputType="number"
 					android:textAlignment="textEnd"
+					android:ems="4"
+					android:nextFocusForward="@+id/fish_breed_time"
+					android:singleLine="true"
+					android:imeOptions="flagNavigateNext"
 					tools:text="200"
 					tools:ignore="RtlCompat,UnusedAttribute"/>
 			<TextView
@@ -85,6 +99,10 @@
 					android:layout_height="wrap_content"
 					android:inputType="number"
 					android:textAlignment="textEnd"
+					android:ems="4"
+					android:nextFocusForward="@+id/shark_breed_time"
+					android:singleLine="true"
+					android:imeOptions="flagNavigateNext"
 					tools:text="100"
 					tools:ignore="RtlCompat,UnusedAttribute"/>
 		</TableRow>
@@ -93,21 +111,24 @@
 					android:id="@+id/fish_breed_time_label"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:text="@string/fish_breed_time_label"
-			/>
+					android:text="@string/fish_breed_time_label"/>
 			<EditText
 					android:id="@+id/fish_breed_time"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:inputType="number"
 					android:textAlignment="textEnd"
+					android:ems="3"
+					android:nextFocusForward="@+id/initial_shark_count"
+					android:singleLine="true"
+					android:imeOptions="flagNavigateNext"
 					tools:text="3"
 					tools:ignore="RtlCompat,UnusedAttribute"/>
 			<TextView
 					android:id="@+id/shark_breed_time_label"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:text="@string/shark_breed_time"
+					android:text="@string/shark_breed_time_label"
 			/>
 			<EditText
 					android:id="@+id/shark_breed_time"
@@ -115,6 +136,10 @@
 					android:layout_height="wrap_content"
 					android:inputType="number"
 					android:textAlignment="textEnd"
+					android:nextFocusForward="@+id/shark_starve"
+					android:ems="3"
+					android:singleLine="true"
+					android:imeOptions="flagNavigateNext"
 					tools:text="10"
 					tools:ignore="RtlCompat,UnusedAttribute"/>
 		</TableRow>
@@ -125,8 +150,8 @@
 					android:id="@+id/shark_starve_label"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
-					android:text="@string/shark_starve_time_label"
 					android:layout_column="2"
+					android:text="@string/shark_starve_time_label"
 			/>
 			<EditText
 					android:id="@+id/shark_starve"
@@ -135,6 +160,9 @@
 					android:inputType="number"
 					android:textAlignment="textEnd"
 					android:layout_column="3"
+					android:ems="3"
+					android:singleLine="true"
+					android:imeOptions="flagNavigateNext"
 					tools:text="3"
 					tools:ignore="RtlCompat,UnusedAttribute"/>
 		</TableRow>
