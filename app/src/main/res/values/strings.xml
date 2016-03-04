@@ -46,4 +46,24 @@
 	<string name="enter_new_value_title">Enter A New Value</string>
 	<string name="create_new_world_command">Create New World</string>
 	<string name="create_new_world_description">Creates a new world with new parameters</string>
+
+	<string name="world_width_too_small_error">World width too small</string>
+	<string name="world_width_too_large_error">World width too large (max %1$d)</string>
+	<string name="world_width_empty_error">World width empty</string>
+	<string name="world_height_too_small_error">World height too small</string>
+	<string name="world_height_too_large_error">World height too large (max %1$d)</string>
+	<string name="world_height_empty_error">World height is empty</string>
+	<string name="fish_breed_time_too_small_error">Fish breed time is too small</string>
+	<string name="fish_breed_time_too_large_error">Fish breed time is too large (max. %1$d)</string>
+	<string name="fish_breed_time_empty_error">Fish breed time is empty</string>
+	<string name="shark_breed_time_too_small_error">Shark breed time is too small</string>
+	<string name="shark_breed_time_too_large_error">Shark breed time is too large (max. %1$d)</string>
+	<string name="shark_breed_time_empty_error">Shark breed time is empty</string>
+	<string name="shark_starve_time_too_small_error">Shark starve time too small</string>
+	<string name="shark_starve_time_too_large_error">Shark starve time too large (max. %1$d)</string>
+	<string name="shark_starve_time_empty_error">Shark starve time is empty</string>
+	<string name="too_many_fish_error">Too many fish (max %1$d)</string>
+	<string name="initial_fish_count_empty_error">Fish count is empty</string>
+	<string name="too_many_shark_error">Too many shark (max %1$d)</string>
+	<string name="initial_shark_count_empty_error">Shark count is empty</string>
 </resources>

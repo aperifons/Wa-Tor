@@ -20,17 +20,22 @@ package com.dirkgassen.wator.ui;
 import java.util.Locale;
 
 import com.dirkgassen.wator.R;
+import com.dirkgassen.wator.simulator.Simulator;
 import com.dirkgassen.wator.simulator.WorldHost;
 import com.dirkgassen.wator.simulator.WorldParameters;
 
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 
 /**
@@ -38,32 +43,146 @@ import android.widget.EditText;
  */
 public class NewWorld extends Fragment {
 
+
 	interface WorldCreator {
 		WorldParameters getPreviousWorldParameters();
 		void createWorld(WorldParameters worldParameters);
 		void cancelCreateWorld();
 	}
 
-	private EditText worldWidthEdit;
-	private EditText worldHeightEdit;
-	private EditText fishBreedEdit;
-	private EditText sharkBreedEdit;
-	private EditText sharkStarveEdit;
-	private EditText initialFishEdit;
-	private EditText initialSharkEdit;
+	abstract class AfterTextWatcher implements TextWatcher {
+
+		@Override
+		public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			// Nothing to do here
+		}
+
+		@Override
+		public void onTextChanged(CharSequence s, int start, int before, int count) {
+			// Nothing to do here either
+		}
+
+	}
+
+	final private static int WORLD_WIDTH_INPUT = 0;
+	final private static int WORLD_HEIGHT_INPUT = 1;
+	final private static int FISH_BREED_INPUT = 2;
+	final private static int SHARK_BREED_INPUT = 3;
+	final private static int SHARK_STARVE_INPUT = 4;
+	final private static int INITIAL_FISH_COUNT_INPUT = 5;
+	final private static int INITIAL_SHARK_COUNT_INPUT = 6;
+	final private static int INPUT_COUNT = 7;
+
+	final private EditText[] inputs = new EditText[INPUT_COUNT];
+	private Button newWorldButton;
 
 	private WorldCreator worldCreator;
+
+	private boolean doMinMaxCheck(int inputNo, Editable s, int min, int max,
+	                              @StringRes int emptyErrorResourceId,
+	                              @StringRes int minErrorResourceId,
+	                              @StringRes int maxErrorResourceId) {
+		if (s.length() == 0) {
+			inputs[inputNo].setError(getString(emptyErrorResourceId));
+			return false;
+		}
+		int value = Integer.valueOf(s.toString());
+		if (value < min) {
+			inputs[inputNo].setError(getString(minErrorResourceId, min));
+			return false;
+		} else if (value > max) {
+			inputs[inputNo].setError(getString(maxErrorResourceId, max));
+			return false;
+		} else {
+			inputs[inputNo].setError(null);
+			return true;
+		}
+	}
+
+	private boolean validateWorldWidth(Editable s) {
+		return doMinMaxCheck(WORLD_WIDTH_INPUT, s, 1, Simulator.MAX_WORLD_WIDTH, R.string.world_width_empty_error, R.string.world_width_too_small_error, R.string.world_width_too_large_error);
+	}
+
+	private boolean validateWorldHeight(Editable s) {
+		return doMinMaxCheck(WORLD_HEIGHT_INPUT, s, 1, Simulator.MAX_WORLD_HEIGHT, R.string.world_height_empty_error, R.string.world_height_too_small_error, R.string.world_height_too_large_error);
+	}
+
+	private boolean validateFishBreedTime(Editable s) {
+		return doMinMaxCheck(FISH_BREED_INPUT, s, 1, Simulator.MAX_FISH_BREED_TIME, R.string.fish_breed_time_empty_error, R.string.fish_breed_time_too_small_error, R.string.fish_breed_time_too_large_error);
+	}
+
+	private void validateSharkBreedTime(Editable s) {
+		doMinMaxCheck(SHARK_BREED_INPUT, s, 1, Simulator.MAX_SHARK_BREED_TIME, R.string.shark_breed_time_empty_error, R.string.shark_breed_time_too_small_error, R.string.shark_breed_time_too_large_error);
+	}
+
+	private boolean validateSharkStarveTime(Editable s) {
+		return doMinMaxCheck(SHARK_STARVE_INPUT, s, 1, Simulator.MAX_SHARK_STARVE_TIME, R.string.shark_starve_time_empty_error, R.string.shark_starve_time_too_small_error, R.string.shark_starve_time_too_large_error);
+	}
+
+	private void validateInitialFishCount(Editable s, int worldSize) {
+		if (s.length() == 0) {
+			inputs[INITIAL_FISH_COUNT_INPUT].setError(getString(R.string.initial_fish_count_empty_error));
+		} else {
+			Editable sharkCount = inputs[INITIAL_SHARK_COUNT_INPUT].getText();
+			int initialFishValue = Integer.valueOf(s.toString());
+			int initialSharkCount = sharkCount.length() == 0 ? 0 : Integer.valueOf(sharkCount.toString());
+			int max = worldSize - initialSharkCount;
+			if (max < 0) {
+				max = 0;
+			}
+			if (initialFishValue > max) {
+				inputs[INITIAL_FISH_COUNT_INPUT].setError(getString(R.string.too_many_fish_error, max));
+			} else {
+				inputs[INITIAL_FISH_COUNT_INPUT].setError(null);
+				if (sharkCount.length() > 0 && initialSharkCount < worldSize - initialFishValue) {
+					inputs[INITIAL_SHARK_COUNT_INPUT].setError(null);
+				}
+			}
+		}
+	}
+
+	private void validateInitialSharkCount(Editable s, int worldSize) {
+		if (s.length() == 0) {
+			inputs[INITIAL_SHARK_COUNT_INPUT].setError(getString(R.string.initial_shark_count_empty_error));
+		} else {
+			Editable fishCountEditable = inputs[INITIAL_FISH_COUNT_INPUT].getText();
+			int initialSharkValue = Integer.valueOf(s.toString());
+			int initialFishValue = fishCountEditable.length() == 0 ? 0 : Integer.valueOf(fishCountEditable.toString());
+			int max = worldSize - initialFishValue;
+			if (max < 0) {
+				max = 0;
+			}
+			if (initialSharkValue > max) {
+				inputs[INITIAL_SHARK_COUNT_INPUT].setError(getString(R.string.too_many_shark_error, max));
+			} else {
+				inputs[INITIAL_SHARK_COUNT_INPUT].setError(null);
+				if (fishCountEditable.length() > 0 && initialFishValue < worldSize - initialSharkValue) {
+					inputs[INITIAL_FISH_COUNT_INPUT].setError(null);
+				}
+			}
+		}
+	}
+
+	private void enDisableNewWorldButton() {
+		for (EditText input: inputs) {
+			if (input.getError() != null) {
+				newWorldButton.setEnabled(false);
+				return;
+			}
+		}
+		newWorldButton.setEnabled(true);
+	}
 
 	private void createWorld() {
 		worldCreator.createWorld(
 				new WorldParameters()
-						.setWidth(Short.valueOf(worldWidthEdit.getText().toString()))
-						.setHeight(Short.valueOf(worldHeightEdit.getText().toString()))
-						.setFishBreedTime(Short.valueOf(fishBreedEdit.getText().toString()))
-						.setSharkBreedTime(Short.valueOf(sharkBreedEdit.getText().toString()))
-						.setSharkStarveTime(Short.valueOf(sharkStarveEdit.getText().toString()))
-						.setInitialFishCount(Short.valueOf(initialFishEdit.getText().toString()))
-						.setInitialSharkCount(Short.valueOf(initialSharkEdit.getText().toString()))
+						.setWidth(Short.valueOf(inputs[WORLD_WIDTH_INPUT].getText().toString()))
+						.setHeight(Short.valueOf(inputs[WORLD_HEIGHT_INPUT].getText().toString()))
+						.setFishBreedTime(Short.valueOf(inputs[FISH_BREED_INPUT].getText().toString()))
+						.setSharkBreedTime(Short.valueOf(inputs[SHARK_BREED_INPUT].getText().toString()))
+						.setSharkStarveTime(Short.valueOf(inputs[SHARK_STARVE_INPUT].getText().toString()))
+						.setInitialFishCount(Short.valueOf(inputs[INITIAL_FISH_COUNT_INPUT].getText().toString()))
+						.setInitialSharkCount(Short.valueOf(inputs[INITIAL_SHARK_COUNT_INPUT].getText().toString()))
 		);
 	}
 
@@ -71,7 +190,8 @@ public class NewWorld extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.new_world, container, false /* attachToRoot */);
-		v.findViewById(R.id.create_new_world).setOnClickListener(new View.OnClickListener() {
+		newWorldButton = (Button) v.findViewById(R.id.create_new_world);
+		newWorldButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				createWorld();
@@ -84,25 +204,89 @@ public class NewWorld extends Fragment {
 			}
 		});
 
-		worldWidthEdit = (EditText) v.findViewById(R.id.world_width);
-		worldHeightEdit = (EditText) v.findViewById(R.id.world_height);
-		fishBreedEdit = (EditText) v.findViewById(R.id.fish_breed_time);
-		sharkBreedEdit = (EditText) v.findViewById(R.id.shark_breed_time);
-		sharkStarveEdit = (EditText) v.findViewById(R.id.shark_starve);
-		initialFishEdit = (EditText) v.findViewById(R.id.initial_fish_count);
-		initialSharkEdit = (EditText) v.findViewById(R.id.initial_shark_count);
+		inputs[WORLD_WIDTH_INPUT] = (EditText) v.findViewById(R.id.world_width);
+		inputs[WORLD_HEIGHT_INPUT] = (EditText) v.findViewById(R.id.world_height);
+		inputs[FISH_BREED_INPUT] = (EditText) v.findViewById(R.id.fish_breed_time);
+		inputs[SHARK_BREED_INPUT] = (EditText) v.findViewById(R.id.shark_breed_time);
+		inputs[SHARK_STARVE_INPUT] = (EditText) v.findViewById(R.id.shark_starve);
+		inputs[INITIAL_FISH_COUNT_INPUT] = (EditText) v.findViewById(R.id.initial_fish_count);
+		inputs[INITIAL_SHARK_COUNT_INPUT] = (EditText) v.findViewById(R.id.initial_shark_count);
 
 		WorldParameters worldParameters = worldCreator.getPreviousWorldParameters();
 		if (worldParameters == null) {
 			worldParameters = new WorldParameters();
 		}
-		worldWidthEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getWidth()));
-		worldHeightEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getHeight()));
-		fishBreedEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getFishBreedTime()));
-		sharkBreedEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getSharkBreedTime()));
-		sharkStarveEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getSharkStarveTime()));
-		initialFishEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getInitialFishCount()));
-		initialSharkEdit.setText(String.format(Locale.getDefault(), "%d", worldParameters.getInitialSharkCount()));
+		inputs[WORLD_WIDTH_INPUT].setText(String.format(Locale.getDefault(), "%d", worldParameters.getWidth()));
+		inputs[WORLD_HEIGHT_INPUT].setText(String.format(Locale.getDefault(), "%d", worldParameters.getHeight()));
+		inputs[FISH_BREED_INPUT].setText(String.format(Locale.getDefault(), "%d", worldParameters.getFishBreedTime()));
+		inputs[SHARK_BREED_INPUT].setText(String.format(Locale.getDefault(), "%d", worldParameters.getSharkBreedTime()));
+		inputs[SHARK_STARVE_INPUT].setText(String.format(Locale.getDefault(), "%d", worldParameters.getSharkStarveTime()));
+		inputs[INITIAL_FISH_COUNT_INPUT].setText(String.format(Locale.getDefault(), "%d", worldParameters.getInitialFishCount()));
+		inputs[INITIAL_SHARK_COUNT_INPUT].setText(String.format(Locale.getDefault(), "%d", worldParameters.getInitialSharkCount()));
+
+		inputs[WORLD_WIDTH_INPUT].addTextChangedListener(new AfterTextWatcher() {
+			@Override
+			public void afterTextChanged(Editable s) {
+				if (validateWorldWidth(s)) {
+					int worldSize = Integer.valueOf(inputs[WORLD_WIDTH_INPUT].getText().toString())
+							* Integer.valueOf(inputs[WORLD_HEIGHT_INPUT].getText().toString());
+					validateInitialFishCount(inputs[INITIAL_FISH_COUNT_INPUT].getText(), worldSize);
+					validateInitialSharkCount(inputs[INITIAL_SHARK_COUNT_INPUT].getText(), worldSize);
+				}
+				enDisableNewWorldButton();
+			}
+		});
+		inputs[WORLD_HEIGHT_INPUT].addTextChangedListener(new AfterTextWatcher() {
+			@Override
+			public void afterTextChanged(Editable s) {
+				if (validateWorldHeight(s)) {
+					int worldSize = Integer.valueOf(inputs[WORLD_WIDTH_INPUT].getText().toString())
+							* Integer.valueOf(inputs[WORLD_HEIGHT_INPUT].getText().toString());
+					validateInitialFishCount(inputs[INITIAL_FISH_COUNT_INPUT].getText(), worldSize);
+					validateInitialSharkCount(inputs[INITIAL_SHARK_COUNT_INPUT].getText(), worldSize);
+				}
+				enDisableNewWorldButton();
+			}
+		});
+		inputs[FISH_BREED_INPUT].addTextChangedListener(new AfterTextWatcher() {
+			@Override
+			public void afterTextChanged(Editable s) {
+				validateFishBreedTime(s);
+				enDisableNewWorldButton();
+			}
+		});
+		inputs[SHARK_BREED_INPUT].addTextChangedListener(new AfterTextWatcher() {
+			@Override
+			public void afterTextChanged(Editable s) {
+				validateSharkBreedTime(s);
+				enDisableNewWorldButton();
+			}
+		});
+		inputs[SHARK_STARVE_INPUT].addTextChangedListener(new AfterTextWatcher() {
+			@Override
+			public void afterTextChanged(Editable s) {
+				validateSharkStarveTime(s);
+				enDisableNewWorldButton();
+			}
+		});
+		inputs[INITIAL_FISH_COUNT_INPUT].addTextChangedListener(new AfterTextWatcher() {
+			@Override
+			public void afterTextChanged(Editable s) {
+				int worldSize = Integer.valueOf(inputs[WORLD_WIDTH_INPUT].getText().toString())
+						* Integer.valueOf(inputs[WORLD_HEIGHT_INPUT].getText().toString());
+				validateInitialFishCount(inputs[INITIAL_FISH_COUNT_INPUT].getText(), worldSize);
+				enDisableNewWorldButton();
+			}
+		});
+		inputs[INITIAL_SHARK_COUNT_INPUT].addTextChangedListener(new AfterTextWatcher() {
+			@Override
+			public void afterTextChanged(Editable s) {
+				int worldSize = Integer.valueOf(inputs[WORLD_WIDTH_INPUT].getText().toString())
+						* Integer.valueOf(inputs[WORLD_HEIGHT_INPUT].getText().toString());
+				validateInitialSharkCount(inputs[INITIAL_SHARK_COUNT_INPUT].getText(), worldSize);
+				enDisableNewWorldButton();
+			}
+		});
 
 		return v;
 	}

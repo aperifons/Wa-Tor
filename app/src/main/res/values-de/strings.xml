@@ -44,4 +44,24 @@
 	<string name="world_size_x_label">x</string>
 	<string name="create_new_world_command">Neue Welt</string>
 	<string name="create_new_world_description">Started mit einer neuen Welt mit wählbaren Parametern</string>
+
+	<string name="fish_breed_time_empty_error">Fischbrutzeit ist leer</string>
+	<string name="fish_breed_time_too_large_error">Fishbrutzeit ist zu groß (max. %1$d)</string>
+	<string name="fish_breed_time_too_small_error">Fischbrutzeit ist zu klein</string>
+	<string name="initial_fish_count_empty_error">Anfangszahl Fische ist leer</string>
+	<string name="initial_shark_count_empty_error">Anfangszahl Haie ist leer</string>
+	<string name="shark_breed_time_empty_error">Haibrutzeit ist leer</string>
+	<string name="shark_breed_time_too_large_error">Haibrutzeit ist zu gross (max. %1$d)</string>
+	<string name="shark_breed_time_too_small_error">Haibrutzeit ist zu klein</string>
+	<string name="shark_starve_time_empty_error">Haihunger ist leer</string>
+	<string name="shark_starve_time_too_large_error">Haihunger ist zu groß (max. %1$d)</string>
+	<string name="shark_starve_time_too_small_error">Haihunger ist zu klein</string>
+	<string name="too_many_fish_error">Zu viele Fische (max. %1$d)</string>
+	<string name="too_many_shark_error">Zu viele Haie (max. %1$d)</string>
+	<string name="world_height_empty_error">Welthöhe ist leer</string>
+	<string name="world_height_too_large_error">Welthöhe ist zu groß (max. %1$d)</string>
+	<string name="world_height_too_small_error">Welthöhe ist zu klein</string>
+	<string name="world_width_empty_error">Weltbreite ist leer</string>
+	<string name="world_width_too_large_error">Weltbreite ist zu groß (max. %1$d)</string>
+	<string name="world_width_too_small_error">Weltbreite ist zu klein</string>
 </resources>

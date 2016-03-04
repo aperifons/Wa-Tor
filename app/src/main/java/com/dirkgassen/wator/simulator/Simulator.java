@@ -191,6 +191,9 @@ final public class Simulator {
 
 	}
 
+	public static final short MAX_WORLD_WIDTH = Short.MAX_VALUE;
+	public static final short MAX_WORLD_HEIGHT = Short.MAX_VALUE;
+
 	public static final short MAX_FISH_BREED_TIME = Short.MAX_VALUE;
 	public static final short MAX_SHARK_BREED_TIME = Short.MAX_VALUE >> 9;
 	public static final short MAX_SHARK_STARVE_TIME = Short.MAX_VALUE >> 9;
