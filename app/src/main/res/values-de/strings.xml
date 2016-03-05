@@ -18,6 +18,7 @@
 
 <resources>
 	<string name="app_name">Wa-Tor</string>
+	<string name="wator_image_view_desc">Wa-Tor Planetenanzeige</string>
 	<string name="cancel">Abbrechen</string>
 	<string name="close_drawer_description">Optionen schließen</string>
 	<string name="create_new_world">Neu</string>
@@ -36,7 +37,6 @@
 	<string name="shark_breed_time_label">Haibrutzeit:</string>
 	<string name="shark_dataseries_name">H</string>
 	<string name="shark_starve_time_label">Haihunger:</string>
-	<string name="wator_image_view_desc">Wa-Tor Planetenanzeige</string>
 	<string name="wator_logo_description">Wa-Tor Logo</string>
 	<string name="wator_name">Wa-Tor</string>
 	<string name="wator_synopsis">Ein Umweltsimulator</string>
@@ -64,4 +64,8 @@
 	<string name="world_width_empty_error">Weltbreite ist leer</string>
 	<string name="world_width_too_large_error">Weltbreite ist zu groß (max. %1$d)</string>
 	<string name="world_width_too_small_error">Weltbreite ist zu klein</string>
+	<string name="desired_fps_label">Desired FPS:</string>
+	<string name="current_fps_label">Current FPS:</string>
+	<string name="current_drawing_fps">Zeichnugn: %1$d</string>
+	<string name="current_simulation_fps">Simulation: %1$d</string>
 </resources>

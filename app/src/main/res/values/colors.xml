@@ -23,4 +23,6 @@
 	<color name="shark_old">#7b0000</color>"
 	<color name="fish_young">#32ff32</color>"
 	<color name="fish_old">#63c772</color>"
+	<color name="fps_warning_color">#ff0000</color>
+	<color name="fps_ok_color">#000</color>
 </resources>

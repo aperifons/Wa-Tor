@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 import com.dirkgassen.wator.R;
@@ -38,6 +37,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -138,11 +138,9 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	private Thread worldUpdateNotifierThread;
 
-	private RollingAverage drawingAverageFps;
+	private RollingAverage drawingAverageTime;
 
-	private TextView currentDrawFpsLabel;
-
-	private TextView currentSimFpsLabel;
+	private TextView fpsLabel;
 
 	private TextView currentSimFps;
 
@@ -171,6 +169,10 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	private WorldParameters previousWorldParameters;
 
+	private int fpsWarningColor;
+
+	private int fpsOkColor;
+
 	private void worldUpdated() {
 		synchronized (worldObservers) {
 			if (worldObservers.size() > 0) {
@@ -181,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 						world.reset();
 					}
 					if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Fish: " + world.getFishCount() + "; sharks: " + world.getSharkCount()); }
-					if (world.getSharkCount() + world.getFishCount() == 0 || world.getFishCount() == world.getWorldWidth() * world.getWorldHeight()) {
+					if (world.getSharkCount() == 0) {
 						simulatorRunnable.stopTicking();
 					}
 				} finally {
@@ -361,10 +363,11 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		// More info: http://codetheory.in/difference-between-setdisplayhomeasupenabled-sethomebuttonenabled-and-setdisplayshowhomeenabled/
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+		fpsOkColor = ContextCompat.getColor(this, R.color.fps_ok_color);
+		fpsWarningColor = ContextCompat.getColor(this, R.color.fps_warning_color);
+		fpsLabel = (TextView) findViewById(R.id.label_fps);
 		currentSimFps = (TextView) findViewById(R.id.fps_simulator);
-		currentSimFpsLabel = (TextView) findViewById(R.id.label_fps_simulator);
 		currentDrawFps = (TextView) findViewById(R.id.fps_drawing);
-		currentDrawFpsLabel = (TextView) findViewById(R.id.label_fps_drawing);
 		desiredFpsSlider = (RangeSlider) findViewById(R.id.desired_fps);
 		desiredFpsSlider.setOnTouchListener(new View.OnTouchListener() {
 			@Override
@@ -383,23 +386,21 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		});
 		desiredFpsSlider.setOnValueChangeListener(new RangeSlider.OnValueChangeListener() {
 			@Override
-			public void onValueChange(RangeSlider slider, int oldVal, int newVal) {
+			public void onValueChange(RangeSlider slider, int oldVal, int newVal, boolean fromUser) {
 				if (newVal == 0) {
+					fpsLabel.setVisibility(View.INVISIBLE);
 					currentDrawFps.setVisibility(View.INVISIBLE);
-					currentDrawFpsLabel.setVisibility(View.INVISIBLE);
 					currentSimFps.setVisibility(View.INVISIBLE);
-					currentSimFpsLabel.setVisibility(View.INVISIBLE);
 				} else {
+					fpsLabel.setVisibility(View.VISIBLE);
 					currentDrawFps.setVisibility(View.VISIBLE);
-					currentDrawFpsLabel.setVisibility(View.VISIBLE);
 					currentSimFps.setVisibility(View.VISIBLE);
-					currentSimFpsLabel.setVisibility(View.VISIBLE);
 				}
-//				if (fromUser) {
-				if (simulatorRunnable.setTargetFps(newVal)) {
-					startSimulatorThread();
+				if (fromUser) {
+					if (simulatorRunnable.setTargetFps(newVal)) {
+						startSimulatorThread();
+					}
 				}
-//				}
 			}
 		});
 
@@ -409,10 +410,19 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			public void run() {
 				synchronized (MainActivity.this) {
 					if (simulatorFpsTextView != null) {
-						simulatorFpsTextView.setText(String.format(Locale.getDefault(), "%d", simulatorRunnable.getAvgFps()));
+						float fps = simulatorRunnable.getAvgFps();
+						simulatorFpsTextView.setText(getString(R.string.current_simulation_fps, (int) fps));
+						int newTextColor = fps < simulatorRunnable.getTargetFps() ? fpsWarningColor : fpsOkColor;
+						simulatorFpsTextView.setTextColor(newTextColor);
 					}
 					if (drawingFpsTextView != null) {
-						drawingFpsTextView.setText(String.format(Locale.getDefault(), "%d", drawingAverageFps.getAverage() == 0 ? 0 : 1000 / drawingAverageFps.getAverage()));
+						float fps = drawingAverageTime.getAverage();
+						if (fps != 0f) {
+							fps = 1000 / fps;
+						}
+						drawingFpsTextView.setText(getString(R.string.current_drawing_fps, (int) fps));
+						int newTextColor = fps < simulatorRunnable.getTargetFps() ? fpsWarningColor : fpsOkColor;
+						drawingFpsTextView.setTextColor(newTextColor);
 					}
 				}
 			}
@@ -548,7 +558,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	protected void onResume() {
 		super.onResume();
 
-		drawingAverageFps = new RollingAverage();
+		drawingAverageTime = new RollingAverage();
 
 		worldUpdateNotifierThread = new Thread(getString(R.string.worldUpdateNotifierThreadName)) {
 			@Override
@@ -562,8 +572,8 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 						worldUpdated();
 						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Notifying observers took " + (System.currentTimeMillis() - startUpdate) + " ms; waiting for next update"); }
 						long now = System.currentTimeMillis();
-						if (lastUpdateFinished > 0 && drawingAverageFps != null) {
-							drawingAverageFps.add(now - lastUpdateFinished);
+						if (lastUpdateFinished > 0 && drawingAverageTime != null) {
+							drawingAverageTime.add(now - lastUpdateFinished);
 							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) {
 								Log.v("Wa-Tor", "Duration since last redraw" + (now - lastUpdateFinished) + " ms");
 								Log.v("Wa-Tor", "Notifying observers took " + (now - startUpdate) + " ms; waiting for next update");
