@@ -227,7 +227,7 @@ public class NewWorld extends Fragment {
 		inputs[WORLD_WIDTH_INPUT].addTextChangedListener(new AfterTextWatcher() {
 			@Override
 			public void afterTextChanged(Editable s) {
-				if (validateWorldWidth(s)) {
+				if (validateWorldWidth(s) && inputs[WORLD_HEIGHT_INPUT].length() > 0) {
 					int worldSize = Integer.valueOf(inputs[WORLD_WIDTH_INPUT].getText().toString())
 							* Integer.valueOf(inputs[WORLD_HEIGHT_INPUT].getText().toString());
 					validateInitialFishCount(inputs[INITIAL_FISH_COUNT_INPUT].getText(), worldSize);
@@ -239,7 +239,7 @@ public class NewWorld extends Fragment {
 		inputs[WORLD_HEIGHT_INPUT].addTextChangedListener(new AfterTextWatcher() {
 			@Override
 			public void afterTextChanged(Editable s) {
-				if (validateWorldHeight(s)) {
+				if (validateWorldHeight(s) && inputs[WORLD_WIDTH_INPUT].length() > 0) {
 					int worldSize = Integer.valueOf(inputs[WORLD_WIDTH_INPUT].getText().toString())
 							* Integer.valueOf(inputs[WORLD_HEIGHT_INPUT].getText().toString());
 					validateInitialFishCount(inputs[INITIAL_FISH_COUNT_INPUT].getText(), worldSize);
@@ -272,7 +272,9 @@ public class NewWorld extends Fragment {
 		inputs[INITIAL_FISH_COUNT_INPUT].addTextChangedListener(new AfterTextWatcher() {
 			@Override
 			public void afterTextChanged(Editable s) {
-				int worldSize = Integer.valueOf(inputs[WORLD_WIDTH_INPUT].getText().toString())
+				int worldSize = inputs[WORLD_WIDTH_INPUT].length() == 0 || inputs[WORLD_HEIGHT_INPUT].length() == 0 ?
+						-1
+						: Integer.valueOf(inputs[WORLD_WIDTH_INPUT].getText().toString())
 						* Integer.valueOf(inputs[WORLD_HEIGHT_INPUT].getText().toString());
 				validateInitialFishCount(inputs[INITIAL_FISH_COUNT_INPUT].getText(), worldSize);
 				enDisableNewWorldButton();
@@ -281,7 +283,9 @@ public class NewWorld extends Fragment {
 		inputs[INITIAL_SHARK_COUNT_INPUT].addTextChangedListener(new AfterTextWatcher() {
 			@Override
 			public void afterTextChanged(Editable s) {
-				int worldSize = Integer.valueOf(inputs[WORLD_WIDTH_INPUT].getText().toString())
+				int worldSize = inputs[WORLD_WIDTH_INPUT].length() == 0 || inputs[WORLD_HEIGHT_INPUT].length() == 0 ?
+						-1
+						: Integer.valueOf(inputs[WORLD_WIDTH_INPUT].getText().toString())
 						* Integer.valueOf(inputs[WORLD_HEIGHT_INPUT].getText().toString());
 				validateInitialSharkCount(inputs[INITIAL_SHARK_COUNT_INPUT].getText(), worldSize);
 				enDisableNewWorldButton();

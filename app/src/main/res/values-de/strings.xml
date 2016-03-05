@@ -64,6 +64,6 @@
 	<string name="world_width_too_small_error">Weltbreite ist zu klein</string>
 	<string name="desired_fps_label">Desired FPS:</string>
 	<string name="current_fps_label">Current FPS:</string>
-	<string name="current_drawing_fps">Zeichnugn: %1$d</string>
+	<string name="current_drawing_fps">Zeichnen: %1$d</string>
 	<string name="current_simulation_fps">Simulation: %1$d</string>
 </resources>

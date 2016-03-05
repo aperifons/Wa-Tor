@@ -70,7 +70,9 @@
 				android:background="@android:color/white"
 				android:layout_below="@id/main_toolbar"
 				android:layout_centerHorizontal="true"
-				android:elevation="4dp"
+				android:layout_marginLeft="20dp"
+				android:layout_marginRight="20dp"
+				android:elevation="2dp"
 				tools:layout="@id/new_world_fragment"
 				tools:ignore="UnusedAttribute" />
 
