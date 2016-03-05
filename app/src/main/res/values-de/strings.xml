@@ -30,9 +30,7 @@
 	<string name="fish_dataseries_name">F</string>
 	<string name="fps_format">%d fps</string>
 	<string name="initial_fish_count_label">Anfangszahl Fische:</string>
-	<string name="fps_simulator_label">Sim:</string>
 	<string name="invalid_value">Ungültiger Wert</string>
-	<string name="label_fps_drawing">Zeichnen:</string>
 	<string name="open_drawer_description">Optionen anzeigen</string>
 	<string name="shark_breed_time_label">Haibrutzeit:</string>
 	<string name="shark_dataseries_name">H</string>

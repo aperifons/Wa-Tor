@@ -20,8 +20,6 @@
 	<string name="wator_image_view_desc">Wa-Tor Display</string>
 	<string name="fish_dataseries_name">F</string>
 	<string name="shark_dataseries_name">S</string>
-	<string name="fps_simulator_label">Sim:</string>
-	<string name="label_fps_drawing">Draw:</string>
 	<string name="initial_fish_count_label">Initial no. of fish:</string>
 	<string name="fish_breed_time_label">Fish breed time:</string>
 	<string name="initial_shark_count_label">Initial no. of shark:</string>

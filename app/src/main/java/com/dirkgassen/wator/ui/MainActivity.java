@@ -31,6 +31,7 @@ import com.dirkgassen.wator.simulator.WorldHost;
 import com.dirkgassen.wator.simulator.WorldObserver;
 import com.dirkgassen.wator.simulator.WorldParameters;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -370,6 +371,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		currentDrawFps = (TextView) findViewById(R.id.fps_drawing);
 		desiredFpsSlider = (RangeSlider) findViewById(R.id.desired_fps);
 		desiredFpsSlider.setOnTouchListener(new View.OnTouchListener() {
+			@SuppressLint("ClickableViewAccessibility")
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				switch (event.getAction()) {
