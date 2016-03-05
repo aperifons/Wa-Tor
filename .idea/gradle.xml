@@ -5,8 +5,7 @@
       <GradleProjectSettings>
         <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleHome" value="/usr/share/gradle-bin-2.2.1" />
-        <option name="gradleJvm" value="IcedTea 1.7" />
+        <option name="gradleJvm" value="Oracle JDK 1.7" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
