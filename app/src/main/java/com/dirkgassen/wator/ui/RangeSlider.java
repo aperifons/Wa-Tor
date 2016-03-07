@@ -22,13 +22,14 @@ import java.util.Locale;
 
 import com.dirkgassen.wator.R;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.Typeface;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -37,7 +38,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewDebug;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -60,15 +60,12 @@ public class RangeSlider extends View {
 	 */
 	private static final int MAX_CLICK_DURATION = 1000;
 
-	/**  Interface to listen for changes of the current value. */
+	/**  Interface to implement to listen for changes of the current value. */
 	interface OnValueChangeListener {
 
 		/**
 		 * Called upon a change of the current value.
-
-		 picker - The NumberPicker associated with this listener.
-		 oldVal - The previous value.
-		 newVal - The new value.
+		 *
 		 * @param slider The {@link RangeSlider} associated with this listener
 		 * @param oldVal The previous value
 		 * @param newVal The new value
@@ -80,16 +77,16 @@ public class RangeSlider extends View {
 	}
 
 	/** Paint for the text inside the thumb */
-	final private Paint thumbTextPaint;
+	final private Paint thumbTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
 	/** Paint for the background of the thumb */
-	final private Paint thumbBackgroundPaint;
+	final private Paint thumbBackgroundPaint = new Paint();
 
 	/** Paint for the slider along which the thumb is dragged */
-	final private Paint sliderPaint;
+	final private Paint sliderPaint = new Paint();
 
 	/** Path for the thumb */
-	final Path thumbPath;
+	final Path thumbPath = new Path();
 
 	/** Minimum selectable value (ignored if {@link #valueSet} is not {@code null}) */
 	private int minValue;
@@ -301,13 +298,139 @@ public class RangeSlider extends View {
 	}
 
 	/**
+	 * Read out the attributes from the given attribute set and initialize whatever they represent.
+	 *
+	 * For now this method ignrores {@code defStyleAttr} and {@code defStyleRes}
+	 * @param attributeArray typed array containing the attribute values from the XML file
+	 */
+	private void setupAttributes(TypedArray attributeArray) {
+		displayDensity = getResources().getDisplayMetrics().density;
+
+		minValue = attributeArray.getInt(R.styleable.RangeSlider_minValue, 0);
+		maxValue = attributeArray.getInt(R.styleable.RangeSlider_maxValue, 100);
+
+		thumbPadding = attributeArray.getDimension(R.styleable.RangeSlider_thumbPadding, 6 /* dp */ * displayDensity);
+
+		thumbFormat = attributeArray.getString(R.styleable.RangeSlider_thumbFormat);
+		if (thumbFormat == null) {
+			thumbFormat = "%d";
+		}
+
+		String valueSetString = attributeArray.getString(R.styleable.RangeSlider_valueSet);
+		if (valueSetString == null) {
+			value = attributeArray.getInt(R.styleable.RangeSlider_android_value, minValue);
+		} else {
+			String[] values = valueSetString.split(",");
+			valueSet = new int[values.length];
+			for (int no = 0; no < values.length; no++) {
+				valueSet[no] = Integer.valueOf(values[no]);
+			}
+			Arrays.sort(valueSet);
+			value = attributeArray.getInt(R.styleable.RangeSlider_android_value, valueSet[0]);
+		}
+
+		thumbTextPaint.setTextSize(attributeArray.getDimension(R.styleable.RangeSlider_android_textSize, 12));
+		thumbTextPaint.setColor(attributeArray.getColor(R.styleable.RangeSlider_android_textColor, ContextCompat.getColor(getContext(), android.R.color.white)));
+
+		thumbBackgroundPaint.setStyle(Paint.Style.FILL);
+		thumbBackgroundPaint.setColor(attributeArray.getColor(R.styleable.RangeSlider_android_color, ContextCompat.getColor(getContext(), android.R.color.black)));
+
+		sliderPaint.setStrokeWidth(attributeArray.getDimension(R.styleable.RangeSlider_sliderThickness, 2));
+		sliderPaint.setStrokeCap(Paint.Cap.ROUND);
+		sliderPaint.setColor(thumbBackgroundPaint.getColor());
+
+	}
+
+	/**
+	 * Constructor that is called when this view is created from code.
+	 *
+	 * @param context context the view is running in, through which it can access the current theme, resources, etc.
+	 */
+	public RangeSlider(Context context) {
+		super(context);
+
+		thumbPath.setFillType(Path.FillType.EVEN_ODD);
+
+		calculateThumbSize();
+	}
+
+	/**
+	 * Constructor that is called when inflating a view from XML.
+	 * This is called when a view is being constructed from an XML file, supplying attributes that were specified in the
+	 * XML file. This version uses a default style of 0, so the only attribute values applied are those in the Context's
+	 * Theme and the given AttributeSet.
+	 *
+	 * @param context context the view is running in, through which it can access the current theme, resources, etc.
+	 * @param attrs   the attributes of the XML tag that is inflating the vie
+	 */
+	public RangeSlider(Context context, AttributeSet attrs) {
+		super(context, attrs);
+
+		thumbPath.setFillType(Path.FillType.EVEN_ODD);
+
+		TypedArray attributeArray = context.getTheme().obtainStyledAttributes(
+				attrs,
+				R.styleable.RangeSlider,
+				0, 0);
+		try {
+			setupAttributes(attributeArray);
+		} finally {
+			attributeArray.recycle();
+		}
+
+		calculateThumbSize();
+	}
+
+	/**
+	 * Perform inflation from XML and apply a class-specific base style from a theme attribute or style resource.
+	 * This constructor of View allows subclasses to use their own base style when they are inflating.
+	 *
+	 * When determining the final value of a particular attribute, there are four inputs that come into play:
+	 * <ul>
+	 *   <li>Any attribute values in the given AttributeSet.</li>
+	 *   <li>The style resource specified in the {@code AttributeSet} (named "style").</li>
+	 *   <li>The default style specified by {@code defStyleAttr}.</li>
+	 *   <li>he default style specified by {@code defStyleRes}.</li>T
+	 *   <li>The base values in this theme.</li>
+	 * </ul>
+	 *
+	 * Each of these inputs is considered in-order, with the first listed taking precedence over the following ones.
+	 *
+	 * @param context      context the view is running in, through which it can access the current theme, resources, etc.
+	 * @param attrs        the attributes of the XML tag that is inflating the vie
+	 * @param defStyleAttr An attribute in the current theme that contains a reference to a style resource that supplies
+	 *                     default values for the view. Can be 0 to not look for defaults.
+	 * @param defStyleRes  A resource identifier of a style resource that supplies default values for the view, used
+	 *                     only if {@code defStyleAttr} is 0 or can not be found in the theme. Can be 0 to not look for
+	 *                     defaults.
+	 */
+	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+	public RangeSlider(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+		super(context, attrs, defStyleAttr, defStyleRes);
+
+		thumbPath.setFillType(Path.FillType.EVEN_ODD);
+
+		TypedArray attributeArray = context.getTheme().obtainStyledAttributes(
+				attrs,
+				R.styleable.RangeSlider,
+				defStyleAttr, defStyleRes);
+		try {
+			setupAttributes(attributeArray);
+		} finally {
+			attributeArray.recycle();
+		}
+
+		calculateThumbSize();
+	}
+
+	/**
 	 * Called whenever the size of this view has changed.
 	 *
 	 * We are merely resetting the thumb path so that it gets redone when we draw next time.
 	 *
-	 * @param newWidth width of the view after the size changed
+	 * @param newWidth  width of the view after the size changed
 	 * @param newHeight height of the view after the size changed
-	 * @param oldWidth width of the view before the size changed
+	 * @param oldWidth  width of the view before the size changed
 	 * @param oldHeight height of the view before the size changed
 	 */
 	@Override
@@ -316,66 +439,12 @@ public class RangeSlider extends View {
 		thumbPath.reset();
 	}
 
-	public RangeSlider(Context context, AttributeSet attrs) {
-		this(context, attrs, 0, 0);
-	}
-
-	public RangeSlider(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-		super(context, attrs);
-
-		TypedArray a = context.getTheme().obtainStyledAttributes(
-				attrs,
-				R.styleable.RangeSlider,
-				defStyleAttr, defStyleRes);
-
-		displayDensity = getResources().getDisplayMetrics().density;
-
-		try {
-			minValue = a.getInt(R.styleable.RangeSlider_minValue, 0);
-			maxValue = a.getInt(R.styleable.RangeSlider_maxValue, 100);
-
-			thumbPadding = a.getDimension(R.styleable.RangeSlider_thumbPadding, 6 /* dp */ * displayDensity);
-
-			thumbFormat = a.getString(R.styleable.RangeSlider_thumbFormat);
-			if (thumbFormat == null) {
-				thumbFormat = "%d";
-			}
-
-			String valueSetString = a.getString(R.styleable.RangeSlider_valueSet);
-			if (valueSetString == null) {
-				value = a.getInt(R.styleable.RangeSlider_android_value, minValue);
-			} else {
-				String[] values = valueSetString.split(",");
-				valueSet = new int[values.length];
-				for (int no = 0; no < values.length; no++) {
-					valueSet[no] = Integer.valueOf(values[no]);
-				}
-				Arrays.sort(valueSet);
-				value = a.getInt(R.styleable.RangeSlider_android_value, valueSet[0]);
-			}
-
-			thumbTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-			thumbTextPaint.setTextSize(a.getDimension(R.styleable.RangeSlider_android_textSize, 12));
-			thumbTextPaint.setColor(a.getColor(R.styleable.RangeSlider_android_textColor, ContextCompat.getColor(getContext(), android.R.color.white)));
-
-			thumbBackgroundPaint = new Paint();
-			thumbBackgroundPaint.setStyle(Paint.Style.FILL);
-			thumbBackgroundPaint.setColor(a.getColor(R.styleable.RangeSlider_android_color, ContextCompat.getColor(getContext(), android.R.color.black)));
-
-			sliderPaint = new Paint();
-			sliderPaint.setStrokeWidth(a.getDimension(R.styleable.RangeSlider_sliderThickness, 2));
-			sliderPaint.setStrokeCap(Paint.Cap.ROUND);
-			sliderPaint.setColor(thumbBackgroundPaint.getColor());
-		} finally {
-			a.recycle();
-		}
-
-		thumbPath = new Path();
-		thumbPath.setFillType(Path.FillType.EVEN_ODD);
-
-		calculateThumbSize();
-	}
-
+	/**
+	 * Allows the user to click on the thumb. Clicking shows an alert that allows the user to enter a value. The
+	 * entered value is adjusted to the minimum/maximum (or to be one of the value set if one is active).
+	 *
+	 * @return {@code true} to indicate that the click was handled.
+	 */
 	@Override
 	public boolean performClick() {
 		super.performClick();
@@ -427,6 +496,12 @@ public class RangeSlider extends View {
 		return true;
 	}
 
+	/**
+	 * Handle touch events: drag the thumb to new values. This method also detects clicks.
+	 *
+	 * @param event the touch event
+	 * @return {@code true} if the event was handled; {@code false} otherwise
+	 */
 	@Override
 	public boolean onTouchEvent(@NonNull MotionEvent event) {
 		if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Got touch event: " + event); }
@@ -483,6 +558,14 @@ public class RangeSlider extends View {
 		return super.onTouchEvent(event);
 	}
 
+	/**
+	 * Implement custom measuring of the view.
+	 *
+	 * @param widthMeasureSpec  horizontal space requirements as imposed by the parent. The requirements are encoded with
+	 *                          {@link View.MeasureSpec}.
+	 * @param heightMeasureSpec vertical space requirements as imposed by the parent. The requirements are encoded with
+	 *                          {@link View.MeasureSpec}.
+	 */
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		int widthSize = MeasureSpec.getSize(widthMeasureSpec);
@@ -505,10 +588,12 @@ public class RangeSlider extends View {
 		setMeasuredDimension(widthSize, height);
 	}
 
+	/**
+	 * Draws the view
+	 * @param canvas canvas to paint on
+	 */
 	@Override
 	protected void onDraw(Canvas canvas) {
-		super.onDraw(canvas);
-
 		int paddingLeft = getPaddingLeft();
 		int paddingTop = getPaddingTop();
 		int paddingRight = getPaddingRight();
@@ -534,10 +619,17 @@ public class RangeSlider extends View {
 		thumbPath.offset(-thumbTip, 0);
 	}
 
+	/** @return minimum value of this slider */
 	public int getMinValue() {
 		return minValue;
 	}
 
+	/**
+	 * Changes the minimum value of this slider. Note: if the current value is smaller than the new minimum value
+	 * the value is adjusted accordingly.
+	 *
+	 * @param minValue new minimum value
+	 */
 	public void setMinValue(int minValue) {
 		if (minValue != this.minValue) {
 			this.minValue = minValue;
@@ -550,10 +642,19 @@ public class RangeSlider extends View {
 		}
 	}
 
+	/**
+	 * @return maximum value of this slider
+	 */
 	public int getMaxValue() {
 		return maxValue;
 	}
 
+	/**
+	 * Changes the maximum value of this slider. Note: if the current value is smaller than the new minimum value
+	 * the value is adjusted accordingly.
+	 *
+	 * @param maxValue new maximum value
+	 */
 	public void setMaxValue(int maxValue) {
 		if (maxValue != this.maxValue) {
 			this.maxValue = maxValue;
@@ -564,10 +665,16 @@ public class RangeSlider extends View {
 		}
 	}
 
+	/** @return text size used to draw the thumb value */
 	public float getTextSize() {
 		return thumbTextPaint.getTextSize();
 	}
 
+	/**
+	 * Changes the text size that is used to draw the thumb value
+	 *
+	 * @param textSize new text size for the thumb value
+	 */
 	public void setTextSize(float textSize) {
 		if (textSize != thumbTextPaint.getTextSize()) {
 			thumbTextPaint.setTextSize(textSize);
@@ -575,25 +682,22 @@ public class RangeSlider extends View {
 		}
 	}
 
-
-	@ViewDebug.ExportedProperty(category = "text", mapping = {
-			@ViewDebug.IntToString(from = Typeface.NORMAL, to = "NORMAL"),
-			@ViewDebug.IntToString(from = Typeface.BOLD, to = "BOLD"),
-			@ViewDebug.IntToString(from = Typeface.ITALIC, to = "ITALIC"),
-			@ViewDebug.IntToString(from = Typeface.BOLD_ITALIC, to = "BOLD_ITALIC")
-	})
-	public int getTypefaceStyle() {
-		Typeface typeface = thumbTextPaint.getTypeface();
-		return typeface != null ? typeface.getStyle() : Typeface.NORMAL;
-	}
-
-
+	/** @return current value of the slider */
 	public int getValue() {
 		return value;
 	}
 
+	/**
+	 * Changes the value of the slider. Note: the value is adusted to be in between the minimum and the maximum
+	 * (or to be one of the value set values if a set is active)
+	 *
+	 * @param value new value for the slider
+	 */
 	public void setValue(int value) {
 		if (valueSet != null) {
+
+			// Value set
+
 			if (value != this.value) {
 				// Set the value to one of the value set
 				int foundValue = valueSet[valueSet.length - 1];
@@ -604,10 +708,14 @@ public class RangeSlider extends View {
 						break;
 					}
 				}
-				updateValue(foundValue, false /* from user */);
+				if (foundValue != this.value) {
+					updateValue(foundValue, false /* from user */);
+				}
 			}
 		} else {
+
 			// Linear range: limit to the range
+
 			if (value < minValue) {
 				value = minValue;
 			} else if (value > maxValue) {
@@ -619,18 +727,31 @@ public class RangeSlider extends View {
 		}
 	}
 
+	/** @return padding of the thumb */
 	public float getThumbPadding() {
 		return thumbPadding / displayDensity;
 	}
 
+	/**
+	 * Changes the padding of the thumb
+	 *
+	 * @param thumbPadding new padding (on each side)
+	 */
 	public void setThumbPadding(float thumbPadding) {
 		this.thumbPadding = thumbPadding * displayDensity;
 	}
 
+	/**
+	 * Sets an {@link OnValueChangeListener} that is called whenever the value of this slider changes. Calling this
+	 * method replaces a previously set listener.
+	 *
+	 * @param onValueChangeListener new listener
+	 */
 	synchronized public void setOnValueChangeListener(OnValueChangeListener onValueChangeListener) {
 		this.onValueChangeListener = onValueChangeListener;
 	}
 
+	/** @return currently active {@link com.dirkgassen.wator.ui.RangeSlider.OnValueChangeListener} */
 	public OnValueChangeListener getOnValueChangeListener() {
 		return onValueChangeListener;
 	}

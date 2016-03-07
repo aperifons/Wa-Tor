@@ -18,7 +18,6 @@
 package com.dirkgassen.wator.ui;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +31,10 @@ import com.dirkgassen.wator.simulator.WorldObserver;
 import com.dirkgassen.wator.simulator.WorldParameters;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -39,13 +42,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -57,44 +60,95 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 /**
- * @author dirk.
+ * Main activity for the app.
  */
 // Adding the hamburger menu: followed this tutorial:
 //     http://codetheory.in/android-navigation-drawer/
 public class MainActivity extends AppCompatActivity implements WorldHost, SimulatorRunnable.SimulatorRunnableObserver, NewWorld.WorldCreator {
 
 
-	class DrawerCommandItem {
+	/** Stores information about one commad in the drawer. */
+	abstract class DrawerCommandItem {
+
+		/** ID that uniquely identifies the command */
+		public final int id;
+
+		/** ID of the icon of the command. */
 		public final int icon;
+
+		/** Command title. */
 		public final String title;
+
+		/** A description of the command. */
 		public final String subtitle;
 
-		DrawerCommandItem(int icon, String title, String subtitle) {
+		/**
+		 * Creates a new command
+		 *
+		 * @param id       ID for the new command
+		 * @param icon     ID of the icon to use
+		 * @param title    title for the command
+		 * @param subtitle description of th ecommand
+		 */
+		DrawerCommandItem(int id, int icon, String title, String subtitle) {
+			this.id = id;
 			this.icon = icon;
 			this.title = title;
 			this.subtitle = subtitle;
 		}
+
+		abstract public void execute();
 	}
 
+	/** A {@link android.widget.ListAdapter} for our drawer commands */
 	class DrawerListAdapter extends BaseAdapter {
+
+		/** List of commands available */
 		private final List<DrawerCommandItem> drawerCommands;
+
+		/** Layout inflater to use to inflate the views for the items in the list */
 		private final LayoutInflater inflater;
 
+		/** @return number of commands in this adapter */
 		@Override
 		public int getCount() {
 			return drawerCommands.size();
 		}
 
+		/**
+		 * Returns a given command in the list.
+		 *
+		 * @param position position of the command in the list
+		 * @return desired command
+		 */
 		@Override
 		public Object getItem(int position) {
 			return drawerCommands.get(position);
 		}
 
+		/**
+		 * Returns the ID of the command at a certain position (if there is a command)
+		 *
+		 * @param position position of the command
+		 * @return ID of the command
+		 */
 		@Override
 		public long getItemId(int position) {
-			return 0;
+			DrawerCommandItem item = drawerCommands.get(position);
+			if (item == null) {
+				return 0;
+			}
+			return item.id;
 		}
 
+		/**
+		 * Returns the view for the given position.
+		 *
+		 * @param position    index of the row
+		 * @param convertView an existing view that should be recycled
+		 * @param parent      The parent that this view will eventually be attached to
+		 * @return            view for the position
+		 */
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			if (convertView == null) {
@@ -107,6 +161,11 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			return convertView;
 		}
 
+		/**
+		 * Creates a new drawer command adapter
+		 *
+		 * @param drawerCommands list of commands for this adapter
+		 */
 		public DrawerListAdapter(List<DrawerCommandItem> drawerCommands) {
 			this.drawerCommands = drawerCommands;
 			inflater = LayoutInflater.from(MainActivity.this);
@@ -114,66 +173,120 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	}
 
-	private static final String FISH_AGE_KEY = "fishAge";
-	private static final String SHARK_AGE_KEY = "sharkAge";
-	private static final String SHARK_HUNGER_KEY = "sharkHunger";
-	private static final String FISH_POSITIONS_X_KEY = "fishPositionsX";
-	private static final String FISH_POSITIONS_Y_KEY = "fishPositionsY";
-	private static final String FISH_BREED_TIME_KEY = "fishReproductionAge";
-	private static final String SHARK_BREED_TIME_KEY = "sharkReproductionAge";
-	private static final String SHARK_STARVE_TIME_KEY = "fishMaxHunger";
-	private static final String SHARK_POSITIONS_X_KEY = "sharkPositionsX";
-	private static final String SHARK_POSITIONS_Y_KEY = "sharkPositionsY";
-	private static final String WORLD_WIDTH_KEY = "worldWidth";
-	private static final String WORLD_HEIGHT_KEY = "worldHeight";
-	private static final String INITIAL_FISH_COUNT_KEY = "initialFishCount";
-	private static final String INITIAL_SHARK_COUNT_KEY = "initialSharkCount";
-	private static final String TARGET_FPS_KEY = "targetFps";
+	/** Groups the command IDs together */
+	static class Commands {
+		/** ID of the command to create a new world */
+		private static final int NEW_WORLD_COMMAND = 1;
+
+		/** Id of the "about" command */
+		private static final int ABOUT_COMMAND = 2;
+	}
 
 
+	/** Groups the keys for saving world data in a Bundle */
+	static class WorldKeys {
+		/** Key for the fish age array */
+		private static final String FISH_AGE_KEY = "fishAge";
+
+		/** Key for the shark age array */
+		private static final String SHARK_AGE_KEY = "sharkAge";
+
+		/** Key for the fish age */
+		private static final String SHARK_HUNGER_KEY = "sharkHunger";
+
+		/** Key for the array containinng the x coordinates of the fish positions */
+		private static final String FISH_POSITIONS_X_KEY = "fishPositionsX";
+
+		/** Key for the array containing the y coordinates of the fish positions */
+		private static final String FISH_POSITIONS_Y_KEY = "fishPositionsY";
+
+		/** Key for the fish breed time */
+		private static final String FISH_BREED_TIME_KEY = "fishBreedTime";
+
+		/** Key for the shark breed time */
+		private static final String SHARK_BREED_TIME_KEY = "sharkBreedTime";
+
+		/** Key for the shark starve time */
+		private static final String SHARK_STARVE_TIME_KEY = "sharkStarveTime";
+
+		/** Key for the array containing the x coordinates of the shark positions */
+		private static final String SHARK_POSITIONS_X_KEY = "sharkPositionsX";
+
+		/** Key for the array containing the y coordinates of the shark positions */
+		private static final String SHARK_POSITIONS_Y_KEY = "sharkPositionsY";
+
+		/** Key for the width of the world */
+		private static final String WORLD_WIDTH_KEY = "worldWidth";
+
+		/** Key for the height of the world */
+		private static final String WORLD_HEIGHT_KEY = "worldHeight";
+
+		/** Key for the initial number of fish */
+		private static final String INITIAL_FISH_COUNT_KEY = "initialFishCount";
+
+		/** Key for the initial number of shark */
+		private static final String INITIAL_SHARK_COUNT_KEY = "initialSharkCount";
+
+		/** Key for the simulation FPS  */
+		private static final String TARGET_FPS_KEY = "targetFps";
+	}
+
+
+	/**
+	 * Set of {@link com.dirkgassen.wator.simulator.WorldObserver} objects that are notified whenever the simulator
+	 * ticked.
+	 */
 	private final Set<WorldObserver> worldObservers = new HashSet<WorldObserver>();
 
+	/** Simulator object that runs the world */
 	private Simulator simulator;
 
+	/** {@link java.lang.Runnable} for the thread that ticks the world */
 	private SimulatorRunnable simulatorRunnable;
 
+	/** Thread that updates the {@link #worldObservers} */
 	private Thread worldUpdateNotifierThread;
 
+	/** Displays the statistics of how many fish and shark exist in the world */
 	private RollingAverage drawingAverageTime;
 
+	/** Label for the "current frame rates" display */
 	private TextView fpsLabel;
 
+	/** Contains the current simulation frame rate */
 	private TextView currentSimFps;
 
+	/** Displays the current frame rate of the drawing */
 	private TextView currentDrawFps;
 
-
+	/** Slider for the desired frame rate */
 	private RangeSlider desiredFpsSlider;
 
-	private TextView simulatorFpsTextView;
-
-	private TextView drawingFpsTextView;
-
+	/** The {@link DrawerLayout} of the main view */
 	private DrawerLayout drawerLayout;
 
-	private View drawerPane;
-
-	private ListView drawerList;
-
-	private Fragment newWorldFragment;
-
+	/** Ties together the {@link android.support.v7.app.ActionBar} and our {@link #drawerLayout}*/
 	private ActionBarDrawerToggle drawerToggle;
 
+	/* "New world" fragment */
+	private Fragment newWorldFragment;
+
+	/** Handler to run stuff on the UI thread */
 	private Handler handler;
 
+	/** A {@link Runnable} that updates the FPS in the drawer */
 	private Runnable updateFpsRunnable;
 
+	/** Stores the parameters of the most recently created world */
 	private WorldParameters previousWorldParameters;
 
+	/** The FPS indicators will be colored with this color when the FPS is lower than desired */
 	private int fpsWarningColor;
 
+	/** The FPS indicators will be colored with this color when the FPS is higher or equal to the desired FPS */
 	private int fpsOkColor;
 
+	/** Notifies all {@link #worldObservers} of a world change */
 	private void worldUpdated() {
 		synchronized (worldObservers) {
 			if (worldObservers.size() > 0) {
@@ -196,39 +309,84 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		// necessary. If the drawer opens while we are executing and one of these fields change to non-null
 		// then the frame rate will be update next time. If it's the other way around the updateFpsRunnable
 		// should synchronize and check again.
-		if (simulatorFpsTextView != null || drawingFpsTextView != null) {
+		if (currentSimFps != null || currentDrawFps != null) {
 			handler.post(updateFpsRunnable);
 		}
 	}
 
+	/**
+	 * Creates a list with commands for our drawer.
+	 *
+	 * @return command list
+	 */
 	private List<DrawerCommandItem> getDrawerCommands() {
-		DrawerCommandItem[] commands = new DrawerCommandItem[] {
-				new DrawerCommandItem(0, getString(R.string.create_new_world_command), getString(R.string.create_new_world_description))
-		};
 		List<DrawerCommandItem> commandList = new ArrayList<DrawerCommandItem>();
-		Collections.addAll(commandList, commands);
+		commandList.add(
+				new DrawerCommandItem(Commands.NEW_WORLD_COMMAND, 0, getString(R.string.create_new_world_command), getString(R.string.create_new_world_description)) {
+					@Override
+					public void execute() {
+						drawerLayout.closeDrawers();
+						toggleNewWorldFragment();
+					}
+				}
+		);
+		commandList.add(
+				new DrawerCommandItem(Commands.ABOUT_COMMAND, 0, getString(R.string.about_command), getString(R.string.about_description)) {
+					@Override
+					public void execute() {
+						showAbout();
+					}
+				}
+		);
 		return commandList;
 	}
 
-	private void drawerCommandSelected(int position) {
-		switch (position) {
-			case 0: // New world
-				drawerLayout.closeDrawers();
-				toggleNewWorldFragment();
-				break;
+	/** Shows an alert with fancy info about this App. */
+	@SuppressLint("InflateParams")
+	private void showAbout() {
+		View aboutView = getLayoutInflater().inflate(R.layout.about, null /* root */, true /* attachToRoot */);
+		TextView versionView = (TextView) aboutView.findViewById(R.id.version);
+		PackageInfo packageInfo;
+		try {
+			packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+			String version = getString(R.string.version, packageInfo.versionName, packageInfo.versionCode);
+			versionView.setText(version);
+		} catch (PackageManager.NameNotFoundException e) {
+			versionView.setText(R.string.unknown_version);
 		}
+
+		new AlertDialog.Builder(this)
+				//TODO: Integrate a pretty icon
+//				.setIcon(R.drawable.)
+				.setTitle(R.string.app_name)
+				.setView(aboutView)
+				.setCancelable(true)
+				.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface d, int c) {
+						d.dismiss();
+					}
+				})
+				.create()
+				.show();
 	}
 
-	synchronized private void hideNewWorldFragment() {
+	/**
+	 * Hides the "new world" fragment if it was showing.
+	 * @return {@code true} if the fragment was visible; {@code false} otherwise
+	 */
+	synchronized private boolean hideNewWorldFragment() {
 		if (newWorldFragment != null) {
 			FragmentManager fm = getSupportFragmentManager();
 			FragmentTransaction ft = fm.beginTransaction();
 			ft.remove(newWorldFragment);
 			newWorldFragment = null;
 			ft.commit();
+			return true;
 		}
+		return false;
 	}
 
+	/** Toggles the state of the "new world" fragment: if it is currently open then hide it, otherwise show it. */
 	synchronized private void toggleNewWorldFragment() {
 		FragmentManager fm = getSupportFragmentManager();
 		FragmentTransaction ft = fm.beginTransaction();
@@ -242,9 +400,12 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			newWorldFragment = null;
 		}
 		ft.commit();
-
 	}
 
+	/**
+	 * Return the parameters from which the current world was created
+	 * @return parameters that created the current world
+	 */
 	@Override
 	public WorldParameters getPreviousWorldParameters() {
 		if (previousWorldParameters == null) {
@@ -253,12 +414,19 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		return previousWorldParameters;
 	}
 
+	/**
+	 * Creates a new world with the given parameters. Depending on the current desired FPS the simulator thread
+	 * is started (or not, if the desired FPS is 0).
+	 * @param worldParameters parameters for the new world.
+	 */
 	@Override
-	public void createWorld(WorldParameters worldParameters) {
+	synchronized public void createWorld(WorldParameters worldParameters) {
 		int targetFps = simulatorRunnable != null ? simulatorRunnable.getTargetFps() : -1;
 		previousWorldParameters = worldParameters;
+		if (simulatorRunnable != null) {
+			simulatorRunnable.stopTicking();
+		}
 		simulator = new Simulator(worldParameters);
-		simulatorRunnable.stopTicking();
 		simulatorRunnable = new SimulatorRunnable(simulator);
 		if (targetFps >= 0) {
 			simulatorRunnable.setTargetFps(targetFps);
@@ -268,11 +436,21 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		hideNewWorldFragment();
 	}
 
+	/** Cancels creating a new world: simply hide the "new world" fragment. */
 	@Override
 	public void cancelCreateWorld() {
 		hideNewWorldFragment();
 	}
 
+	/**
+	 * Saves the state of this instance:
+	 * <ul>
+	 *     <li>current state of the simulator: fish positions and age, shark positions and age and hunger</li>
+	 *     <li>world parameters</li>
+	 *     <li>desired fps</li>
+	 * </ul>
+	 * @param outState Bundle to save the state to
+	 */
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		Simulator.WorldInspector world = simulator.getWorldToPaint();
@@ -324,30 +502,30 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 				}
 			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
 			if (fishCount > 0) {
-				outState.putShortArray(FISH_AGE_KEY, fishAge);
-				outState.putShortArray(FISH_POSITIONS_X_KEY, fishPosX);
-				outState.putShortArray(FISH_POSITIONS_Y_KEY, fishPosY);
+				outState.putShortArray(WorldKeys.FISH_AGE_KEY, fishAge);
+				outState.putShortArray(WorldKeys.FISH_POSITIONS_X_KEY, fishPosX);
+				outState.putShortArray(WorldKeys.FISH_POSITIONS_Y_KEY, fishPosY);
 			}
 			if (sharkCount > 0) {
-				outState.putShortArray(SHARK_AGE_KEY, sharkAge);
-				outState.putShortArray(SHARK_HUNGER_KEY, sharkHunger);
-				outState.putShortArray(SHARK_POSITIONS_X_KEY, sharkPosX);
-				outState.putShortArray(SHARK_POSITIONS_Y_KEY, sharkPosY);
+				outState.putShortArray(WorldKeys.SHARK_AGE_KEY, sharkAge);
+				outState.putShortArray(WorldKeys.SHARK_HUNGER_KEY, sharkHunger);
+				outState.putShortArray(WorldKeys.SHARK_POSITIONS_X_KEY, sharkPosX);
+				outState.putShortArray(WorldKeys.SHARK_POSITIONS_Y_KEY, sharkPosY);
 			}
-			outState.putShort(WORLD_WIDTH_KEY, world.getWorldWidth());
-			outState.putShort(WORLD_HEIGHT_KEY, world.getWorldHeight());
-			outState.putShort(FISH_BREED_TIME_KEY, world.getFishBreedTime());
-			outState.putShort(SHARK_BREED_TIME_KEY, world.getSharkBreedTime());
-			outState.putShort(SHARK_STARVE_TIME_KEY, world.getSharkStarveTime());
+			outState.putShort(WorldKeys.WORLD_WIDTH_KEY, world.getWorldWidth());
+			outState.putShort(WorldKeys.WORLD_HEIGHT_KEY, world.getWorldHeight());
+			outState.putShort(WorldKeys.FISH_BREED_TIME_KEY, world.getFishBreedTime());
+			outState.putShort(WorldKeys.SHARK_BREED_TIME_KEY, world.getSharkBreedTime());
+			outState.putShort(WorldKeys.SHARK_STARVE_TIME_KEY, world.getSharkStarveTime());
 
 			if (previousWorldParameters == null) {
 				previousWorldParameters = new WorldParameters();
 			}
-			outState.putInt(INITIAL_FISH_COUNT_KEY, previousWorldParameters.getInitialFishCount());
-			outState.putInt(INITIAL_SHARK_COUNT_KEY, previousWorldParameters.getInitialSharkCount());
+			outState.putInt(WorldKeys.INITIAL_FISH_COUNT_KEY, previousWorldParameters.getInitialFishCount());
+			outState.putInt(WorldKeys.INITIAL_SHARK_COUNT_KEY, previousWorldParameters.getInitialSharkCount());
 
 			if (simulatorRunnable != null) {
-				outState.putInt(TARGET_FPS_KEY, simulatorRunnable.getTargetFps());
+				outState.putInt(WorldKeys.TARGET_FPS_KEY, simulatorRunnable.getTargetFps());
 			}
 		} finally {
 			world.release();
@@ -355,6 +533,11 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		super.onSaveInstanceState(outState);
 	}
 
+	/**
+	 * Initializes this activity
+	 * @param savedInstanceState if this parameter is not {@code null} the activity state is restored to the information
+	 *                           in this Bundle
+	 */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -367,8 +550,6 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		fpsOkColor = ContextCompat.getColor(this, R.color.fps_ok_color);
 		fpsWarningColor = ContextCompat.getColor(this, R.color.fps_warning_color);
 		fpsLabel = (TextView) findViewById(R.id.label_fps);
-		currentSimFps = (TextView) findViewById(R.id.fps_simulator);
-		currentDrawFps = (TextView) findViewById(R.id.fps_drawing);
 		desiredFpsSlider = (RangeSlider) findViewById(R.id.desired_fps);
 		desiredFpsSlider.setOnTouchListener(new View.OnTouchListener() {
 			@SuppressLint("ClickableViewAccessibility")
@@ -389,18 +570,28 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		desiredFpsSlider.setOnValueChangeListener(new RangeSlider.OnValueChangeListener() {
 			@Override
 			public void onValueChange(RangeSlider slider, int oldVal, int newVal, boolean fromUser) {
-				if (newVal == 0) {
-					fpsLabel.setVisibility(View.INVISIBLE);
-					currentDrawFps.setVisibility(View.INVISIBLE);
-					currentSimFps.setVisibility(View.INVISIBLE);
-				} else {
-					fpsLabel.setVisibility(View.VISIBLE);
-					currentDrawFps.setVisibility(View.VISIBLE);
-					currentSimFps.setVisibility(View.VISIBLE);
-				}
-				if (fromUser) {
-					if (simulatorRunnable.setTargetFps(newVal)) {
-						startSimulatorThread();
+				synchronized (MainActivity.this) {
+					if (newVal == 0) {
+						fpsLabel.setVisibility(View.INVISIBLE);
+						if (currentDrawFps != null) {
+							currentDrawFps.setVisibility(View.INVISIBLE);
+						}
+						if (currentSimFps != null) {
+							currentSimFps.setVisibility(View.INVISIBLE);
+						}
+					} else {
+						fpsLabel.setVisibility(View.VISIBLE);
+						if (currentDrawFps != null) {
+							currentDrawFps.setVisibility(View.VISIBLE);
+						}
+						if (currentSimFps != null) {
+							currentSimFps.setVisibility(View.VISIBLE);
+						}
+					}
+					if (fromUser) {
+						if (simulatorRunnable.setTargetFps(newVal)) {
+							startSimulatorThread();
+						}
 					}
 				}
 			}
@@ -411,20 +602,20 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			@Override
 			public void run() {
 				synchronized (MainActivity.this) {
-					if (simulatorFpsTextView != null) {
+					if (currentSimFps != null) {
 						float fps = simulatorRunnable.getAvgFps();
-						simulatorFpsTextView.setText(getString(R.string.current_simulation_fps, (int) fps));
+						currentSimFps.setText(getString(R.string.current_simulation_fps, (int) fps));
 						int newTextColor = fps < simulatorRunnable.getTargetFps() ? fpsWarningColor : fpsOkColor;
-						simulatorFpsTextView.setTextColor(newTextColor);
+						currentSimFps.setTextColor(newTextColor);
 					}
-					if (drawingFpsTextView != null) {
+					if (currentDrawFps != null) {
 						float fps = drawingAverageTime.getAverage();
 						if (fps != 0f) {
 							fps = 1000 / fps;
 						}
-						drawingFpsTextView.setText(getString(R.string.current_drawing_fps, (int) fps));
+						currentDrawFps.setText(getString(R.string.current_drawing_fps, (int) fps));
 						int newTextColor = fps < simulatorRunnable.getTargetFps() ? fpsWarningColor : fpsOkColor;
-						drawingFpsTextView.setTextColor(newTextColor);
+						currentDrawFps.setTextColor(newTextColor);
 					}
 				}
 			}
@@ -437,19 +628,19 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			);
 		} else {
 			WorldParameters parameters = new WorldParameters()
-					.setWidth(savedInstanceState.getShort(WORLD_WIDTH_KEY))
-					.setHeight(savedInstanceState.getShort(WORLD_HEIGHT_KEY))
-					.setFishBreedTime(savedInstanceState.getShort(FISH_BREED_TIME_KEY))
-					.setSharkBreedTime(savedInstanceState.getShort(SHARK_BREED_TIME_KEY))
-					.setSharkStarveTime(savedInstanceState.getShort(SHARK_STARVE_TIME_KEY))
+					.setWidth(savedInstanceState.getShort(WorldKeys.WORLD_WIDTH_KEY))
+					.setHeight(savedInstanceState.getShort(WorldKeys.WORLD_HEIGHT_KEY))
+					.setFishBreedTime(savedInstanceState.getShort(WorldKeys.FISH_BREED_TIME_KEY))
+					.setSharkBreedTime(savedInstanceState.getShort(WorldKeys.SHARK_BREED_TIME_KEY))
+					.setSharkStarveTime(savedInstanceState.getShort(WorldKeys.SHARK_STARVE_TIME_KEY))
 					.setInitialFishCount(0)
 					.setInitialSharkCount(0);
 			simulator = new Simulator(parameters);
-			short[] fishAge = savedInstanceState.getShortArray(FISH_AGE_KEY);
+			short[] fishAge = savedInstanceState.getShortArray(WorldKeys.FISH_AGE_KEY);
 			if (fishAge != null) {
-				short[] fishPosX = savedInstanceState.getShortArray(FISH_POSITIONS_X_KEY);
+				short[] fishPosX = savedInstanceState.getShortArray(WorldKeys.FISH_POSITIONS_X_KEY);
 				if (fishPosX != null) {
-					short[] fishPosY = savedInstanceState.getShortArray(FISH_POSITIONS_Y_KEY);
+					short[] fishPosY = savedInstanceState.getShortArray(WorldKeys.FISH_POSITIONS_Y_KEY);
 					if (fishPosY != null) {
 						for (int fishNo = 0; fishNo < fishAge.length; fishNo++) {
 							simulator.setFish(fishPosX[fishNo], fishPosY[fishNo], fishAge[fishNo]);
@@ -457,13 +648,13 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 					}
 				}
 			}
-			short[] sharkAge = savedInstanceState.getShortArray(SHARK_AGE_KEY);
+			short[] sharkAge = savedInstanceState.getShortArray(WorldKeys.SHARK_AGE_KEY);
 			if (sharkAge != null) {
-				short[] sharkHunger = savedInstanceState.getShortArray(SHARK_HUNGER_KEY);
+				short[] sharkHunger = savedInstanceState.getShortArray(WorldKeys.SHARK_HUNGER_KEY);
 				if (sharkHunger != null) {
-					short[] sharkPosX = savedInstanceState.getShortArray(SHARK_POSITIONS_X_KEY);
+					short[] sharkPosX = savedInstanceState.getShortArray(WorldKeys.SHARK_POSITIONS_X_KEY);
 					if (sharkPosX != null) {
-						short[] sharkPosY = savedInstanceState.getShortArray(SHARK_POSITIONS_Y_KEY);
+						short[] sharkPosY = savedInstanceState.getShortArray(WorldKeys.SHARK_POSITIONS_Y_KEY);
 						if (sharkPosY != null) {
 							for (int sharkNo = 0; sharkNo < sharkAge.length; sharkNo++) {
 								simulator.setShark(sharkPosX[sharkNo], sharkPosY[sharkNo], sharkAge[sharkNo], sharkHunger[sharkNo]);
@@ -473,12 +664,12 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 				}
 			}
 
-			if (savedInstanceState.containsKey(INITIAL_FISH_COUNT_KEY) || savedInstanceState.containsKey(INITIAL_SHARK_COUNT_KEY)) {
-				if (savedInstanceState.containsKey(INITIAL_FISH_COUNT_KEY)) {
-					parameters.setInitialFishCount(savedInstanceState.getInt(INITIAL_FISH_COUNT_KEY));
+			if (savedInstanceState.containsKey(WorldKeys.INITIAL_FISH_COUNT_KEY) || savedInstanceState.containsKey(WorldKeys.INITIAL_SHARK_COUNT_KEY)) {
+				if (savedInstanceState.containsKey(WorldKeys.INITIAL_FISH_COUNT_KEY)) {
+					parameters.setInitialFishCount(savedInstanceState.getInt(WorldKeys.INITIAL_FISH_COUNT_KEY));
 				}
-				if (savedInstanceState.containsKey(INITIAL_SHARK_COUNT_KEY)) {
-					parameters.setInitialSharkCount(savedInstanceState.getInt(INITIAL_SHARK_COUNT_KEY));
+				if (savedInstanceState.containsKey(WorldKeys.INITIAL_SHARK_COUNT_KEY)) {
+					parameters.setInitialSharkCount(savedInstanceState.getInt(WorldKeys.INITIAL_SHARK_COUNT_KEY));
 				}
 				previousWorldParameters = parameters;
 			}
@@ -486,19 +677,21 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		}
 
 		simulatorRunnable = new SimulatorRunnable(simulator);
-		if (savedInstanceState != null && savedInstanceState.containsKey(TARGET_FPS_KEY)) {
-			simulatorRunnable.setTargetFps(savedInstanceState.getInt(TARGET_FPS_KEY));
+		if (savedInstanceState != null && savedInstanceState.containsKey(WorldKeys.TARGET_FPS_KEY)) {
+			simulatorRunnable.setTargetFps(savedInstanceState.getInt(WorldKeys.TARGET_FPS_KEY));
 		}
 		simulatorRunnable.registerSimulatorRunnableObserver(this);
 
 		drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-		drawerPane = findViewById(R.id.drawer_pane);
-		drawerList = (ListView) findViewById(R.id.drawer_commands);
+		final ListView drawerList = (ListView) findViewById(R.id.drawer_commands);
 		drawerList.setAdapter(new DrawerListAdapter(getDrawerCommands()));
 		drawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				drawerCommandSelected(position);
+				DrawerCommandItem command = (DrawerCommandItem) drawerList.getItemAtPosition(position);
+				if (command != null) {
+					command.execute();
+				}
 			}
 		});
 		drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open_drawer_description, R.string.close_drawer_description) {
@@ -508,8 +701,8 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 				supportInvalidateOptionsMenu();
 				synchronized (MainActivity.this) {
 					desiredFpsSlider.setValue(simulatorRunnable.getTargetFps());
-					simulatorFpsTextView = (TextView) findViewById(R.id.fps_simulator);
-					drawingFpsTextView = (TextView) findViewById(R.id.fps_drawing);
+					currentSimFps = (TextView) findViewById(R.id.fps_simulator);
+					currentDrawFps = (TextView) findViewById(R.id.fps_drawing);
 				}
 			}
 
@@ -518,20 +711,29 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 				super.onDrawerClosed(drawerView);
 				supportInvalidateOptionsMenu();
 				synchronized (MainActivity.this) {
-					simulatorFpsTextView = null;
-					drawingFpsTextView = null;
+					currentSimFps = null;
+					currentDrawFps= null;
 				}
 			}
 		};
 		drawerLayout.setDrawerListener(drawerToggle);
 	}
 
+	/**
+	 * Intercept the back press. We want to not perform the default action if
+	 * <ul>
+	 *     <li>the drawer is showing (instead, hide the drawer)</li>
+	 *     <li>the "new world" fragment is showing (hide it)</li>
+	 * </ul>
+	 * Otherwise call through to {@code super}.
+	 */
 	@Override
-	public boolean onPrepareOptionsMenu(Menu menu) {
-//		// If the nav drawer is open, hide action items related to the content view
-//		boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
-//		menu.findItem(R.id.action_search).setVisible(!drawerOpen);
-		return super.onPrepareOptionsMenu(menu);
+	public void onBackPressed() {
+		if (drawerLayout.isDrawerVisible(GravityCompat.START)) {
+			drawerLayout.closeDrawers();
+		} else if (!hideNewWorldFragment()) {
+			super.onBackPressed();
+		}
 	}
 
 	@Override
@@ -548,6 +750,11 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		return super.onOptionsItemSelected(item);
 	}
 
+	/**
+	 * Handle post-create initialization. We cannot find fragments in the activity in {@link #onCreate(Bundle)}.
+	 * We also need to synchronize the state of the {@link #drawerToggle} to get the hamburger menu.
+	 * @param savedInstanceState Bundle with state to restore (ignored)
+	 */
 	@Override
 	protected void onPostCreate(@Nullable Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
@@ -618,6 +825,10 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		}
 	}
 
+	/**
+	 * Add another {@link WorldObserver} to our list of observers.
+	 * @param newObserver observer to add
+	 */
 	@Override
 	public void registerSimulatorObserver(WorldObserver newObserver) {
 		synchronized (worldObservers) {
@@ -626,6 +837,10 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	}
 
+	/**
+	 * Remove a {@link WorldObserver} from our list of observers.
+	 * @param goneObserver observer to remove
+	 */
 	@Override
 	public void unregisterSimulatorObserver(WorldObserver goneObserver) {
 		synchronized (worldObservers) {
@@ -633,6 +848,11 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		}
 	}
 
+	/**
+	 * Called whenever the {@link SimulatorRunnable} has finished calculating a new world. We need to tell the
+	 * registered {@link WorldObserver} objects about this fact.
+	 * @param simulator simulator that has ticked
+	 */
 	@Override
 	synchronized public void simulatorUpdated(Simulator simulator) {
 		if (worldUpdateNotifierThread != null) {

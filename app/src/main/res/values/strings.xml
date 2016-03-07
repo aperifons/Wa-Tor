@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
   ~ strings.xml is part of Wa-Tor (C) 2016 by Dirk Gassen.
   ~
@@ -18,39 +19,79 @@
 <resources>
 	<string name="app_name">Wa-Tor</string>
 	<string name="wator_image_view_desc">Wa-Tor Display</string>
+
+	<!-- generic button labels -->
+	<string name="ok">OK</string>
+	<string name="yes">Yes</string>
+	<string name="no">No</string>
+	<string name="cancel">Cancel</string>
+
+	<!-- rolling stats graph -->
 	<string name="fish_dataseries_name">F</string>
 	<string name="shark_dataseries_name">S</string>
+
+
+
+	<!-- about -->
+	<string name="version_label">Version:</string>
+	<string name="version">%1$s build #%2$d</string>
+	<string name="website_label">Web:</string>
+	<string name="website">http://www.dirkgassen.com/</string>
+	<string name="license_intro">.</string>
+	<string name="license">Copyright © 2011&#8211;2016 Dirk Gassen</string>
+	<string name="unknown_version"><![CDATA[<unknown>]]></string>
+
+
+
+	<!-- new world stuff -->
+	<string name="world_size_label">World size:</string>
+	<string name="world_size_x_label">x</string>
 	<string name="initial_fish_count_label">Initial no. of fish:</string>
 	<string name="fish_breed_time_label">Fish breed time:</string>
 	<string name="initial_shark_count_label">Initial no. of shark:</string>
 	<string name="shark_breed_time_label">Shark breed time:</string>
 	<string name="shark_starve_time_label">Shark starve time:</string>
-	<string name="world_size_label">World size:</string>
-	<string name="world_size_x_label">x</string>
-	<string name="open_drawer_description">Show options</string>
-	<string name="close_drawer_description">Close options</string>
-	<string name="cancel">Cancel</string>
 	<string name="create_new_world">Create</string>
-	<string name="wator_logo_description">Wa-Tor Logo</string>
-	<string name="wator_name">Wa-Tor</string>
-	<string name="wator_synopsis">An eco system simulator</string>
-	<string name="fps_format">%d fps</string>
-	<string name="drawer_command_icon_description">action icon</string>
+
+
+
+	<!-- Strings for entering a value after clicking on the thumb in the RangeSlider -->
+	<string name="enter_new_value_title">Enter A New Value</string>
 	<string name="invalid_value">Invalid value</string>
 	<string name="entered_value_adjusted">Entered value adjusted to %1$d</string>
-	<string name="enter_new_value_title">Enter A New Value</string>
+
+
+
+	<!-- app drawer (hamburger menu) -->
+	<string name="open_drawer_description">Show options</string>
+	<string name="close_drawer_description">Close options</string>
+	<string name="wator_name">@string/app_name</string>
+	<string name="wator_synopsis">An eco system simulator</string>
+	<string name="wator_logo_description">Wa-Tor Logo</string>
+	<string name="drawer_command_icon_description">action icon</string>
+	<string name="desired_fps_label">Desired FPS:</string>
+	<string name="current_fps_label">Current FPS:</string>
+	<string name="current_simulation_fps">Simulation: %1$d</string>
+	<string name="current_drawing_fps">Drawing: %1$d</string>
+	<string name="fps_format">%d fps</string>
+
 	<string name="create_new_world_command">Create New World</string>
 	<string name="create_new_world_description">Creates a new world with new parameters</string>
 
-	<string name="current_simulation_fps">Simulation: %1$d</string>
-	<string name="current_drawing_fps">Drawing: %1$d</string>
+	<string name="about_command">About</string>
+	<string name="about_description">Shows information about this app</string>
 
+
+
+	<!-- errors in the "new world" fragment -->
 	<string name="world_width_too_small_error">World width too small</string>
 	<string name="world_width_too_large_error">World width too large (max %1$d)</string>
 	<string name="world_width_empty_error">World width empty</string>
 	<string name="world_height_too_small_error">World height too small</string>
 	<string name="world_height_too_large_error">World height too large (max %1$d)</string>
 	<string name="world_height_empty_error">World height is empty</string>
+	<string name="initial_fish_count_empty_error">Fish count is empty</string>
+	<string name="initial_shark_count_empty_error">Shark count is empty</string>
 	<string name="fish_breed_time_too_small_error">Fish breed time is too small</string>
 	<string name="fish_breed_time_too_large_error">Fish breed time is too large (max. %1$d)</string>
 	<string name="fish_breed_time_empty_error">Fish breed time is empty</string>
@@ -61,14 +102,12 @@
 	<string name="shark_starve_time_too_large_error">Shark starve time too large (max. %1$d)</string>
 	<string name="shark_starve_time_empty_error">Shark starve time is empty</string>
 	<string name="too_many_fish_error">Too many fish (max %1$d)</string>
-	<string name="initial_fish_count_empty_error">Fish count is empty</string>
 	<string name="too_many_shark_error">Too many shark (max %1$d)</string>
-	<string name="initial_shark_count_empty_error">Shark count is empty</string>
-	<string name="desired_fps_label">Desired FPS:</string>
-	<string name="current_fps_label">Current FPS:</string>
 
+
+
+	<!-- Strings that shouldn't be translated -->
 	<string name="worldUpdateNotifierThreadName" translatable="false">Wa-Tor World Update Notifier Thread</string>
 	<string name="simulatorThreadName" translatable="false">Wa-Tor Simulator Thread</string>
-	<string name="desired_fps_value_set" translatable="false">0,1,2,4,6,8,10,12,14,16,20,24,30,35,40,45,50,60,80,100
-	</string>
+	<string name="desired_fps_value_set" translatable="false">0,1,2,4,6,8,10,12,14,16,20,24,30,35,40,45,50,60,80,100</string>
 </resources>
