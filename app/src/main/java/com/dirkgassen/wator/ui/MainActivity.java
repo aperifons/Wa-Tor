@@ -38,9 +38,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -53,6 +50,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
@@ -250,6 +248,8 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	/** Displays the statistics of how many fish and shark exist in the world */
 	private RollingAverage drawingAverageTime;
 
+	private View newWorldView;
+
 	/** Label for the "current frame rates" display */
 	private TextView fpsLabel;
 
@@ -267,9 +267,6 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	/** Ties together the {@link android.support.v7.app.ActionBar} and our {@link #drawerLayout}*/
 	private ActionBarDrawerToggle drawerToggle;
-
-	/* "New world" fragment */
-	private Fragment newWorldFragment;
 
 	/** Handler to run stuff on the UI thread */
 	private Handler handler;
@@ -375,12 +372,9 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	 * @return {@code true} if the fragment was visible; {@code false} otherwise
 	 */
 	synchronized private boolean hideNewWorldFragment() {
-		if (newWorldFragment != null) {
-			FragmentManager fm = getSupportFragmentManager();
-			FragmentTransaction ft = fm.beginTransaction();
-			ft.remove(newWorldFragment);
-			newWorldFragment = null;
-			ft.commit();
+		if (newWorldView.getVisibility() != View.GONE) {
+			newWorldView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_up));
+			newWorldView.setVisibility(View.GONE);
 			return true;
 		}
 		return false;
@@ -388,18 +382,13 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	/** Toggles the state of the "new world" fragment: if it is currently open then hide it, otherwise show it. */
 	synchronized private void toggleNewWorldFragment() {
-		FragmentManager fm = getSupportFragmentManager();
-		FragmentTransaction ft = fm.beginTransaction();
-		if (newWorldFragment == null) {
-			ft.setCustomAnimations(R.anim.slide_down, R.anim.slide_down);
-			newWorldFragment = new NewWorld();
-			ft.add(R.id.new_world_fragment, newWorldFragment);
+		if (newWorldView.getVisibility() != View.GONE) {
+			newWorldView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_out_up));
+			newWorldView.setVisibility(View.GONE);
 		} else {
-			ft.setCustomAnimations(R.anim.slide_up, R.anim.slide_up);
-			ft.remove(newWorldFragment);
-			newWorldFragment = null;
+			newWorldView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_down));
+			newWorldView.setVisibility(View.VISIBLE);
 		}
-		ft.commit();
 	}
 
 	/**
@@ -547,6 +536,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		// More info: http://codetheory.in/difference-between-setdisplayhomeasupenabled-sethomebuttonenabled-and-setdisplayshowhomeenabled/
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+		newWorldView = findViewById(R.id.new_world_fragment_container);
 		fpsOkColor = ContextCompat.getColor(this, R.color.fps_ok_color);
 		fpsWarningColor = ContextCompat.getColor(this, R.color.fps_warning_color);
 		fpsLabel = (TextView) findViewById(R.id.label_fps);
@@ -759,8 +749,6 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	protected void onPostCreate(@Nullable Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
 		drawerToggle.syncState();
-		FragmentManager fm = getSupportFragmentManager();
-		newWorldFragment = fm.findFragmentById(R.id.new_world_fragment);
 	}
 
 	@Override

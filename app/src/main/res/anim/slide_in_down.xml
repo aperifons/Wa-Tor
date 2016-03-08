@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ slide_up.xml is part of Wa-Tor (C) 2016 by Dirk Gassen.
+  ~ slide_in_down.xmlxml is part of Wa-Tor (C) 2016 by Dirk Gassen.
   ~
   ~ Wa-Tor is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
@@ -16,10 +16,9 @@
   ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-
 <translate xmlns:android="http://schemas.android.com/apk/res/android"
            android:duration="@android:integer/config_mediumAnimTime"
-           android:fromYDelta="100%p"
+           android:fromYDelta="-100%"
            android:toYDelta="0"
            android:zAdjustment="top"
 />

@@ -63,7 +63,7 @@
 
 		<FrameLayout
 				android:name="com.dirkgassen.wator.ui.NewWorld"
-				android:id="@+id/new_world_fragment"
+				android:id="@+id/new_world_fragment_container"
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
 				android:alpha=".8"
@@ -73,8 +73,16 @@
 				android:layout_marginLeft="20dp"
 				android:layout_marginRight="20dp"
 				android:elevation="2dp"
+				android:visibility="gone"
 				tools:layout="@id/new_world_fragment"
-				tools:ignore="UnusedAttribute" />
+				tools:ignore="UnusedAttribute">
+			<fragment
+					android:id="@+id/new_world_fragment"
+				android:name="com.dirkgassen.wator.ui.NewWorld"
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+			    tools:layout="@layout/new_world" />
+		</FrameLayout>
 
 	</RelativeLayout>
 
