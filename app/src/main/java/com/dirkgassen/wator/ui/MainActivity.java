@@ -32,6 +32,7 @@ import com.dirkgassen.wator.simulator.WorldParameters;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -55,6 +56,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
@@ -234,6 +236,9 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	}
 
 
+	/** Tag for the "new world" fragment */
+	private static final String NEW_WORLD_FRAGMENT_TAG = "New World";
+
 	/**
 	 * Set of {@link com.dirkgassen.wator.simulator.WorldObserver} objects that are notified whenever the simulator
 	 * ticked.
@@ -268,9 +273,6 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	/** The {@link DrawerLayout} of the main view */
 	private DrawerLayout drawerLayout;
-
-	/** The "new world" fragment if it was added to the layout (otherwise {@code null} */
-	private Fragment newWorldFragment;
 
 	/** Ties together the {@link android.support.v7.app.ActionBar} and our {@link #drawerLayout}*/
 	private ActionBarDrawerToggle drawerToggle;
@@ -379,16 +381,13 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	 * @return {@code true} if the fragment was not visible; {@code false} otherwise
 	 */
 	synchronized private boolean showNewWorldFragment() {
-		if (newWorldFragment == null) {
+		if (newWorldView.getVisibility() == View.GONE) {
 			FragmentManager fm = getSupportFragmentManager();
 			FragmentTransaction ft = fm.beginTransaction();
-			newWorldFragment = new NewWorld();
-			ft.add(R.id.new_world_fragment_container, newWorldFragment);
+			Fragment newWorldFragment = new NewWorld();
+			ft.add(R.id.new_world_fragment_container, newWorldFragment, NEW_WORLD_FRAGMENT_TAG);
 			ft.commit();
 			fm.executePendingTransactions();
-			int visibility = newWorldView.getVisibility();
-			int width = newWorldView.getWidth();
-			int height = newWorldView.getHeight();
 			newWorldView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_down));
 			newWorldView.setVisibility(View.VISIBLE);
 			return true;
@@ -401,8 +400,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	 * @return {@code true} if the fragment was visible; {@code false} otherwise
 	 */
 	synchronized private boolean hideNewWorldFragment() {
-		if (newWorldFragment != null) {
-			final Fragment fragment = newWorldFragment;
+		if (newWorldView.getVisibility() != View.GONE) {
 			Animation animation = AnimationUtils.loadAnimation(this, R.anim.slide_out_up);
 			animation.setAnimationListener(new Animation.AnimationListener() {
 				@Override
@@ -412,20 +410,26 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 				@Override
 				public void onAnimationEnd(Animation animation) {
-					// Nothing to do here
-				}
-
-				@Override
-				public void onAnimationRepeat(Animation animation) {
 					FragmentManager fm = getSupportFragmentManager();
+					Fragment fragment = fm.findFragmentByTag(NEW_WORLD_FRAGMENT_TAG);
 					FragmentTransaction ft = fm.beginTransaction();
 					ft.remove(fragment);
 					ft.commit();
 				}
+
+				@Override
+				public void onAnimationRepeat(Animation animation) {
+					// Nothing to do here
+				}
 			});
-			newWorldFragment = null;
 			newWorldView.startAnimation(animation);
 			newWorldView.setVisibility(View.GONE);
+
+			View viewWithFocus = getCurrentFocus();
+			if (viewWithFocus != null) {
+				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.hideSoftInputFromWindow(viewWithFocus.getWindowToken(), 0);
+			}
 			return true;
 		}
 		return false;
