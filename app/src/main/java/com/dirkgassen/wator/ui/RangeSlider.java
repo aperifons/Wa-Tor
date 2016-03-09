@@ -300,12 +300,9 @@ public class RangeSlider extends View {
 	/**
 	 * Read out the attributes from the given attribute set and initialize whatever they represent.
 	 *
-	 * For now this method ignrores {@code defStyleAttr} and {@code defStyleRes}
 	 * @param attributeArray typed array containing the attribute values from the XML file
 	 */
 	private void setupAttributes(TypedArray attributeArray) {
-		displayDensity = getResources().getDisplayMetrics().density;
-
 		minValue = attributeArray.getInt(R.styleable.RangeSlider_minValue, 0);
 		maxValue = attributeArray.getInt(R.styleable.RangeSlider_maxValue, 100);
 
@@ -367,6 +364,7 @@ public class RangeSlider extends View {
 		super(context, attrs);
 
 		thumbPath.setFillType(Path.FillType.EVEN_ODD);
+		displayDensity = getResources().getDisplayMetrics().density;
 
 		TypedArray attributeArray = context.getTheme().obtainStyledAttributes(
 				attrs,
@@ -409,6 +407,7 @@ public class RangeSlider extends View {
 		super(context, attrs, defStyleAttr, defStyleRes);
 
 		thumbPath.setFillType(Path.FillType.EVEN_ODD);
+		displayDensity = getResources().getDisplayMetrics().density;
 
 		TypedArray attributeArray = context.getTheme().obtainStyledAttributes(
 				attrs,
