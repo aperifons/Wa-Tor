@@ -74,14 +74,8 @@
 				android:layout_marginRight="20dp"
 				android:elevation="2dp"
 				android:visibility="gone"
-				tools:layout="@id/new_world_fragment"
+				tools:layout="@layout/new_world"
 				tools:ignore="UnusedAttribute">
-			<fragment
-					android:id="@+id/new_world_fragment"
-				android:name="com.dirkgassen.wator.ui.NewWorld"
-			    android:layout_width="wrap_content"
-			    android:layout_height="wrap_content"
-			    tools:layout="@layout/new_world" />
 		</FrameLayout>
 
 	</RelativeLayout>
