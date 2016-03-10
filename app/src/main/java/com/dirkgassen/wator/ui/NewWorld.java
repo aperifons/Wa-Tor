@@ -40,9 +40,9 @@ import android.widget.EditText;
 
 /**
  * A fragment that allows the user to enter parameter for a new world and create it (or cancel the process).
- * The fragment must be placed into an activity (or another fragment) that implements {@link WorldCreator}.
+ * The fragment must be placed into an activity (or another fragment) that implements {@link NewWorld.WorldCreator}.
  * This fragment does not create a new simulator itself but rather communicates with the host (via the
- * {@link WorldCreator} interface).
+ * {@link NewWorld.WorldCreator} interface).
  */
 public class NewWorld extends Fragment {
 

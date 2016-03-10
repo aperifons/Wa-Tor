@@ -113,7 +113,7 @@ public class RangeSlider extends View {
 	private float displayDensity;
 
 	/**
-	 * The {@link OnValueChangeListener} that should be called upon if the value changes. Can be set with
+	 * The {@link RangeSlider.OnValueChangeListener} that should be called upon if the value changes. Can be set with
 	 * {@link #setOnValueChangeListener(OnValueChangeListener)}).
 	 */
 	private OnValueChangeListener onValueChangeListener;
@@ -143,7 +143,7 @@ public class RangeSlider extends View {
 	private long touchEventStartTime;
 
 	/**
-	 * Changes the value, invalidates the view and calls upon the {@link OnValueChangeListener} (if set).
+	 * Changes the value, invalidates the view and calls upon the {@link RangeSlider.OnValueChangeListener} (if set).
 	 *
 	 * @param newValue new value to set
 	 * @param fromUser should be {@code true} if the new value is coming from the UI (user); otherwise {@code false}
@@ -741,7 +741,7 @@ public class RangeSlider extends View {
 	}
 
 	/**
-	 * Sets an {@link OnValueChangeListener} that is called whenever the value of this slider changes. Calling this
+	 * Sets an {@link RangeSlider.OnValueChangeListener} that is called whenever the value of this slider changes. Calling this
 	 * method replaces a previously set listener.
 	 *
 	 * @param onValueChangeListener new listener
