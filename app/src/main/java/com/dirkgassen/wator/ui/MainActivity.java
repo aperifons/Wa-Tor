@@ -18,9 +18,7 @@
 package com.dirkgassen.wator.ui;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.dirkgassen.wator.R;
 import com.dirkgassen.wator.simulator.RollingAverage;
@@ -243,7 +241,20 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	 * Set of {@link com.dirkgassen.wator.simulator.WorldObserver} objects that are notified whenever the simulator
 	 * ticked.
 	 */
-	private final Set<WorldObserver> worldObservers = new HashSet<WorldObserver>();
+	private WorldObserver worldObservers[] = new WorldObserver[4];
+
+	/**
+	 * Stores the number of observers stored in {@link #worldObservers}. Note that elements of that array can be
+	 * unused
+	 */
+	private int worldObserverCount = 0;
+
+	/**
+	 * A mutex on which we need to synchronize whenever we access the {@link #worldObservers} array
+	 * (adding, removing or iterating over them)
+	 */
+	final private Object worldObserverMutex = new Object();
+
 
 	/** Simulator object that runs the world */
 	private Simulator simulator;
@@ -256,6 +267,9 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	/** Keeps track of the average drawing time */
 	private RollingAverage drawingAverageTime;
+
+	/** Stores the wall time of the next FPS update (so that we update the FPS indicators less often) */
+	private long nextFpsUpdate = 0;
 
 	/** The view that should contain the new world fragment */
 	private View newWorldView;
@@ -292,12 +306,12 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	/** Notifies all {@link #worldObservers} of a world change */
 	private void worldUpdated() {
-		synchronized (worldObservers) {
-			if (worldObservers.size() > 0) {
+		synchronized (worldObserverMutex) {
+			if (worldObserverCount > 0) {
 				Simulator.WorldInspector world = simulator.getWorldToPaint();
 				try {
-					for (WorldObserver observer : worldObservers) {
-						observer.worldUpdated(world);
+					for (int observerNo = 0; observerNo < worldObserverCount; observerNo++) {
+						worldObservers[observerNo].worldUpdated(world);
 						world.reset();
 					}
 					if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Fish: " + world.getFishCount() + "; sharks: " + world.getSharkCount()); }
@@ -313,8 +327,9 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		// necessary. If the drawer opens while we are executing and one of these fields change to non-null
 		// then the frame rate will be update next time. If it's the other way around the updateFpsRunnable
 		// should synchronize and check again.
-		if (currentSimFps != null || currentDrawFps != null) {
+		if (currentSimFps != null || currentDrawFps != null && nextFpsUpdate < System.currentTimeMillis()) {
 			handler.post(updateFpsRunnable);
+			nextFpsUpdate = System.currentTimeMillis() + 6000L;
 		}
 	}
 
@@ -822,10 +837,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 						long now = System.currentTimeMillis();
 						if (lastUpdateFinished > 0 && drawingAverageTime != null) {
 							drawingAverageTime.add(now - lastUpdateFinished);
-							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) {
-								Log.v("Wa-Tor", "Duration since last redraw" + (now - lastUpdateFinished) + " ms");
-								Log.v("Wa-Tor", "Notifying observers took " + (now - startUpdate) + " ms; waiting for next update");
-							}
+							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Duration since last redraw" + (now - lastUpdateFinished) + " ms"); }
 						}
 						lastUpdateFinished = now;
 						synchronized (this) {
@@ -876,12 +888,16 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	 * Add another {@link WorldObserver} to our list of observers.
 	 * @param newObserver observer to add
 	 */
-	@Override
 	public void registerSimulatorObserver(WorldObserver newObserver) {
-		synchronized (worldObservers) {
-			worldObservers.add(newObserver);
+		synchronized (worldObserverMutex) {
+			if (worldObservers.length == worldObserverCount - 1) {
+				// Time to reallocate
+				WorldObserver[] newObservers = new WorldObserver[worldObservers.length * 2];
+				System.arraycopy(worldObservers, 0, newObservers, 0, worldObservers.length);
+				worldObservers = newObservers;
+			}
+			worldObservers[worldObserverCount++] = newObserver;
 		}
-
 	}
 
 	/**
@@ -890,8 +906,14 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	 */
 	@Override
 	public void unregisterSimulatorObserver(WorldObserver goneObserver) {
-		synchronized (worldObservers) {
-			worldObservers.remove(goneObserver);
+		synchronized (worldObserverMutex) {
+			for (int no = 0; no < worldObservers.length; no++) {
+				if (worldObservers[no] == goneObserver) {
+					System.arraycopy(worldObservers, no + 1, worldObservers, no, worldObserverCount - 1 - no);
+					worldObservers[worldObserverCount - 1] = null;
+					worldObserverCount--;
+				}
+			}
 		}
 	}
 

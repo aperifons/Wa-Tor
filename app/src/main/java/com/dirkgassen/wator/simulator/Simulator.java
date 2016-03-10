@@ -191,6 +191,24 @@ final public class Simulator {
 
 	}
 
+	static final class WorldCalculatorState {
+		public final int start;
+		public final int end;
+		public final Random random;
+		public final int neighbours[];
+		public final int fishNeighbourPos[];
+		public final int emptyNeighbourPos[];
+
+		WorldCalculatorState(int start, int end, boolean allowDiagonally) {
+			this.start = start;
+			this.end = end;
+			random = new Random();
+			neighbours = new int[allowDiagonally ? 8 : 4];
+			fishNeighbourPos = new int[neighbours.length];
+			emptyNeighbourPos = new int[neighbours.length];
+		}
+	}
+
 	public static final short MAX_WORLD_WIDTH = Short.MAX_VALUE;
 	public static final short MAX_WORLD_HEIGHT = Short.MAX_VALUE;
 
@@ -202,6 +220,7 @@ final public class Simulator {
 	private short[] nextWorld;
 	private int worldPainters;
 	private final boolean[] cellProcessed;
+	private WorldCalculatorState[] worldCalculatorStates;
 	private WorldInspector worldToPaint = new WorldInspector();
 
 	private final short worldWidth;
@@ -296,72 +315,68 @@ final public class Simulator {
 		currentWorld[x + y * worldWidth] = (short) ((currentHunger << 8) | currentBreedTime);
 	}
 
-	private void calculateNeighbours(int no, int[] neighbours) {
+	private void calculateNeighbours(WorldCalculatorState calculatorState, int no) {
 		final int x = no % worldWidth;
 		final int y = no / worldWidth;
 		final int left   = x == 0               ? x - 1 + worldWidth  : x - 1;
 		final int right  = x == worldWidth  - 1 ? x + 1 - worldWidth  : x + 1;
 		final int top    = y == 0               ? y - 1 + worldHeight : y - 1;
 		final int bottom = y == worldHeight - 1 ? y + 1 - worldHeight : y + 1;
-		if (neighbours.length == 4) {
-			neighbours[0] = left + y * worldWidth; // left
-			neighbours[1] = x + top * worldWidth; // top
-			neighbours[2] = right + y * worldWidth; // right
-			neighbours[3] = x + bottom * worldWidth; // bottom
+		if (calculatorState.neighbours.length == 4) {
+			calculatorState.neighbours[0] = left + y * worldWidth; // left
+			calculatorState.neighbours[1] = x + top * worldWidth; // top
+			calculatorState.neighbours[2] = right + y * worldWidth; // right
+			calculatorState.neighbours[3] = x + bottom * worldWidth; // bottom
 		} else {
-			neighbours[0] = left + y * worldWidth; // left
-			neighbours[1] = left + top * worldWidth; // top left
-			neighbours[2] = x + top * worldWidth; // top
-			neighbours[3] = right + top * worldWidth; // top right
-			neighbours[4] = right + y * worldWidth; // right
-			neighbours[5] = right + bottom * worldWidth; // bottom right
-			neighbours[6] = x + bottom * worldWidth; // bottom
-			neighbours[7] = left + bottom * worldWidth; // bottom left
+			calculatorState.neighbours[0] = left + y * worldWidth; // left
+			calculatorState.neighbours[1] = left + top * worldWidth; // top left
+			calculatorState.neighbours[2] = x + top * worldWidth; // top
+			calculatorState.neighbours[3] = right + top * worldWidth; // top right
+			calculatorState.neighbours[4] = right + y * worldWidth; // right
+			calculatorState.neighbours[5] = right + bottom * worldWidth; // bottom right
+			calculatorState.neighbours[6] = x + bottom * worldWidth; // bottom
+			calculatorState.neighbours[7] = left + bottom * worldWidth; // bottom left
 		}
 	}
 
-	private void calculateNextWorld(int start, int end) {
-		Random random = new Random();
-		int neighbours[] = new int[8];
-		int fishNeighbourPos[] = new int[neighbours.length];
-		int emptyNeighbourPos[] = new int[neighbours.length];
-		int offset = random.nextInt(end - start);
-		int delta = random.nextInt(4) + 11;
+	private void calculateNextWorld(WorldCalculatorState calculatorState) {
+		int offset = calculatorState.random.nextInt(calculatorState.end - calculatorState.start);
+		int delta = calculatorState.random.nextInt(4) + 11;
 		while (true) {
 			int startOffset = offset;
-			while (cellProcessed[start + offset]) {
-				offset = (offset + 1) % (end - start);
+			while (cellProcessed[calculatorState.start + offset]) {
+				offset = (offset + 1) % (calculatorState.end - calculatorState.start);
 				if (offset == startOffset) {
 					return; // all cells in our range processed
 				}
 			}
-			int no = start + offset;
+			int no = calculatorState.start + offset;
 			if (nextWorld[no] < 0) {
 				// Fish
-				calculateNeighbours(no, neighbours);
-				calculateFish(random, no, neighbours, emptyNeighbourPos);
+				calculateNeighbours(calculatorState, no);
+				calculateFish(calculatorState, no);
 			} else if (nextWorld[no] > 0) {
 				// Sharl
-				calculateNeighbours(no, neighbours);
-				calculateShark(random, no, neighbours, emptyNeighbourPos, fishNeighbourPos);
+				calculateNeighbours(calculatorState, no);
+				calculateShark(calculatorState, no);
 			}
 			cellProcessed[no] = true;
-			offset = (offset + delta) % (end - start);
+			offset = (offset + delta) % (calculatorState.end - calculatorState.start);
 		}
 	}
 
-	private void calculateFish(Random random, int no, int[] neighbours, int emptyNeighbourPos[]) {
+	private void calculateFish(WorldCalculatorState calculatorState, int no) {
 		int emptyNeighbours = 0;
-		for (int neighbourNo : neighbours) {
+		for (int neighbourNo : calculatorState.neighbours) {
 			if (nextWorld[neighbourNo] == 0) {
 				// empty
-				emptyNeighbourPos[emptyNeighbours++] = neighbourNo;
+				calculatorState.emptyNeighbourPos[emptyNeighbours++] = neighbourNo;
 			}
 		}
 		short fishAge = nextWorld[no];
 		if (emptyNeighbours > 0) {
-			int newNo = emptyNeighbourPos[
-					emptyNeighbours == 1 ? 0 : random.nextInt(emptyNeighbours)
+			int newNo = calculatorState.emptyNeighbourPos[
+					emptyNeighbours == 1 ? 0 : calculatorState.random.nextInt(emptyNeighbours)
 					];
 			if (fishAge <= -fishBreedTime) {
 				// reproduce
@@ -379,22 +394,22 @@ final public class Simulator {
 		}
 	}
 
-	private void calculateShark(Random random, int no, int[] neighbours, int emptyNeighbourPos[], int fishNeighbourPos[]) {
+	private void calculateShark(WorldCalculatorState calculatorState, int no) {
 		int emptyNeighbours = 0;
 		int fishNeighbours = 0;
-		for (int neighbourNo : neighbours) {
+		for (int neighbourNo : calculatorState.neighbours) {
 			if (nextWorld[neighbourNo] == 0) {
 				// empty
-				emptyNeighbourPos[emptyNeighbours++] = neighbourNo;
+				calculatorState.emptyNeighbourPos[emptyNeighbours++] = neighbourNo;
 			} else if (nextWorld[neighbourNo] < 0) {
 				// fish
-				fishNeighbourPos[fishNeighbours++] = neighbourNo;
+				calculatorState.fishNeighbourPos[fishNeighbours++] = neighbourNo;
 			}
 		}
 		if (fishNeighbours > 0) {
 			// we can eat a fish :) so ignore the hunger
 			short currentBreedTime = (short) (nextWorld[no] & 255);
-			int newNo = fishNeighbourPos[fishNeighbours == 1 ? 0 : random.nextInt(fishNeighbours)];
+			int newNo = calculatorState.fishNeighbourPos[fishNeighbours == 1 ? 0 : calculatorState.random.nextInt(fishNeighbours)];
 			final short compositeHunger = 1 << 8;
 			if (currentBreedTime > sharkBreedTime) {
 				// eat fish, reproduce and move
@@ -418,7 +433,7 @@ final public class Simulator {
 				short currentBreedTime = (short) (nextWorld[no] & 255);
 				if (emptyNeighbours > 0) {
 					// ... and move
-					int newNo = emptyNeighbourPos[emptyNeighbours == 1 ? 0 : random.nextInt(emptyNeighbours)];
+					int newNo = calculatorState.emptyNeighbourPos[emptyNeighbours == 1 ? 0 : calculatorState.random.nextInt(emptyNeighbours)];
 					if (currentBreedTime >= sharkBreedTime) {
 						// reproduce and move
 						nextWorld[newNo] = (short) ((hunger << 8) | 1);
@@ -455,40 +470,13 @@ final public class Simulator {
 		// Mark all cells as unprocessed
 		Arrays.fill(cellProcessed, false);
 
-		// Do the tick
-		if (threads == 1) {
-			calculateNextWorld(0, nextWorld.length);
-		} else if (threads == 2) {
-			try {
-				final int bounds[] = new int[] {
-						0,
-						nextWorld.length / 4,
-						nextWorld.length / 2,
-						nextWorld.length / 4 * 3
-				};
-				Thread otherThread = new Thread() {
-					@Override
-					public void run() {
-						calculateNextWorld(bounds[2], bounds[3]);
-					}
-				};
-				otherThread.start();
-				calculateNextWorld(0, bounds[1]);
-				otherThread.join();
-
-				otherThread = new Thread() {
-					@Override
-					public void run() {
-						calculateNextWorld(bounds[3], nextWorld.length);
-					}
-				};
-				otherThread.start();
-				calculateNextWorld(bounds[1], bounds[2]);
-				otherThread.join();
-			} catch (InterruptedException e) {
-				// TODO: Handle?
-			}
+		if (worldCalculatorStates == null || worldCalculatorStates[0].start != 0 || worldCalculatorStates[0].end != nextWorld.length) {
+			worldCalculatorStates = new WorldCalculatorState[] {
+					new WorldCalculatorState(0, nextWorld.length, true /* allow diagonally */)
+			};
 		}
+		// Do the tick
+		calculateNextWorld(worldCalculatorStates[0]);
 
 		synchronized(this) {
 			short[] tempWorld = currentWorld;

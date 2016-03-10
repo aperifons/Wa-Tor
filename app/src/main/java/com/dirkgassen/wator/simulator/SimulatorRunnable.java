@@ -17,15 +17,12 @@
 
 package com.dirkgassen.wator.simulator;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import android.util.Log;
 
 /**
  * A class that "ticks" a simulator. This is a {@link Runnable} object that updates a {@link Simulator}
  * with a desired frame rate (see {@link #getTargetFps()}}. If the frame rate cannot be achieved it tries to run
- * as fast as possbile (but leaves a couple of ms between each frame).
+ * as fast as possible (but leaves a couple of ms between each frame).
  */
 public class SimulatorRunnable implements Runnable {
 
@@ -50,13 +47,25 @@ public class SimulatorRunnable implements Runnable {
 	private Thread simulatorTickThread;
 
 	/**
-	 * A set of objects that want to be notified of a finished tick via the {@link SimulatorRunnableObserver}
+	 * A list of objects that want to be notified of a finished tick via the {@link SimulatorRunnableObserver}
 	 * interface.
 	 *
 	 * Observers can be added with {@link #registerSimulatorRunnableObserver(SimulatorRunnableObserver)} and removed
 	 * with {@link #unregisterSimulatorObserver(SimulatorRunnableObserver)}.
 	 */
-	private final Set<SimulatorRunnableObserver> simulatorObservers = new HashSet<SimulatorRunnableObserver>();
+	private SimulatorRunnableObserver simulatorObservers[] = new SimulatorRunnableObserver[4];
+
+	/**
+	 * Stores the number of observers stored in {@link #simulatorObservers}. Note that elements of that array can be
+	 * unused
+	 */
+	private int simulatorObserverCount = 0;
+
+	/**
+	 * A mutex on which we need to synchronize whenever we access the {@link #simulatorObservers}
+	 * (adding, removing or iterating over them)
+	 */
+	final private Object simulatorObserverMutex = new Object();
 
 	/** @return average frame rate of the calculation of simulator ticks */
 	final public long getAvgFps() {
@@ -73,10 +82,15 @@ public class SimulatorRunnable implements Runnable {
 	 * @param newObserver new observer
 	 */
 	public void registerSimulatorRunnableObserver(SimulatorRunnableObserver newObserver) {
-		synchronized (simulatorObservers) {
-			simulatorObservers.add(newObserver);
+		synchronized(simulatorObserverMutex) {
+			if (simulatorObservers.length == simulatorObserverCount - 1) {
+				// Time to reallocate
+				SimulatorRunnableObserver[] newObservers = new SimulatorRunnableObserver[simulatorObservers.length * 2];
+				System.arraycopy(simulatorObservers, 0, newObservers, 0, simulatorObservers.length);
+				simulatorObservers = newObservers;
+			}
+			simulatorObservers[simulatorObserverCount++] = newObserver;
 		}
-
 	}
 
 	/**
@@ -85,8 +99,14 @@ public class SimulatorRunnable implements Runnable {
 	 * @param goneObserver observer to remove
 	 */
 	public void unregisterSimulatorObserver(SimulatorRunnableObserver goneObserver) {
-		synchronized (simulatorObservers) {
-			simulatorObservers.remove(goneObserver);
+		synchronized(simulatorObserverMutex) {
+			for (int no = 0; no < simulatorObservers.length; no++) {
+				if (simulatorObservers[no] == goneObserver) {
+					System.arraycopy(simulatorObservers, no + 1, simulatorObservers, no, simulatorObserverCount - 1 - no);
+					simulatorObservers[simulatorObserverCount - 1] = null;
+					simulatorObserverCount--;
+				}
+			}
 		}
 	}
 
@@ -129,8 +149,10 @@ public class SimulatorRunnable implements Runnable {
 			while (Thread.currentThread() == simulatorTickThread) {
 				long startUpdate = System.currentTimeMillis();
 				simulator.tick(1);
-				for (SimulatorRunnableObserver observer: simulatorObservers) {
-					observer.simulatorUpdated(simulator);
+				synchronized(simulatorObserverMutex) {
+					for (int observerNo = 0; observerNo < simulatorObserverCount; observerNo++) {
+						simulatorObservers[observerNo].simulatorUpdated(simulator);
+					}
 				}
 				long duration = System.currentTimeMillis() - startUpdate;
 				tickDuration.add(duration);
