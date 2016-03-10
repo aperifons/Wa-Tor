@@ -22,24 +22,42 @@ package com.dirkgassen.wator.simulator;
  */
 public class RollingAverage {
 
-	private long[] tickDurationHistory = new long[60];
+	private long[] valueHistory;
 
-	private long tickDurationHistorySum = 0;
+	private long valueHistorySum = 0;
 
-	private int tickDurationHistoryCurrentNo = 0;
+	private int valueCurrentNo = 0;
 
-	final public long getAverage() {
-		return tickDurationHistorySum / tickDurationHistory.length;
+	private int valueCount = 0;
+
+	final public float getAverage() {
+		if (valueCount == 0) {
+			return 0f;
+		}
+		return (float) valueHistorySum / valueCount;
 	}
 
 	final public void add(long newValue) {
-		tickDurationHistory[tickDurationHistoryCurrentNo] = newValue;
-		if (tickDurationHistoryCurrentNo == 0) {
-			tickDurationHistoryCurrentNo = tickDurationHistory.length - 1;
+		valueHistory[valueCurrentNo] = newValue;
+		if (valueCurrentNo == 0) {
+			valueCurrentNo = valueHistory.length - 1;
 		} else {
-			tickDurationHistoryCurrentNo--;
+			valueCurrentNo--;
 		}
-		tickDurationHistorySum = tickDurationHistorySum + newValue - tickDurationHistory[tickDurationHistoryCurrentNo];
+		valueHistorySum += newValue;
+		if (valueCount < valueHistory.length-1) {
+			valueCount++;
+		} else {
+			valueHistorySum = valueHistorySum - valueHistory[valueCurrentNo];
+		}
+	}
+
+	public RollingAverage() {
+		valueHistory = new long[61];
+	}
+
+	public RollingAverage(int history) {
+		valueHistory = new long[history+1];
 	}
 
 }

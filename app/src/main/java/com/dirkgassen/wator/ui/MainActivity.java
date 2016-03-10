@@ -831,15 +831,16 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 					long lastUpdateFinished = 0;
 					while (Thread.currentThread() == worldUpdateNotifierThread) {
 						long startUpdate = System.currentTimeMillis();
-						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Notifying observers of world update"); }
+						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "WorldUpdateNotifierThread: Notifying observers of world update"); }
 						worldUpdated();
-						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Notifying observers took " + (System.currentTimeMillis() - startUpdate) + " ms; waiting for next update"); }
+						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "WorldUpdateNotifierThread: Notifying observers took " + (System.currentTimeMillis() - startUpdate) + " ms"); }
 						long now = System.currentTimeMillis();
 						if (lastUpdateFinished > 0 && drawingAverageTime != null) {
 							drawingAverageTime.add(now - lastUpdateFinished);
-							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Duration since last redraw" + (now - lastUpdateFinished) + " ms"); }
+							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "WorldUpdateNotifierThread: Time delta since last redraw " + (now - lastUpdateFinished) + " ms"); }
 						}
 						lastUpdateFinished = now;
+						if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "WorldUpdateNotifierThread: Waiting for next update"); }
 						synchronized (this) {
 							wait();
 						}

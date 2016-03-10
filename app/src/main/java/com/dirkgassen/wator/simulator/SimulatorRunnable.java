@@ -69,11 +69,11 @@ public class SimulatorRunnable implements Runnable {
 
 	/** @return average frame rate of the calculation of simulator ticks */
 	final public long getAvgFps() {
-		long avgDuration = tickDuration.getAverage();
-		if (avgDuration == 0) {
+		float avgDuration = tickDuration.getAverage();
+		if (avgDuration == 0f) {
 			return 0;
 		}
-		return 1000 / tickDuration.getAverage();
+		return (long) (1000f / avgDuration);
 	}
 
 	/**
@@ -145,7 +145,7 @@ public class SimulatorRunnable implements Runnable {
 	public void run() {
 		simulatorTickThread = Thread.currentThread();
 		try {
-			if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Entering simulator thread"); }
+			if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "SimThread: Entering simulator thread"); }
 			while (Thread.currentThread() == simulatorTickThread) {
 				long startUpdate = System.currentTimeMillis();
 				simulator.tick(1);
@@ -158,7 +158,7 @@ public class SimulatorRunnable implements Runnable {
 				tickDuration.add(duration);
 				if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) {
 					// Calculate some statistics
-					Log.v("Wa-Tor", "World tick took " + duration + " ms (avg: " + tickDuration.getAverage() + " ms)");
+					Log.v("Wa-Tor", "SimThread: World tick took " + duration + " ms (avg: " + tickDuration.getAverage() + " ms)");
 				}
 				synchronized (this) {
 					if (targetFps == 0) {
@@ -168,7 +168,7 @@ public class SimulatorRunnable implements Runnable {
 						if (sleepTime < 10 /* ms */) {
 							sleepTime = 10 /* ms */;
 							if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) {
-								Log.v("Wa-Tor", "World tick took TOO LONG! Sleeping " + sleepTime + " ms");
+								Log.v("Wa-Tor", "SimThread: World tick took TOO LONG! Sleeping " + sleepTime + " ms");
 							}
 						}
 						Thread.sleep(sleepTime);
