@@ -23,26 +23,42 @@ import java.util.Set;
 import android.util.Log;
 
 /**
- * @author dirk.
+ * A class that "ticks" a simulator. This is a {@link Runnable} object that updates a {@link Simulator}
+ * with a desired frame rate (see {@link #getTargetFps()}}. If the frame rate cannot be achieved it tries to run
+ * as fast as possbile (but leaves a couple of ms between each frame).
  */
 public class SimulatorRunnable implements Runnable {
 
+	/** Classes should implement this interface if they are interested whenever a simulator tick is finished. */
 	public interface SimulatorRunnableObserver {
 
+		/** This method is called whenever one simulator tick is finished */
 		void simulatorUpdated(Simulator simulator);
 
 	}
 
+	/** The simulator that should be ticked */
 	private final Simulator simulator;
 
+	/** Keeps track of how long on average it took to calculate one tick */
 	private final RollingAverage tickDuration = new RollingAverage();
 
-	private int targetFps = 30;
+	/** Desired frame rate */
+	private int targetFps = 15;
 
+	/** The thread of this {@link Runnable} */
 	private Thread simulatorTickThread;
 
+	/**
+	 * A set of objects that want to be notified of a finished tick via the {@link SimulatorRunnableObserver}
+	 * interface.
+	 *
+	 * Observers can be added with {@link #registerSimulatorRunnableObserver(SimulatorRunnableObserver)} and removed
+	 * with {@link #unregisterSimulatorObserver(SimulatorRunnableObserver)}.
+	 */
 	private final Set<SimulatorRunnableObserver> simulatorObservers = new HashSet<SimulatorRunnableObserver>();
 
+	/** @return average frame rate of the calculation of simulator ticks */
 	final public long getAvgFps() {
 		long avgDuration = tickDuration.getAverage();
 		if (avgDuration == 0) {
@@ -51,6 +67,11 @@ public class SimulatorRunnable implements Runnable {
 		return 1000 / tickDuration.getAverage();
 	}
 
+	/**
+	 * Add a new {@link SimulatorRunnableObserver}. The new observer will be notified whenever a tick completes.
+	 *
+	 * @param newObserver new observer
+	 */
 	public void registerSimulatorRunnableObserver(SimulatorRunnableObserver newObserver) {
 		synchronized (simulatorObservers) {
 			simulatorObservers.add(newObserver);
@@ -58,16 +79,29 @@ public class SimulatorRunnable implements Runnable {
 
 	}
 
+	/**
+	 * Remove a {@link SimulatorRunnableObserver}. The observer will no longer be notified when a tick completes.
+	 *
+	 * @param goneObserver observer to remove
+	 */
 	public void unregisterSimulatorObserver(SimulatorRunnableObserver goneObserver) {
 		synchronized (simulatorObservers) {
 			simulatorObservers.remove(goneObserver);
 		}
 	}
 
+	/** @return desired frame rate */
 	public int getTargetFps() {
 		return targetFps;
 	}
 
+	/**
+	 * Changes the desired frame rate.
+	 *
+	 * @param newTargetFps new desired frame rate
+	 * @return {@code true} if the desired frame rate was changed; {@code false} if the desired frame rate
+	 *     is already equal to the requested frame rate
+	 */
 	synchronized public boolean setTargetFps(int newTargetFps) {
 		if (newTargetFps == targetFps) {
 			return false;
@@ -77,6 +111,7 @@ public class SimulatorRunnable implements Runnable {
 		return needToStartNewThread;
 	}
 
+	/** Stop ticking the world. To start over a new {@link Thread} must be created and started. */
 	public void stopTicking() {
 		Thread originalThread = simulatorTickThread;
 		simulatorTickThread = null;
@@ -85,6 +120,7 @@ public class SimulatorRunnable implements Runnable {
 		}
 	}
 
+	/** Main loop that ticks the simulator */
 	@Override
 	public void run() {
 		simulatorTickThread = Thread.currentThread();
@@ -129,6 +165,7 @@ public class SimulatorRunnable implements Runnable {
 
 	}
 
+	/** Creates a new {@link Runnable}. The new object should be started with a new {@link Thread} */
 	public SimulatorRunnable(Simulator simulator) {
 		this.simulator = simulator;
 	}

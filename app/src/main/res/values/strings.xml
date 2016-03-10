@@ -26,6 +26,8 @@
 	<string name="no">No</string>
 	<string name="cancel">Cancel</string>
 
+
+
 	<!-- rolling stats graph -->
 	<string name="fish_dataseries_name">F</string>
 	<string name="shark_dataseries_name">S</string>
@@ -73,6 +75,7 @@
 	<string name="current_fps_label">Current FPS:</string>
 	<string name="current_simulation_fps">Simulation: %1$d</string>
 	<string name="current_drawing_fps">Drawing: %1$d</string>
+	<string name="paused">- paused -</string>
 	<string name="fps_format">%d fps</string>
 
 	<string name="create_new_world_command">Create New World</string>

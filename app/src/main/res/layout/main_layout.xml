@@ -164,6 +164,8 @@
 				android:layout_alignBaseline="@id/label_fps"
 				android:layout_toRightOf="@id/label_fps"
 				android:layout_toEndOf="@id/label_fps"
+				android:layout_alignLeft="@id/desired_fps"
+				android:layout_alignStart="@id/desired_fps"
 				android:padding="4dp"
 				tools:text="Simulation: 20fps"/>
 
@@ -171,9 +173,9 @@
 				android:id="@+id/fps_drawing"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_alignBaseline="@id/fps_simulator"
-				android:layout_alignParentRight="true"
-				android:layout_alignParentEnd="true"
+				android:layout_below="@id/fps_simulator"
+				android:layout_alignLeft="@id/fps_simulator"
+				android:layout_alignStart="@id/fps_simulator"
 				android:padding="4dp"
 				tools:text="Drawing: 30fps"/>
 
@@ -181,7 +183,7 @@
 				android:id="@+id/drawer_commands"
 				android:layout_width="match_parent"
 				android:layout_height="match_parent"
-				android:layout_below="@id/label_fps"
+				android:layout_below="@id/fps_drawing"
 				android:choiceMode="singleChoice"
 				android:padding="8dp"
 				tools:listitem="@layout/drawer_command_item"/>

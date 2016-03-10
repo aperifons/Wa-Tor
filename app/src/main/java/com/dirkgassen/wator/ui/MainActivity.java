@@ -254,13 +254,11 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	/** Thread that updates the {@link #worldObservers} */
 	private Thread worldUpdateNotifierThread;
 
-	/** Displays the statistics of how many fish and shark exist in the world */
+	/** Keeps track of the average drawing time */
 	private RollingAverage drawingAverageTime;
 
+	/** The view that should contain the new world fragment */
 	private View newWorldView;
-
-	/** Label for the "current frame rates" display */
-	private TextView fpsLabel;
 
 	/** Contains the current simulation frame rate */
 	private TextView currentSimFps;
@@ -591,7 +589,6 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		newWorldView = findViewById(R.id.new_world_fragment_container);
 		fpsOkColor = ContextCompat.getColor(this, R.color.fps_ok_color);
 		fpsWarningColor = ContextCompat.getColor(this, R.color.fps_warning_color);
-		fpsLabel = (TextView) findViewById(R.id.label_fps);
 		desiredFpsSlider = (RangeSlider) findViewById(R.id.desired_fps);
 		desiredFpsSlider.setOnTouchListener(new View.OnTouchListener() {
 			@SuppressLint("ClickableViewAccessibility")
@@ -614,20 +611,12 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			public void onValueChange(RangeSlider slider, int oldVal, int newVal, boolean fromUser) {
 				synchronized (MainActivity.this) {
 					if (newVal == 0) {
-						fpsLabel.setVisibility(View.INVISIBLE);
 						if (currentDrawFps != null) {
 							currentDrawFps.setVisibility(View.INVISIBLE);
 						}
-						if (currentSimFps != null) {
-							currentSimFps.setVisibility(View.INVISIBLE);
-						}
 					} else {
-						fpsLabel.setVisibility(View.VISIBLE);
 						if (currentDrawFps != null) {
 							currentDrawFps.setVisibility(View.VISIBLE);
-						}
-						if (currentSimFps != null) {
-							currentSimFps.setVisibility(View.VISIBLE);
 						}
 					}
 					if (fromUser) {
@@ -645,10 +634,15 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			public void run() {
 				synchronized (MainActivity.this) {
 					if (currentSimFps != null) {
-						float fps = simulatorRunnable.getAvgFps();
-						currentSimFps.setText(getString(R.string.current_simulation_fps, (int) fps));
-						int newTextColor = fps < simulatorRunnable.getTargetFps() ? fpsWarningColor : fpsOkColor;
-						currentSimFps.setTextColor(newTextColor);
+						if (simulatorRunnable.getTargetFps() == 0) {
+							currentSimFps.setText(getString(R.string.paused));
+							currentSimFps.setTextColor(fpsOkColor);
+						} else {
+							int fps = (int) simulatorRunnable.getAvgFps();
+							currentSimFps.setText(getString(R.string.current_simulation_fps, fps));
+							int newTextColor = fps < simulatorRunnable.getTargetFps() ? fpsWarningColor : fpsOkColor;
+							currentSimFps.setTextColor(newTextColor);
+						}
 					}
 					if (currentDrawFps != null) {
 						float fps = drawingAverageTime.getAverage();
@@ -742,7 +736,6 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 				super.onDrawerOpened(drawerView);
 				supportInvalidateOptionsMenu();
 				synchronized (MainActivity.this) {
-					desiredFpsSlider.setValue(simulatorRunnable.getTargetFps());
 					currentSimFps = (TextView) findViewById(R.id.fps_simulator);
 					currentDrawFps = (TextView) findViewById(R.id.fps_drawing);
 				}
@@ -801,6 +794,12 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	protected void onPostCreate(@Nullable Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
 		drawerToggle.syncState();
+		FragmentManager fm = getSupportFragmentManager();
+		Fragment newWorldFragment = fm.findFragmentByTag(NEW_WORLD_FRAGMENT_TAG);
+		if (newWorldFragment != null) {
+			newWorldView.startAnimation(AnimationUtils.loadAnimation(this, R.anim.slide_in_down));
+			newWorldView.setVisibility(View.VISIBLE);
+		}
 	}
 
 	@Override
@@ -845,6 +844,8 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		worldUpdateNotifierThread.start();
 
 		startSimulatorThread();
+
+		desiredFpsSlider.setValue(simulatorRunnable.getTargetFps());
 	}
 
 	private void startSimulatorThread() {

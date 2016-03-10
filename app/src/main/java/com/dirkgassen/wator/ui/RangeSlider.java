@@ -513,7 +513,7 @@ public class RangeSlider extends View {
 				activePointerId = event.getPointerId(0);
 				float valuePos = positionFromValue(paddingLeft, paddingRight);
 				float x = event.getX();
-				if (x < valuePos - thumbSize || x > valuePos + thumbSize) {
+				if (x < valuePos - thumbSize / 2 || x > valuePos + thumbSize / 2) {
 					int newValue = valueFromPosition(x, paddingLeft, paddingRight);
 					if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "Starting to drag thumb OUTSIDE of thumb"); }
 					if (newValue != value) {
