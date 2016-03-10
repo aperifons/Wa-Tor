@@ -843,9 +843,15 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		};
 		worldUpdateNotifierThread.start();
 
+		desiredFpsSlider.setValue(simulatorRunnable.getTargetFps());
 		startSimulatorThread();
 
-		desiredFpsSlider.setValue(simulatorRunnable.getTargetFps());
+		synchronized(this) {
+			if (drawerLayout.isDrawerVisible(GravityCompat.START)) {
+				currentSimFps = (TextView) findViewById(R.id.fps_simulator);
+				currentDrawFps = (TextView) findViewById(R.id.fps_drawing);
+			}
+		}
 	}
 
 	private void startSimulatorThread() {
