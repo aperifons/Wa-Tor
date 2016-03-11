@@ -31,6 +31,10 @@ android {
 	}
 }
 
+jacoco {
+	toolVersion = "0.7.4+"
+}
+
 if (project.hasProperty("signing.properties") && new File(project.property("signing.properties") as String).exists()) {
 	Properties signingProps = new Properties()
 	signingProps.load(new FileInputStream(file(project.property("signing.properties"))))
