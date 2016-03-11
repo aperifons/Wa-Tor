@@ -39,8 +39,10 @@
 	<string name="version">%1$s (Build #%2$d)</string>
 	<string name="website_label">Web:</string>
 	<string name="website">http://www.dirkgassen.com/</string>
-	<string name="license_intro">.</string>
-	<string name="license">Copyright © 2016 Dirk Gassen\n\nAlle Rechte vorbehalten</string>
+	<string name="license_label">Lizenz:</string>
+	<string name="license">GNU General Public License version 3 or later</string>
+	<string name="copyright_label">Copyright:</string>
+	<string name="copyright">Copyright © 2016 Dirk Gassen</string>
 	<string name="unknown_version"><![CDATA[<unbekannt>]]></string>
 
 
@@ -80,7 +82,7 @@
 	<string name="create_new_world_command">Neue Welt</string>
 	<string name="create_new_world_description">Started mit einer neuen Welt mit wählbaren Parametern</string>
 
-	<string name="about_command">über Wa-Tor</string>
+	<string name="about_command">Über Wa-Tor</string>
 	<string name="about_description">Zeigt Informationen über diese App an.</string>
 
 

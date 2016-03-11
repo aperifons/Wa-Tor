@@ -341,7 +341,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	private List<DrawerCommandItem> getDrawerCommands() {
 		List<DrawerCommandItem> commandList = new ArrayList<DrawerCommandItem>();
 		commandList.add(
-				new DrawerCommandItem(Commands.NEW_WORLD_COMMAND, 0, getString(R.string.create_new_world_command), getString(R.string.create_new_world_description)) {
+				new DrawerCommandItem(Commands.NEW_WORLD_COMMAND, R.drawable.new_world_icon, getString(R.string.create_new_world_command), getString(R.string.create_new_world_description)) {
 					@Override
 					public void execute() {
 						drawerLayout.closeDrawers();
@@ -350,7 +350,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 				}
 		);
 		commandList.add(
-				new DrawerCommandItem(Commands.ABOUT_COMMAND, 0, getString(R.string.about_command), getString(R.string.about_description)) {
+				new DrawerCommandItem(Commands.ABOUT_COMMAND, R.drawable.about_icon, getString(R.string.about_command), getString(R.string.about_description)) {
 					@Override
 					public void execute() {
 						showAbout();
@@ -375,9 +375,6 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		}
 
 		new AlertDialog.Builder(this)
-				//TODO: Integrate a pretty icon
-//				.setIcon(R.drawable.)
-				.setTitle(R.string.app_name)
 				.setView(aboutView)
 				.setCancelable(true)
 				.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {

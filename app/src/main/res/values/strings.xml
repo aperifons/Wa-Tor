@@ -39,8 +39,10 @@
 	<string name="version">%1$s (build #%2$d)</string>
 	<string name="website_label">Web:</string>
 	<string name="website">http://www.dirkgassen.com/</string>
-	<string name="license_intro">.</string>
-	<string name="license">Copyright © 2016 Dirk Gassen</string>
+	<string name="license_label">License:</string>
+	<string name="license">GNU General Public License version 3 or later</string>
+	<string name="copyright_label">Copyright:</string>
+	<string name="copyright">Copyright © 2016 Dirk Gassen</string>
 	<string name="unknown_version"><![CDATA[<unknown>]]></string>
 
 

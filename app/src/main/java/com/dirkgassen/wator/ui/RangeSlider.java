@@ -750,7 +750,7 @@ public class RangeSlider extends View {
 		this.onValueChangeListener = onValueChangeListener;
 	}
 
-	/** @return currently active {@link com.dirkgassen.wator.ui.RangeSlider.OnValueChangeListener} */
+	/** @return currently active {@link RangeSlider.OnValueChangeListener} */
 	public OnValueChangeListener getOnValueChangeListener() {
 		return onValueChangeListener;
 	}

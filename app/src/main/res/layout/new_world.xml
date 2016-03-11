@@ -29,6 +29,7 @@
 		<TextView
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
+				android:labelFor="@+id/world_width"
 				android:text="@string/world_size_label"
 		/>
 		<EditText
@@ -49,6 +50,7 @@
 		<TextView
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
+				android:labelFor="@+id/world_height"
 				android:text="@string/world_size_x_label"/>
 		<EditText
 				android:id="@+id/world_height"
@@ -75,6 +77,7 @@
 					android:id="@+id/initial_fish_count_label"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
+					android:labelFor="@+id/initial_fish_count"
 					android:text="@string/initial_fish_count_label"
 			/>
 			<EditText
@@ -94,6 +97,7 @@
 					android:id="@+id/initial_shark_count_label"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
+					android:labelFor="@+id/initial_shark_count"
 					android:text="@string/initial_shark_count_label"
 			/>
 			<EditText
@@ -115,6 +119,7 @@
 					android:id="@+id/fish_breed_time_label"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
+					android:labelFor="@+id/fish_breed_time"
 					android:text="@string/fish_breed_time_label"/>
 			<EditText
 					android:id="@+id/fish_breed_time"
@@ -133,6 +138,7 @@
 					android:id="@+id/shark_breed_time_label"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
+					android:labelFor="@+id/shark_breed_time"
 					android:text="@string/shark_breed_time_label"
 			/>
 			<EditText
@@ -156,6 +162,7 @@
 					android:id="@+id/shark_starve_label"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
+					android:labelFor="@+id/shark_starve"
 					android:layout_column="2"
 					android:text="@string/shark_starve_time_label"
 			/>
