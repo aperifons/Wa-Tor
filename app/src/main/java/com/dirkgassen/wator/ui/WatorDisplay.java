@@ -179,7 +179,7 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 			} else {
 				pixels[world.getCurrentPosition()] = sharkAgeColors[world.getSharkHunger() - 1];
 			}
-		} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
+		} while (world.moveToNext() != Simulator.WorldInspector.RESET);
 		if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Generating pixels " + (System.currentTimeMillis() - startUpdate) + " ms"); }
 		synchronized (WatorDisplay.this) {
 			if (planetBitmap != null) {

@@ -551,7 +551,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 					//noinspection ConstantConditions
 					sharkPosY[sharkNo++] = world.getCurrentY();
 				}
-			} while (world.moveToNext() != Simulator.WORLD_INSPECTOR_MOVE_RESULT.RESET);
+			} while (world.moveToNext() != Simulator.WorldInspector.RESET);
 			if (fishCount > 0) {
 				outState.putShortArray(WorldKeys.FISH_AGE_KEY, fishAge);
 				outState.putShortArray(WorldKeys.FISH_POSITIONS_X_KEY, fishPosX);
@@ -783,6 +783,12 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		}
 	}
 
+	/**
+	 * Called whenever menu item is selected. We need to make sure that we pass this on to our
+	 * {@link #drawerToggle}.
+	 * @param item menu item that was selected
+	 * @return {@code true} if the event was handled; otherwise {@code false}
+	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Pass the event to ActionBarDrawerToggle
@@ -814,6 +820,9 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		}
 	}
 
+	/**
+	 * The activitiy is resuming. We need to start our simulator and world updater thread.
+	 */
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -864,11 +873,13 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		}
 	}
 
+	/** Starts the simulator thread with our {@link #simulatorRunnable}. */
 	private void startSimulatorThread() {
 		Thread simulatorThread = new Thread(simulatorRunnable, getString(R.string.simulatorThreadName));
 		simulatorThread.start();
 	}
 
+	/** The activity is pausing. Stop the simulator thread and the world updater thread. */
 	@Override
 	protected void onPause() {
 		super.onPause();
