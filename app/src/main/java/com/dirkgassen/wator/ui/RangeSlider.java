@@ -561,9 +561,9 @@ public class RangeSlider extends View {
 	 * Implement custom measuring of the view.
 	 *
 	 * @param widthMeasureSpec  horizontal space requirements as imposed by the parent. The requirements are encoded with
-	 *                          {@link View.MeasureSpec}.
+	 *                          {@link android.view.View.MeasureSpec}.
 	 * @param heightMeasureSpec vertical space requirements as imposed by the parent. The requirements are encoded with
-	 *                          {@link View.MeasureSpec}.
+	 *                          {@link android.view.View.MeasureSpec}.
 	 */
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {

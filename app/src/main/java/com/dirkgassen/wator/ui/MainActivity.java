@@ -595,7 +595,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		setContentView(R.layout.main_layout);
 		Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolbar);
 		setSupportActionBar(myToolbar);
-		// More info: http://codetheory.in/difference-between-setdisplayhomeasupenabled-sethomebuttonenabled-and-setdisplayshowhomeenabled/
+		 // More info: http://codetheory.in/difference-between-setdisplayhomeasupenabled-sethomebuttonenabled-and-setdisplayshowhomeenabled/
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 		newWorldView = findViewById(R.id.new_world_fragment_container);
@@ -763,7 +763,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 				}
 			}
 		};
-		drawerLayout.setDrawerListener(drawerToggle);
+		drawerLayout.addDrawerListener(drawerToggle);
 	}
 
 	/**

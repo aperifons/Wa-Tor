@@ -20,6 +20,11 @@ android {
 		sourceCompatibility JavaVersion.VERSION_1_6
 		targetCompatibility JavaVersion.VERSION_1_6
 	}
+
+	lintOptions {
+		ignore 'GradleDependency'
+	}
+
 	buildTypes {
 		debug {
 			testCoverageEnabled true
@@ -60,12 +65,12 @@ if (project.hasProperty("signing.properties") && new File(project.property("sign
 
 dependencies {
 	compile fileTree(dir: 'libs', include: ['*.jar'])
-	compile 'com.android.support:support-v4:23.2.0'
-	compile 'com.android.support:appcompat-v7:23.2.0'
-	compile 'com.android.support:gridlayout-v7:23.2.0'
+	compile 'com.android.support:support-v4:23.2.1'
+	compile 'com.android.support:appcompat-v7:23.2.1'
+	compile 'com.android.support:gridlayout-v7:23.2.1'
 	testCompile 'junit:junit:4.12'
 	testCompile 'org.mockito:mockito-core:1.10.19'
-	androidTestCompile 'com.android.support:support-annotations:23.2.0'
+	androidTestCompile 'com.android.support:support-annotations:23.2.1'
 	androidTestCompile 'com.android.support.test:runner:0.4.1'
 	androidTestCompile 'com.android.support.test:rules:0.4.1'
 	androidTestCompile 'org.hamcrest:hamcrest-library:1.3'
@@ -75,6 +80,9 @@ dependencies {
 
 gradle.projectsEvaluated {
 	preBuild.dependsOn(convertDrawables)
+	tasks.withType(JavaCompile) {
+		options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+	}
 }
 
 // See: http://stackoverflow.com/questions/17033878/generate-javadocs-with-android-gradle-plugin
@@ -93,8 +101,8 @@ android.applicationVariants.all { variant ->
 	}
 }
 
-/* See: http://stackoverflow.com/questions/27263160/external-dependencies-on-gradle */
-/* Also interesting: http://stackoverflow.com/questions/30351549/generating-drawables-from-svg-for-android-with-gradle-on-mac-os */
+// See: http://stackoverflow.com/questions/27263160/external-dependencies-on-gradle
+// Also interesting: http://stackoverflow.com/questions/30351549/generating-drawables-from-svg-for-android-with-gradle-on-mac-os
 task convertDrawables() {
 	// look for *.svg files in app/src/art/drawable folder
 	def resolutions = [
