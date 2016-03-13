@@ -120,6 +120,34 @@
 				android:layout_alignStart="@id/drawer_subtitle" />
 
 		<TextView
+				android:id="@+id/threads_label"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_alignParentLeft="true"
+				android:layout_alignParentStart="true"
+				android:layout_alignTop="@+id/threads"
+				android:layout_alignBottom="@+id/threads"
+				android:layout_below="@id/wator_logo"
+				android:padding="4dp"
+				android:text="@string/threads_label"
+				android:gravity="center_vertical"/>
+
+		<com.dirkgassen.wator.ui.RangeSlider
+				android:id="@+id/threads"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_below="@id/wator_logo"
+				android:layout_toRightOf="@id/threads_label"
+				android:layout_toEndOf="@id/threads_label"
+				android:value="1"
+				app:sliderThickness="4dp"
+				app:valueSet="@string/threads_value_set"
+				app:thumbPadding="2dp"
+				android:padding="6dp"
+				android:textSize="12sp"
+				android:color="@color/fish_old"/>
+
+		<TextView
 				android:id="@+id/desired_fps_label"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
@@ -127,7 +155,7 @@
 				android:layout_alignParentStart="true"
 				android:layout_alignTop="@+id/desired_fps"
 				android:layout_alignBottom="@+id/desired_fps"
-				android:layout_below="@id/wator_logo"
+				android:layout_below="@id/threads"
 				android:padding="4dp"
 				android:text="@string/desired_fps_label"
 				android:gravity="center_vertical" />
@@ -136,11 +164,12 @@
 				android:id="@+id/desired_fps"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
-				android:layout_below="@id/wator_logo"
+				android:layout_below="@id/threads"
 				android:layout_toRightOf="@id/desired_fps_label"
 				android:layout_toEndOf="@id/desired_fps_label"
-				android:value="100"
+				android:value="80"
 				app:thumbFormat="@string/fps_format"
+				app:thumbPadding="2dp"
 				app:sliderThickness="4dp"
 				app:valueSet="@string/desired_fps_value_set"
 				android:padding="6dp"

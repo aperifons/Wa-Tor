@@ -327,13 +327,13 @@ final public class Simulator {
 	 */
 	final class WorldCalculatorState {
 		/** Start of the chunk of the world to be calculated */
-		public final int start;
+		private int start;
 
 		/**
 		 * End of the chunk of the world to be calculated. This field stores the index of the cell after the last one
 		 * to be calculated.
 		 */
-		public final int end;
+		private int end;
 
 		/** A random number generator */
 		public final Random random;
@@ -349,18 +349,139 @@ final public class Simulator {
 
 		/**
 		 * Creates a new initialized object
-		 * @param start start of the chunk of the world to be calculated (see {@link #start})
-		 * @param end end of the chunk of the world to be calcualated (see {@link #end})
 		 * @param allowDiagonally allow for diagonal movement ({@code true}) or only for horizontal and vertical
 		 *                        movement (@code false)?
 		 */
-		WorldCalculatorState(int start, int end, boolean allowDiagonally) {
-			this.start = start;
-			this.end = end;
+		WorldCalculatorState(boolean allowDiagonally) {
 			random = new Random();
 			neighbours = new int[allowDiagonally ? 8 : 4];
 			fishNeighbourPos = new int[neighbours.length];
 			emptyNeighbourPos = new int[neighbours.length];
+		}
+
+		/**
+		 * Sets the chunk bounds.
+		 * @param start first cell to work on
+		 * @param end cell after the last cell to work on
+		 */
+		public void setChunk(int start, int end) {
+			this.start = start;
+			this.end = end;
+		}
+	}
+
+	/**
+	 * Internal counter to nicely identify the calculator threads
+	 */
+	static private int calculatorThreadCounter = 0;
+
+	/**
+	 * Special {@link Thread} that calculates chunks of the next world. Each of these threads has a
+	 * {@link WorldCalculatorState} that defines the range of the chunk this particular thread should work on.
+	 *
+	 * To make a thread work on a chunk call {@link #startCalculatingWorld(int, int)}. To wait for the calculation
+	 * to be complete call {@link #waitForWorkDone()}.
+	 */
+	class CalculatorThread extends Thread {
+
+		/** The thread is in this state if it just started up but isn't waiting for work yet */
+		final public static int STATE_STARTING = 0;
+
+		/** The thread is blocked and waiting to work on the next chunk */
+		final public static int STATE_WAITING_FOR_WORK = 1;
+
+		/** The thread is working on a chunk of the world */
+		final public static int STATE_WORKING = 2;
+
+		/** For some reason the thread has excited (aka is dead). The thread will never work again. */
+		final public static int STATE_DEAD = 3;
+
+		/** Defines the next chunk/current chunk to work on */
+		final WorldCalculatorState worldCalculatorState;
+
+		/** State of this thread */
+		private int state = STATE_STARTING;
+
+		/** Mutex to organize access to {@link #state}. */
+		final private Object stateMutex = new Object();
+
+		/**
+		 * Schedule to work on a chunk.
+		 *
+		 * @param start first cell to work on
+		 * @param end cell after the last cell to work on
+		 * @return {@code true} if the work has been scheduled; {@code false} if this thread is {@link #STATE_DEAD}
+		 * @throws InterruptedException if the thread got interrupted while waiting
+		 */
+		public boolean startCalculatingWorld(int start, int end) throws InterruptedException {
+			synchronized (stateMutex) {
+				if (state == STATE_DEAD) {
+					return false;
+				}
+				while (state != STATE_WAITING_FOR_WORK) {
+					stateMutex.wait();
+				}
+				worldCalculatorState.setChunk(start, end);
+				state = STATE_WORKING;
+				stateMutex.notifyAll();
+				return true;
+			}
+		}
+
+		/**
+		 * Waits until the thread is no longer working. This method also waits if the thread is currently in the
+		 * state {@link #STATE_STARTING} (which is treaded by this method like {@link #STATE_WORKING}.
+		 *
+		 * @return {@code true} if the thread is waiting for more work; {@code false} if the thread is
+		 * {@link #STATE_DEAD}
+		 * @throws InterruptedException if the thread got interrupted while waiting
+		 */
+		public boolean waitForWorkDone() throws InterruptedException {
+			synchronized (stateMutex) {
+				if (state == STATE_DEAD) {
+					return false;
+				}
+				while (state == STATE_STARTING || state == STATE_WORKING) {
+					stateMutex.wait();
+				}
+			}
+			return true;
+		}
+
+		/** Main loop of this thread. This thread loops forever (or better until the thread is interrupted). */
+		@Override
+		public void run() {
+			try {
+				while (true) {
+					synchronized (stateMutex) {
+						state = STATE_WAITING_FOR_WORK;
+						stateMutex.notifyAll();
+						while (state != STATE_WORKING) {
+							stateMutex.wait();
+						}
+					}
+					calculateNextWorld(worldCalculatorState);
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				// Nothing to do here
+			} finally {
+				synchronized (stateMutex) {
+					state = STATE_DEAD;
+					stateMutex.notifyAll();
+				}
+			}
+		}
+
+		/**
+		 * Creates a new calculator thread.
+		 *
+		 * @param allowDiagonally should fish/shark be allowed to move diagonally?
+		 */
+		public CalculatorThread(boolean allowDiagonally) {
+			super("Wa - Tor World Tick Thread" + calculatorThreadCounter);
+			calculatorThreadCounter++;
+			worldCalculatorState = new WorldCalculatorState(allowDiagonally);
 		}
 	}
 
@@ -389,7 +510,33 @@ final public class Simulator {
 	private final boolean[] cellProcessed;
 
 	/** World calculators that can be used during world calculation */
-	private WorldCalculatorState[] worldCalculatorStates;
+	private WorldCalculatorState mainThreadWorldCalculatorState = new WorldCalculatorState(true /* allow diagonally */);
+
+	/** The additional threads that perform world calculations besides the thread that calls {@link #tick(int)} */
+	private CalculatorThread calculatorThreads[];
+
+	/**
+	 * Sets up the array of threads for world calculation.
+	 *
+	 * @param threads number of threads to use to calculate the next world
+	 */
+	private void setupCalculatorThreads(int threads) {
+		if (calculatorThreads == null || calculatorThreads.length != (threads-1)) {
+			if (calculatorThreads != null) {
+				for (Thread t : calculatorThreads) {
+					if (t != null) {
+						t.interrupt();
+					}
+				}
+			}
+
+			calculatorThreads = new CalculatorThread[threads - 1];
+			for (int no = 0; no < calculatorThreads.length; no++) {
+				calculatorThreads[no] = new CalculatorThread(true /* allow diagonally */);
+				calculatorThreads[no].start();
+			}
+		}
+	}
 
 	/**
 	 * Cache of allocated {@link WorldInspector} objects. Whenever a world inspector is requested one from this
@@ -580,9 +727,9 @@ final public class Simulator {
 	 * @param calculatorState defines the chunk of the world to calculate
 	 */
 	private void calculateNextWorld(WorldCalculatorState calculatorState) {
-		int offset = calculatorState.random.nextInt(calculatorState.end - calculatorState.start);
-		int delta = calculatorState.random.nextInt(4) + 11;
 		int chunkSize = calculatorState.end - calculatorState.start;
+		int offset = calculatorState.random.nextInt(chunkSize);
+		int delta = calculatorState.random.nextInt(4) + 11;
 		while (true) {
 			int startOffset = offset;
 			while (cellProcessed[calculatorState.start + offset]) {
@@ -602,7 +749,7 @@ final public class Simulator {
 				calculateShark(calculatorState, no);
 			}
 			cellProcessed[no] = true;
-			offset = (offset + delta) % (calculatorState.end - calculatorState.start);
+			offset = (offset + delta) % chunkSize;
 		}
 	}
 
@@ -730,13 +877,56 @@ final public class Simulator {
 		// Mark all cells as unprocessed
 		Arrays.fill(cellProcessed, false);
 
-		if (worldCalculatorStates == null || worldCalculatorStates[0].start != 0 || worldCalculatorStates[0].end != nextWorld.length) {
-			worldCalculatorStates = new WorldCalculatorState[] {
-					new WorldCalculatorState(0, nextWorld.length, true /* allow diagonally */)
-			};
+		if (threads == 1) {
+
+			// Single threaded: just calculate the whole world start to end
+			mainThreadWorldCalculatorState.setChunk(0, nextWorld.length);
+			calculateNextWorld(mainThreadWorldCalculatorState);
+
+		} else {
+
+			// Multithreaded: need to calculate the chunk size and then schedule the work to all the threads
+			//                we have set up
+
+			// Calculate work chunk size
+			int chunkSize = nextWorld.length / (2 * threads);
+			if (chunkSize < 100) {
+				chunkSize = 100;
+				threads = 1 / chunkSize * nextWorld.length / 2;
+				if (threads < 1) {
+					threads = 1;
+					chunkSize = nextWorld.length;
+				} else {
+					chunkSize = nextWorld.length / (2 * threads);
+				}
+			}
+
+			// Set up calculator threads
+			setupCalculatorThreads(threads);
+
+			// Do the tick
+			try {
+				for (int passNo = 0; passNo < 2; passNo++) {
+					for (int chunkNo = 0; chunkNo < threads; chunkNo++) {
+						int chunkStart = (2 * chunkNo + passNo) * chunkSize;
+						int chunkEnd = (passNo == 1 && chunkNo == threads - 1) ? nextWorld.length : chunkStart + chunkSize;
+
+						if (chunkNo == calculatorThreads.length) {
+							// Run on this thread
+							mainThreadWorldCalculatorState.setChunk(chunkStart, chunkEnd);
+							calculateNextWorld(mainThreadWorldCalculatorState);
+						} else {
+							calculatorThreads[chunkNo].startCalculatingWorld(chunkStart, chunkEnd);
+						}
+					}
+					for (CalculatorThread t: calculatorThreads) {
+						t.waitForWorkDone();
+					}
+				}
+			} catch (InterruptedException e) {
+				// Nothing to do here
+			}
 		}
-		// Do the tick
-		calculateNextWorld(worldCalculatorStates[0]);
 
 		synchronized(this) {
 			short[] tempWorld = currentWorld;

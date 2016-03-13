@@ -43,6 +43,9 @@ public class SimulatorRunnable implements Runnable {
 	/** Desired frame rate */
 	private int targetFps = 15;
 
+	/** Number of threads to use to tick the world */
+	private int threads = 1;
+
 	/** The thread of this {@link Runnable} */
 	private Thread simulatorTickThread;
 
@@ -131,6 +134,20 @@ public class SimulatorRunnable implements Runnable {
 		return needToStartNewThread;
 	}
 
+	/** @return number of threads used to tick the world */
+	public int getThreadCount() {
+		return threads;
+	}
+
+	/**
+	 * Changes the number of threads.
+	 *
+	 * @param newThreads new number of threads
+	 */
+	synchronized public void setThreadCount(int newThreads) {
+		threads = newThreads;
+	}
+
 	/** Stop ticking the world. To start over a new {@link Thread} must be created and started. */
 	public void stopTicking() {
 		Thread originalThread = simulatorTickThread;
@@ -148,7 +165,7 @@ public class SimulatorRunnable implements Runnable {
 			if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "SimThread: Entering simulator thread"); }
 			while (Thread.currentThread() == simulatorTickThread) {
 				long startUpdate = System.currentTimeMillis();
-				simulator.tick(1);
+				simulator.tick(threads);
 				synchronized(simulatorObserverMutex) {
 					for (int observerNo = 0; observerNo < simulatorObserverCount; observerNo++) {
 						simulatorObservers[observerNo].simulatorUpdated(simulator);

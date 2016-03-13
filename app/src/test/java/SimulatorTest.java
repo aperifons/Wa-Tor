@@ -40,7 +40,7 @@ public class SimulatorTest {
 		);
 		simulator.setFish(2, 2, (short) 1);
 
-		simulator.tick();
+		simulator.tick(16);
 
 		//   0   1   2   3   4
 		// +---+---+---+---+---+
@@ -93,7 +93,7 @@ public class SimulatorTest {
 		simulator.setFish(1, 1);
 
 		for (int tickNo = 0; tickNo < 6; tickNo++) {
-			simulator.tick();
+			simulator.tick(16);
 		}
 
 		Simulator.WorldInspector world = simulator.getWorldToPaint();
@@ -128,7 +128,7 @@ public class SimulatorTest {
 		simulator.setShark(2, 2, (short) 1, (short) 2);
 
 		for (int tickNo = 2; tickNo >= 0; tickNo--) {
-			simulator.tick();
+			simulator.tick(16);
 
 			Simulator.WorldInspector world = simulator.getWorldToPaint();
 			try {
@@ -165,7 +165,7 @@ public class SimulatorTest {
 			}
 		}
 
-		simulator.tick();
+		simulator.tick(16);
 
 		Simulator.WorldInspector world = simulator.getWorldToPaint();
 		try {
@@ -205,7 +205,7 @@ public class SimulatorTest {
 			}
 		}
 
-		simulator.tick();
+		simulator.tick(16);
 
 		Simulator.WorldInspector world = simulator.getWorldToPaint();
 		try {
@@ -249,7 +249,7 @@ public class SimulatorTest {
 				Thread backgroundTick = new Thread() {
 					@Override
 					public void run() {
-						simulator.tick();
+						simulator.tick(16);
 					}
 				};
 				backgroundTick.start();
@@ -290,7 +290,7 @@ public class SimulatorTest {
 			}
 		}
 
-		simulator.tick();
+		simulator.tick(16);
 		Simulator.WorldInspector world = simulator.getWorldToPaint();
 		try {
 			do {
@@ -301,7 +301,7 @@ public class SimulatorTest {
 			world.release();
 		}
 
-		simulator.tick();
+		simulator.tick(16);
 		world = simulator.getWorldToPaint();
 		try {
 			do {
@@ -313,7 +313,7 @@ public class SimulatorTest {
 		}
 
 
-		simulator.tick();
+		simulator.tick(16);
 		world = simulator.getWorldToPaint();
 		try {
 			do {

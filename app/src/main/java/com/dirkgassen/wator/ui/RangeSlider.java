@@ -288,13 +288,14 @@ public class RangeSlider extends View {
 		);
 
 		// Calculate the width of that string + padding on each side
-		final float valueWidth = (thumbTextPaint.measureText(demoValue, 0, demoValue.length())) + 2 * thumbPadding;
+		final float valueWidth = 1.4142136f * ((thumbTextPaint.measureText(demoValue, 0, demoValue.length())) + 2 * thumbPadding);
 
 		// Calculate the height of that string + padding on top and bottom
-		final float valueTotalHeight = (-thumbTextPaint.ascent() + thumbTextPaint.descent());
+		final float valueTotalHeight = 1.4142136f * ((-thumbTextPaint.ascent() + thumbTextPaint.descent()) + 2 * thumbPadding);
 
-		// The thumb size is the diameter of the circle that encloses the rectangle of the box
-		thumbSize = (float) (Math.sqrt(valueWidth * valueWidth + valueTotalHeight + valueTotalHeight));
+		thumbSize = valueWidth > valueTotalHeight ? valueWidth : valueTotalHeight;
+//		// The thumb size is the diameter of the circle that encloses the rectangle of the box
+//		thumbSize = (float) (Math.sqrt(valueWidth * valueWidth + valueTotalHeight + valueTotalHeight));
 	}
 
 	/**

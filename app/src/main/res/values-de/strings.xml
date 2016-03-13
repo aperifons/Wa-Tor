@@ -73,6 +73,7 @@
 	<string name="wator_logo_description">Wa-Tor Logo</string>
 	<string name="drawer_command_icon_description">Aktionsbild</string>
 	<string name="desired_fps_label">Gewünscht:</string>
+	<string name="threads_label">Threads:</string>
 	<string name="current_fps_label">Aktuell:</string>
 	<string name="current_simulation_fps">Simulation: %1$d B/s</string>
 	<string name="current_drawing_fps">Zeichnen: %1$d B/s</string>

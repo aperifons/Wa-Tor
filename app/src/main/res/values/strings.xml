@@ -74,6 +74,7 @@
 	<string name="wator_logo_description">Wa-Tor Logo</string>
 	<string name="drawer_command_icon_description">action icon</string>
 	<string name="desired_fps_label">Desired FPS:</string>
+	<string name="threads_label">Threads:</string>
 	<string name="current_fps_label">Current FPS:</string>
 	<string name="current_simulation_fps">Simulation: %1$d</string>
 	<string name="current_drawing_fps">Drawing: %1$d</string>
@@ -114,5 +115,6 @@
 	<!-- Strings that shouldn't be translated -->
 	<string name="worldUpdateNotifierThreadName" translatable="false">Wa-Tor World Update Notifier Thread</string>
 	<string name="simulatorThreadName" translatable="false">Wa-Tor Simulator Thread</string>
-	<string name="desired_fps_value_set" translatable="false">0,1,2,4,6,8,10,12,14,16,20,24,30,35,40,45,50,60,80,100</string>
+	<string name="desired_fps_value_set" translatable="false">0,1,2,4,6,8,10,12,14,16,20,24,30,35,40,45,50,60,80</string>
+	<string name="threads_value_set" translatable="false">1,2,4,8</string>
 </resources>

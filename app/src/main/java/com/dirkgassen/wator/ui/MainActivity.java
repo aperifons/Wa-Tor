@@ -283,6 +283,9 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	/** Slider for the desired frame rate */
 	private RangeSlider desiredFpsSlider;
 
+	/** Slider for setting the number of threads to tick the world */
+	private RangeSlider threadsSlider;
+
 	/** The {@link DrawerLayout} of the main view */
 	private DrawerLayout drawerLayout;
 
@@ -602,6 +605,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		fpsOkColor = ContextCompat.getColor(this, R.color.fps_ok_color);
 		fpsWarningColor = ContextCompat.getColor(this, R.color.fps_warning_color);
 		desiredFpsSlider = (RangeSlider) findViewById(R.id.desired_fps);
+		threadsSlider = (RangeSlider) findViewById(R.id.threads);
 		desiredFpsSlider.setOnTouchListener(new View.OnTouchListener() {
 			@SuppressLint("ClickableViewAccessibility")
 			@Override
@@ -637,6 +641,28 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 						}
 					}
 				}
+			}
+		});
+		threadsSlider.setOnTouchListener(new View.OnTouchListener() {
+			@SuppressLint("ClickableViewAccessibility")
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				switch (event.getAction()) {
+					case MotionEvent.ACTION_DOWN:
+						v.getParent().requestDisallowInterceptTouchEvent(true);
+						break;
+					case MotionEvent.ACTION_UP:
+						v.getParent().requestDisallowInterceptTouchEvent(false);
+						break;
+				}
+				v.onTouchEvent(event);
+				return true;
+			}
+		});
+		threadsSlider.setOnValueChangeListener(new RangeSlider.OnValueChangeListener() {
+			@Override
+			public void onValueChange(RangeSlider slider, int oldVal, int newVal, boolean fromUser) {
+				simulatorRunnable.setThreadCount(newVal);
 			}
 		});
 
