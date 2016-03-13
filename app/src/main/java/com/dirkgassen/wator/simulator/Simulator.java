@@ -877,6 +877,20 @@ final public class Simulator {
 		// Mark all cells as unprocessed
 		Arrays.fill(cellProcessed, false);
 
+
+		// Calculate work chunk size
+		int chunkSize = nextWorld.length / (2 * threads);
+		if (chunkSize < 100) {
+			chunkSize = 100;
+			threads = 1 / chunkSize * nextWorld.length / 2;
+			if (threads < 1) {
+				threads = 1;
+				chunkSize = nextWorld.length;
+			} else {
+				chunkSize = nextWorld.length / (2 * threads);
+			}
+		}
+
 		if (threads == 1) {
 
 			// Single threaded: just calculate the whole world start to end
@@ -887,19 +901,6 @@ final public class Simulator {
 
 			// Multithreaded: need to calculate the chunk size and then schedule the work to all the threads
 			//                we have set up
-
-			// Calculate work chunk size
-			int chunkSize = nextWorld.length / (2 * threads);
-			if (chunkSize < 100) {
-				chunkSize = 100;
-				threads = 1 / chunkSize * nextWorld.length / 2;
-				if (threads < 1) {
-					threads = 1;
-					chunkSize = nextWorld.length;
-				} else {
-					chunkSize = nextWorld.length / (2 * threads);
-				}
-			}
 
 			// Set up calculator threads
 			setupCalculatorThreads(threads);
