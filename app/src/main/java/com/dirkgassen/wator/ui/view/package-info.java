@@ -1,5 +1,5 @@
 /*
- * WatorDisplayHost.java is part of Wa-Tor (C) 2016 by Dirk Gassen.
+ * package-info.java is part of Wa-Tor (C) 2016 by Dirk Gassen.
  *
  * Wa-Tor is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,27 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dirkgassen.wator.simulator;
-
 /**
- * This interface should be implemented by classes who run a {@link Simulator}. It provides a common interface to
- * allow for registering/unregistering a {@link WorldObserver}.
+ * This package contains views that the app uses.
  */
-public interface WorldHost {
-
-	/**
-	 * Register a new {@link WorldObserver}.
-	 *
-	 * @param newObserver new observer
-	 */
-	void registerSimulatorObserver(WorldObserver newObserver);
-
-	/**
-	 * Unregister a {@link WorldObserver}
-	 *
-	 * @param goneObserver observer to be unregistered
-	 */
-	void unregisterSimulatorObserver(WorldObserver goneObserver);
-
-
-}
+package com.dirkgassen.wator.ui.view;

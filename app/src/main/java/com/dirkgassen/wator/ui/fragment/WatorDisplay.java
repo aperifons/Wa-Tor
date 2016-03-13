@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dirkgassen.wator.ui;
+package com.dirkgassen.wator.ui.fragment;
 
 import com.dirkgassen.wator.R;
 import com.dirkgassen.wator.simulator.Simulator;
-import com.dirkgassen.wator.simulator.WorldObserver;
 import com.dirkgassen.wator.simulator.WorldHost;
+import com.dirkgassen.wator.simulator.WorldObserver;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -38,29 +38,49 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 /**
- * @author dirk.
+ * A fragment that displays a 2D view of a {@link Simulator} (world). The fragment must be placed into an activity that
+ * implements {@link WorldHost}. It registers itself as a {@link WorldObserver} to that {@link WorldHost} to receive
+ * notifcations that the simulator has ticked.
  */
 public class WatorDisplay extends Fragment implements WorldObserver {
 
-
+	/** {@link ImageView} to display the world in */
 	private ImageView watorDisplay;
 
+	/** A precalculated color ramp from the "new fish" color (index 0) to "old fish" color (last index) */
 	private int[] fishAgeColors;
 
+	/** A precalculated color ramp from the "new shark" color (index 0) to "old shark" color (last index) */
 	private int[] sharkAgeColors;
 
+	/** Color of the water */
 	private int waterColor;
 
+	/** The hosting activity */
 	private WorldHost displayHost;
 
+	/** Bitmap for the world */
 	private Bitmap planetBitmap;
 
+	/** Pixel array that is calculated from the world and then dumped into the {@link #planetBitmap} */
 	private int[] pixels;
 
+	/** Handler to run stuff on the UI thread */
 	private Handler handler;
 
+	/**
+	 * A {@link @Runnable} that can be posted to the UI thread to set the bitmap of the {@link #watorDisplay}
+	 * {@link ImageView} */
 	private Runnable updateImageRunner;
 
+	/**
+	 * Calculates a color ramp from {@code youngColor} to {@code oldColor} and returns that array.
+	 *
+	 * @param max        maximum age; defines the number of individual colors calculated
+	 * @param youngColor young (starting) color
+	 * @param oldColor   old (ending) color
+	 * @return array with the color ramp
+	 */
 	private int[] calculateIndividualAgeColors(int max, int youngColor, int oldColor) {
 		final int[] colors = new int[max];
 		final float[] youngColorHsv = new float[3];
@@ -78,6 +98,14 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 		return colors;
 	}
 
+	/**
+	 * Called to have the fragment instantiates its user interface view. Inflates the view of this fragment.
+	 *
+	 * @param inflater           used to inflate the view
+	 * @param container          If not {@code null}, this is the parent view that the fragment's UI should be attached to
+	 * @param savedInstanceState previous state of the framgent (ignored)
+	 * @return view to use for this fragment
+	 */
 	@Nullable
 	@Override
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -86,6 +114,10 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 		return v;
 	}
 
+	/**
+	 * Called to do initial creation of this fragment.
+	 * @param savedInstanceState possibly a saved state of this fragment (ignored)
+	 */
 	@Override
 	public void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -103,6 +135,7 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 		waterColor = ContextCompat.getColor(this.getContext(), R.color.water);
 	}
 
+	/** Called when this framgent is no longer in use */
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
@@ -112,6 +145,7 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 		}
 	}
 
+	/** Called when the fragment is paused. */
 	@Override
 	public void onPause() {
 		super.onPause();
@@ -120,6 +154,7 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 		}
 	}
 
+	/** Called when the fragment is resumed. */
 	@Override
 	public void onResume() {
 		super.onResume();
@@ -128,6 +163,11 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 		}
 	}
 
+	/**
+	 * Called when this fragment is first attached to a {@link Context}.
+	 *
+	 * @param context context this fragment is attached to
+	 */
 	@Override
 	public void onAttach(Context context) {
 		super.onAttach(context);
@@ -139,6 +179,12 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 		}
 	}
 
+	/**
+	 * Called when the {@link WorldHost} has updated its simulator. This method repaints the bitmap for the view.
+	 *
+	 * @param world {@link com.dirkgassen.wator.simulator.Simulator.WorldInspector} of the {@link Simulator} that was
+	 *              updated
+	 */
 	@Override
 	public void worldUpdated(Simulator.WorldInspector world) {
 		if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Updating image"); }

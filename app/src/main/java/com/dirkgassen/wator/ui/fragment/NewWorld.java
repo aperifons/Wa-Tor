@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dirkgassen.wator.ui;
+package com.dirkgassen.wator.ui.fragment;
 
 import java.util.Locale;
 
@@ -49,7 +49,7 @@ public class NewWorld extends Fragment {
 	/**
 	 * Interface that the host must implement.
 	 */
-	interface WorldCreator
+	public interface WorldCreator
 		/** @return the world parameters that were previously used to create a world */{
 		WorldParameters getPreviousWorldParameters();
 

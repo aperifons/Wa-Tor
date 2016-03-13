@@ -17,16 +17,32 @@
 
 package com.dirkgassen.wator.simulator;
 
+import com.dirkgassen.wator.utils.RollingAverage;
+
 import android.util.Log;
 
 /**
  * A class that "ticks" a simulator. This is a {@link Runnable} object that updates a {@link Simulator}
  * with a desired frame rate (see {@link #getTargetFps()}}. If the frame rate cannot be achieved it tries to run
  * as fast as possible (but leaves a couple of ms between each frame).
+ * <p/>
+ * A class that is interested to learn when this runnable has finished updating its world should implement
+ * {@link SimulatorRunnableObserver} and register with this runnable with
+ * {@link #registerSimulatorRunnableObserver(SimulatorRunnableObserver)}. Once a
+ * {@link SimulatorRunnableObserver} is no longer interested in updates it should be unregistered
+ * with {@link #unregisterSimulatorObserver(SimulatorRunnableObserver)}.
  */
 public class SimulatorRunnable implements Runnable {
 
-	/** Classes should implement this interface if they are interested whenever a simulator tick is finished. */
+	/**
+	 * Classes should implement this interface if they are interested whenever a {@link SimulatorRunnable} has finished
+	 * calculating a tick.
+	 * <p/>
+	 * An observer can be registered with a {@link SimulatorRunnable} with
+	 * {@link SimulatorRunnable#registerSimulatorRunnableObserver(SimulatorRunnableObserver)}.
+	 * If an observer should no longer receive updates it should be unregistered with
+	 * {@link SimulatorRunnable#unregisterSimulatorObserver(SimulatorRunnableObserver)}.
+	 */
 	public interface SimulatorRunnableObserver {
 
 		/** This method is called whenever one simulator tick is finished */

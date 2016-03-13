@@ -18,10 +18,16 @@
 package com.dirkgassen.wator.simulator;
 
 /**
- * @author dirk.
+ * Classes that wish to be notified of updates of a {@link Simulator} should implement this interface.
  */
 public interface WorldObserver {
 
+	/**
+	 * Called when a {@link Simulator} is updated.
+	 *
+	 * @param world {@link com.dirkgassen.wator.simulator.Simulator.WorldInspector} of the {@link Simulator} that
+	 *              has been updated
+	 */
 	void worldUpdated(Simulator.WorldInspector world);
 
 }

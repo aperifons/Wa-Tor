@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dirkgassen.wator.ui;
+package com.dirkgassen.wator.ui.view;
 
 import java.security.InvalidParameterException;
 

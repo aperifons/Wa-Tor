@@ -41,10 +41,27 @@ import java.util.Random;
  * inspectore stores a snapshot of the world at the time it was requested. The world can progress while the inspector
  * is in use but the inspector won't be affected.
  *
- * Note that
- * to avoid excessive object creation (which also puts strain on the garbage collector) {@link WorldInspector#release()}
+ * Note that to avoid excessive object creation (which also puts strain on the garbage collector) {@link WorldInspector#release()}
  * when the world inspector is no longer being used.
  */
+// Note that this class can tick the world with multiple threads. The idea behind it is to separate access to the data
+// instead of synchronizing the threads. The world is processed in multiple chunks. The chunks are divided into two
+// sets such that each chunk in each set does not affect any other chunk in the same set.
+//
+// Imagine this:
+// For two threads divide the world into four chunks, e.g.:
+//   A: cells 0 to 99,
+//   B: cells 100 to 199,
+//   C: cells 200 to 299,
+//   and D: cells 300 to 399.
+// The first set would contain chunks A and C while the second set would contain B and D. Now chunks A and C can
+// be calculated simultaniously since none of the cells affected would be anywhere near chunk C. The same is true
+// for chunks B and D. Therefore, we can let two threads calculate chunks A and B, then wait until both are done and
+// then let two threads calculate chunks B and D.
+//
+// To minimize memory allocation we use WorldCalculatorState objects for each thread and a calculatorThread array.
+// The calculatorThread array contains CalculatorThread thread objects that in their "run" loop block until they receive
+// a world chunk to calculate. Details see in the CalculatorThread class documentation.
 final public class Simulator {
 
 	/**
@@ -381,6 +398,16 @@ final public class Simulator {
 	 *
 	 * To make a thread work on a chunk call {@link #startCalculatingWorld(int, int)}. To wait for the calculation
 	 * to be complete call {@link #waitForWorkDone()}.
+	 *
+	 * The class has one of the states: {@link #STATE_STARTING}, {@link #STATE_WAITING_FOR_WORK},
+	 * {@link #STATE_WORKING} or {@link #STATE_DEAD}.
+	 *
+	 * The {@link #run()} loop is a never ending loop that blocks at the beginning (transitioning from
+	 * {@link #STATE_STARTING} to {@link #STATE_WAITING_FOR_WORK}. Calling {@link #startCalculatingWorld(int, int)}
+	 * changes the internal {@link WorldCalculatorState} to the chunk to calculate and then resumes the {@link #run()}
+	 * loop, which makes the thread transition to {@link #STATE_WORKING}. Once the chunk is calculated the state changes
+	 * to {@link #STATE_WAITING_FOR_WORK} again. The {@link #run()} loop exits when an exception happens (including
+	 * {@link InterruptedException}).
 	 */
 	class CalculatorThread extends Thread {
 

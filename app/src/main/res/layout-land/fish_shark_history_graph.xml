@@ -21,7 +21,7 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-	<com.dirkgassen.wator.ui.RollingGraphView
+	<com.dirkgassen.wator.ui.view.RollingGraphView
 			android:id="@+id/fish_shark_graph"
 			android:layout_height="match_parent"
 			android:layout_width="match_parent"

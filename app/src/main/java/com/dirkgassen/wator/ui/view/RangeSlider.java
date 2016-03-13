@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dirkgassen.wator.ui;
+package com.dirkgassen.wator.ui.view;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -61,7 +61,7 @@ public class RangeSlider extends View {
 	private static final int MAX_CLICK_DURATION = 1000;
 
 	/**  Interface to implement to listen for changes of the current value. */
-	interface OnValueChangeListener {
+	public interface OnValueChangeListener {
 
 		/**
 		 * Called upon a change of the current value.

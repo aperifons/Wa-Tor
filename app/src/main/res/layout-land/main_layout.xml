@@ -40,7 +40,7 @@
 				tools:ignore="UnusedAttribute" />
 
 		<fragment
-				android:name="com.dirkgassen.wator.ui.WatorStatistics"
+				android:name="com.dirkgassen.wator.ui.fragment.WatorStatistics"
 				android:id="@+id/wator_statistics_fragment"
 				android:layout_width="80dp"
 				android:layout_height="match_parent"
@@ -51,7 +51,7 @@
 				tools:ignore="UnusedAttribute" />
 
 		<fragment
-				android:name="com.dirkgassen.wator.ui.WatorDisplay"
+				android:name="com.dirkgassen.wator.ui.fragment.WatorDisplay"
 				android:id="@+id/wator_display_fragment"
 				android:layout_width="fill_parent"
 				android:layout_height="match_parent"
@@ -137,7 +137,7 @@
 				android:text="@string/threads_label"
 				android:gravity="center_vertical"/>
 
-		<com.dirkgassen.wator.ui.RangeSlider
+		<com.dirkgassen.wator.ui.view.RangeSlider
 				android:id="@+id/threads"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
@@ -165,7 +165,7 @@
 				android:text="@string/desired_fps_label"
 				android:gravity="center_vertical" />
 
-		<com.dirkgassen.wator.ui.RangeSlider
+		<com.dirkgassen.wator.ui.view.RangeSlider
 				android:id="@+id/desired_fps"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"

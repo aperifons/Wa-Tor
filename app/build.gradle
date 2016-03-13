@@ -89,6 +89,7 @@ gradle.projectsEvaluated {
 android.applicationVariants.all { variant ->
 	task("generate${variant.name.capitalize()}JavaDoc", type: Javadoc) {
 		description "Generates Javadoc for $variant.name."
+		title = "Wa-Tor $android.defaultConfig.versionName (build #$android.defaultConfig.versionCode) API"
 		source = variant.javaCompile.source
 		ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
 		classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)

@@ -15,12 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dirkgassen.wator.ui;
+package com.dirkgassen.wator.ui.fragment;
 
 import com.dirkgassen.wator.R;
 import com.dirkgassen.wator.simulator.Simulator;
 import com.dirkgassen.wator.simulator.WorldObserver;
 import com.dirkgassen.wator.simulator.WorldHost;
+import com.dirkgassen.wator.ui.view.RollingGraphView;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -32,16 +33,26 @@ import android.view.View;
 import android.view.ViewGroup;
 
 /**
- * @author dirk.
+ * A fragment that shows a rolling graph of the statistics of fish and shark in a {@link Simulator}. The fragment must
+ * be placed into an activity that implements {@link WorldHost}.It registers itself as a {@link WorldObserver} to that {@link WorldHost} to receive
+ * notifcations that the simulator has ticked.
  */
 public class WatorStatistics extends Fragment implements WorldObserver {
 
+	/** A preallocated array used to add new values to {@link #rollingGraphView} */
 	private final float[] newStatsValues = new float[2];
 
+	/** The {@link RollingGraphView} that shows the statistics */
 	private RollingGraphView rollingGraphView;
 
+	/** The hosting activity */
 	private WorldHost displayHost;
 
+	/**
+	 * Called when this fragment is first attached to a {@link Context}.
+	 *
+	 * @param context context this fragment is attached to
+	 */
 	@Override
 	public void onAttach(Context context) {
 		super.onAttach(context);
@@ -53,6 +64,14 @@ public class WatorStatistics extends Fragment implements WorldObserver {
 		}
 	}
 
+	/**
+	 * Called to have the fragment instantiates its user interface view. Inflates the view of this fragment.
+	 *
+	 * @param inflater           used to inflate the view
+	 * @param container          If not {@code null}, this is the parent view that the fragment's UI should be attached to
+	 * @param savedInstanceState previous state of the framgent (ignored)
+	 * @return view to use for this fragment
+	 */
 	@Nullable
 	@Override
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -61,6 +80,7 @@ public class WatorStatistics extends Fragment implements WorldObserver {
 		return v;
 	}
 
+	/** Called when the fragment is paused. */
 	@Override
 	public void onPause() {
 		super.onPause();
@@ -69,6 +89,7 @@ public class WatorStatistics extends Fragment implements WorldObserver {
 		}
 	}
 
+	/** Called when the fragment is resumed. */
 	@Override
 	public void onResume() {
 		super.onResume();
@@ -77,7 +98,12 @@ public class WatorStatistics extends Fragment implements WorldObserver {
 		}
 	}
 
-	@Override
+	/**
+	 * Called when the {@link WorldHost} has updated its simulator. This method repaints the bitmap for the view.
+	 *
+	 * @param world {@link com.dirkgassen.wator.simulator.Simulator.WorldInspector} of the {@link Simulator} that was
+	 */
+	 @Override
 	public void worldUpdated(Simulator.WorldInspector world) {
 		if (rollingGraphView != null) {
 			synchronized (newStatsValues) {

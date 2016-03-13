@@ -17,7 +17,7 @@
 
 import org.junit.Test;
 
-import com.dirkgassen.wator.simulator.RollingAverage;
+import com.dirkgassen.wator.utils.RollingAverage;
 
 import junit.framework.Assert;
 

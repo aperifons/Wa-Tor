@@ -15,13 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.dirkgassen.wator.ui;
+package com.dirkgassen.wator.ui.activity;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.dirkgassen.wator.R;
-import com.dirkgassen.wator.simulator.RollingAverage;
+import com.dirkgassen.wator.ui.fragment.NewWorld;
+import com.dirkgassen.wator.ui.view.RangeSlider;
+import com.dirkgassen.wator.utils.RollingAverage;
 import com.dirkgassen.wator.simulator.Simulator;
 import com.dirkgassen.wator.simulator.SimulatorRunnable;
 import com.dirkgassen.wator.simulator.WorldHost;
