@@ -1,3 +1,5 @@
+import com.eowise.imagemagick.tasks.Magick
+
 apply plugin: 'com.android.application'
 apply plugin: 'jacoco'
 project.ext.set("archivesBaseName", "Wa-Tor")
@@ -79,7 +81,7 @@ dependencies {
 }
 
 gradle.projectsEvaluated {
-	preBuild.dependsOn(convertDrawables)
+	preBuild.dependsOn tasks.withType(Magick)
 	tasks.withType(JavaCompile) {
 		options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
 	}
@@ -102,56 +104,38 @@ android.applicationVariants.all { variant ->
 	}
 }
 
+// Create tasks that convert the SVG images for each resolution and type (drawable vs mipmap)
 // See: http://stackoverflow.com/questions/27263160/external-dependencies-on-gradle
 // Also interesting: http://stackoverflow.com/questions/30351549/generating-drawables-from-svg-for-android-with-gradle-on-mac-os
-task convertDrawables() {
-	// look for *.svg files in app/src/art/drawable folder
-	def resolutions = [
-			[types: [ "drawable"           ], variant: "ldpi", dpi: 120],
-			[types: [ "drawable", "mipmap" ], variant: "mdpi", dpi: 160],
-			[types: [ "drawable", "mipmap" ], variant: "hdpi", dpi: 240],
-			[types: [ "drawable", "mipmap" ], variant: "xhdpi", dpi: 320],
-			[types: [ "drawable", "mipmap" ], variant: "xxhdpi", dpi: 480],
-			[types: [ "drawable"           ], variant: "xxxhdpi", dpi: 640]
-	]
-	resolutions.each { resolution ->
-		resolution.types.each { type ->
-			def drawabledir = new File(projectDir.absolutePath + '/src/main/' + type + '-src')
-			if (drawabledir.exists()) {
-				drawabledir.eachFileMatch(~/.*\.svg/) { file ->
-					// look for destination folders
-					def outName = file.name.replaceFirst(/-[0-9]+\.svg/, '').replaceFirst(/\.svg/, '')
-					def androidVersion = file.name.replaceFirst(/.*-([0-9]+)\.svg/, '-v$1')
-					if (androidVersion == file.name) {
-						androidVersion = ''
-					}
-					def outputDir = new File(projectDir.absolutePath + '/src/main/res', type + '-' + resolution.variant + androidVersion)
-					if (!outputDir.exists()) {
-						outputDir.mkdir()
-					}
-					def mustUpdate = false
-					def outFile = new File(outputDir.getAbsolutePath(), outName + '.png')
-					if (!outFile.exists()) {
-						mustUpdate = true
-					} else if (file.lastModified() > outFile.lastModified()) {
-						mustUpdate = true
-					} else if (project.getBuildFile().lastModified() > outFile.lastModified()) {
-						mustUpdate = true
-					}
-					if (mustUpdate) {
-						println 'Updating ' + outFile.absolutePath + ' from ' + file.absolutePath + ' (dpi: ' + resolution.dpi + ')'
-						exec {
-							commandLine(
-									"/usr/bin/inkscape",
-									file.getCanonicalPath(),
-									'--without-gui',
-									'--export-png=' + outputDir.getAbsolutePath() + '/' + outName + '.png',
-									'--export-dpi', resolution.dpi,
-									'--export-background-opacity=0',
-									'--export-area-page'
-							);
-						}
-					}
+// Groovy RegExp stuff: http://naleid.com/blog/2008/05/19/dont-fear-the-regexp
+[
+		[dirTypes: [ "drawable"           ], variant: "ldpi", dpi: 120],
+		[dirTypes: [ "drawable", "mipmap" ], variant: "mdpi", dpi: 160],
+		[dirTypes: [ "drawable", "mipmap" ], variant: "hdpi", dpi: 240],
+		[dirTypes: [ "drawable", "mipmap" ], variant: "xhdpi", dpi: 320],
+		[dirTypes: [ "drawable", "mipmap" ], variant: "xxhdpi", dpi: 480],
+		[dirTypes: [ "drawable"           ], variant: "xxxhdpi", dpi: 640]
+].each { resolution ->
+	resolution.dirTypes.each { dirType ->
+		def srcFolder = new File(projectDir.absolutePath + '/src/main/')
+		srcFolder.eachDirMatch(~/${dirType}(-v[0-9]+|)-src/) { dir ->
+			def androidVersionMatcher = dir.name =~ /.*-v([0-9]+)-src/
+			def outputDirName
+			if (androidVersionMatcher.getCount() == 1) {
+				def version = androidVersionMatcher[0][1]
+				outputDirName = dirType + '-' + resolution.variant + '-v' + version
+			} else {
+				outputDirName = dirType + '-' + resolution.variant
+			}
+			task( "build${outputDirName.replaceAll(/-(\w)/) { fullMatch, firstCharacter -> firstCharacter.toUpperCase() }.capitalize()}", type: Magick) {
+				convert dir.getCanonicalPath(), { include '*.svg' }
+				into projectDir.absolutePath + '/src/main/res' + outputDirName
+				actions {
+					-background('none')
+					-density((8 * resolution.dpi).toString())
+					-resize('12.5%')
+					inputFile()
+					outputFile { filename, extension -> "${filename}.png" }
 				}
 			}
 		}
