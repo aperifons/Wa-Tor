@@ -114,7 +114,7 @@ android.applicationVariants.all { variant ->
 		[dirTypes: [ "drawable", "mipmap" ], variant: "hdpi", dpi: 240],
 		[dirTypes: [ "drawable", "mipmap" ], variant: "xhdpi", dpi: 320],
 		[dirTypes: [ "drawable", "mipmap" ], variant: "xxhdpi", dpi: 480],
-		[dirTypes: [ "drawable"           ], variant: "xxxhdpi", dpi: 640]
+		[dirTypes: [ "drawable", "mipmap" ], variant: "xxxhdpi", dpi: 640]
 ].each { resolution ->
 	resolution.dirTypes.each { dirType ->
 		def srcFolder = new File(projectDir.absolutePath + '/src/main/')
@@ -129,7 +129,7 @@ android.applicationVariants.all { variant ->
 			}
 			task( "build${outputDirName.replaceAll(/-(\w)/) { fullMatch, firstCharacter -> firstCharacter.toUpperCase() }.capitalize()}", type: Magick) {
 				convert dir.getCanonicalPath(), { include '*.svg' }
-				into projectDir.absolutePath + '/src/main/res' + outputDirName
+				into projectDir.absolutePath + '/src/main/res/' + outputDirName
 				actions {
 					-background('none')
 					-density((8 * resolution.dpi).toString())
