@@ -81,6 +81,8 @@ dependencies {
 }
 
 gradle.projectsEvaluated {
+	// Prebuild should depend on all the ImageMagick tasks. Maybe this should be changed so that it depends
+	// on task by name, etc. buildDrawable* and buildMipmap*?
 	preBuild.dependsOn tasks.withType(Magick)
 	tasks.withType(JavaCompile) {
 		options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
