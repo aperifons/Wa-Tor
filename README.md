@@ -54,7 +54,16 @@ Building
 
 This app uses Gradle to build. Run
 
+	export BUILD_NUMBER=x
 	./gradlew build
+
+Replace _`x`_ with the desired `versionCode` (the current gradle build file does _not_ currently
+specify the `versionCode`; this will be changed in a future version).For now, a `versionCode` of 1
+is recommended. If the gradle build script does not find the `BUILD_NUMBER` environment it assumes
+a `versionCode` of 9999.
+
+The above syntax is valid for a POSIX compliant shell (e.g., `bash`). For any other environment,
+please look up how to define environment variables.
 
 This will build the `APK` files for debug and release. These can be found in
 `./app/build/outputs/apk/`. The (few) unit tests are also exceuted as well as lint (reports
@@ -75,6 +84,9 @@ and its password as well as the key alias and the key password to sign the `APK`
 
 Note that you do not need to sign the `APK` if you use `adb` to install it on a device (or an
 emulator).
+
+Details on how to build Android applications using gradle can be found
+[in the Android Developer Documentation](http://developer.android.com/tools/building/building-cmdline.html).
 
 Build Requirements
 ------------------
