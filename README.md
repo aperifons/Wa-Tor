@@ -58,7 +58,7 @@ This app uses Gradle to build. Run
 	./gradlew build
 
 Replace _`x`_ with the desired `versionCode` (the current gradle build file does _not_ currently
-specify the `versionCode`; this will be changed in a future version).For now, a `versionCode` of 1
+specify the `versionCode`; this will be changed in a future version). For now, a `versionCode` of 1
 is recommended. If the gradle build script does not find the `BUILD_NUMBER` environment it assumes
 a `versionCode` of 9999.
 
@@ -78,9 +78,9 @@ The `signing.properties` line should point to a file that contains information a
 and its password as well as the key alias and the key password to sign the `APK` with, e.g.:
 
 	keystore=/my/super/secret.keystore
-    keystore.password=This should be kept secret
-    key.alias=wa-tor
-    key.password=This should be kept secret as well
+	keystore.password=This should be kept secret
+	key.alias=wa-tor
+	key.password=This should be kept secret as well
 
 Note that you do not need to sign the `APK` if you use `adb` to install it on a device (or an
 emulator).
