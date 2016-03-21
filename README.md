@@ -57,7 +57,8 @@ This app uses Gradle to build. Run
 	./gradlew build
 
 This will build the `APK` files for debug and release. These can be found in
-`./app/build/outputs/apk/`.
+`./app/build/outputs/apk/`. The (few) unit tests are also exceuted as well as lint (reports
+saved in `app/build/outputs/`).
 
 Note that the `APK` files will be _unsigned_. To sign the release `APK`  you need to create the
 file `app/gradle.properties`, which should contain the following line:
@@ -78,5 +79,6 @@ emulator).
 Build Requirements
 ------------------
 
-To build the app you need to have [ImageMagick](http://www.imagemagick.org) installed
-(besides the Android SDK).
+ * Android SDK
+ * You need to have [ImageMagick](http://www.imagemagick.org) installed (all graphics are stored as
+   SVG files, which are converted to PNG in their respective resolutions at build time).
