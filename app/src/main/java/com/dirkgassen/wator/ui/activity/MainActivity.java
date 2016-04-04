@@ -373,7 +373,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		PackageInfo packageInfo;
 		try {
 			packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-			String version = getString(R.string.version, packageInfo.versionName, packageInfo.versionCode);
+			String version = getString(R.string.version, packageInfo.versionName);
 			versionView.setText(version);
 		} catch (PackageManager.NameNotFoundException e) {
 			versionView.setText(R.string.unknown_version);
