@@ -4,6 +4,35 @@ apply plugin: 'com.android.application'
 apply plugin: 'jacoco'
 project.ext.set("archivesBaseName", "Wa-Tor")
 
+ext {
+	//noinspection UnnecessaryQualifiedReference
+	git = org.ajoberstar.grgit.Grgit.open(currentDir: projectDir.absolutePath)
+	gitVersionName = git.describe()
+	if (gitVersionName == null) {
+		gitVersionName = "v0.0"
+	}
+
+	def versionMatcher = (gitVersionName =~ /v([0-9]+)\.([0-9]+)-([0-9]+)-(.*)/)
+	if (versionMatcher.matches()) {
+		println 'v: major = ' + versionMatcher[0][1] + ', minor = ' + versionMatcher[0][2] + ', commit count since tag = ' + versionMatcher[0][3] + ', commit = ' + versionMatcher[0][4]
+		gitVersionCode = (versionMatcher[0][1].toInteger() /* major */ * 1000 + versionMatcher[0][2].toInteger() /* minor */) * 1000 + versionMatcher[0][3].toInteger()
+		/* commits since tag */
+	} else {
+		versionMatcher = (gitVersionName =~ /v([0-9]+)\.([0-9]+)/)
+		if (versionMatcher.matches()) {
+			gitVersionCode = (versionMatcher[0][1].toInteger() /* major */ * 1000 + versionMatcher[0][2].toInteger() /* minor */) * 1000
+			/* commits since tag */
+		} else {
+			gitVersionCode = 1
+		}
+	}
+
+	if (!git.status().isClean()) {
+		gitVersionName += '-dirty'
+	}
+	println "Vesion code: " + gitVersionCode + ", version name: " + gitVersionName
+}
+
 android {
 	compileSdkVersion 23
 	buildToolsVersion "23.0.2"
@@ -12,8 +41,8 @@ android {
 		applicationId "com.dirkgassen.wator"
 		minSdkVersion 9
 		targetSdkVersion 23
-		versionCode System.getenv("BUILD_NUMBER") as Integer ?: 9999
-		versionName "1.0"
+		versionCode gitVersionCode
+		versionName gitVersionName
 
 		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 	}
@@ -93,7 +122,7 @@ gradle.projectsEvaluated {
 android.applicationVariants.all { variant ->
 	task("generate${variant.name.capitalize()}JavaDoc", type: Javadoc) {
 		description "Generates Javadoc for $variant.name."
-		title = "Wa-Tor $android.defaultConfig.versionName (build #$android.defaultConfig.versionCode) API"
+		title = "Wa-Tor $android.defaultConfig.versionName API"
 		source = variant.javaCompile.source
 		ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
 		classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)

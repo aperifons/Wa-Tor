@@ -36,7 +36,7 @@
 
 	<!-- about -->
 	<string name="version_label">Version:</string>
-	<string name="version">%1$s (Build #%2$d)</string>
+	<string name="version">%1$s</string>
 	<string name="website_label">Web:</string>
 	<string name="website">http://www.dirkgassen.com/</string>
 	<string name="license_label">Lizenz:</string>

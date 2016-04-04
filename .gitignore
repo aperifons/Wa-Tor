@@ -7,6 +7,10 @@
 .DS_Store
 /build
 /captures
+/reports
+.idea/codeStyleSettings.xml
+.idea/inspectionProfiles
+.idea/uiDesigner.xml
 /app/src/main/res/drawable-*/wator_logo.png
 /app/src/main/res/drawable-*/about_icon.png
 /app/src/main/res/drawable-*/new_world_icon.png
