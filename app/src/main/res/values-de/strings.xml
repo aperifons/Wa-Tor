@@ -38,7 +38,7 @@
 	<string name="version_label">Version:</string>
 	<string name="version">%1$s</string>
 	<string name="website_label">Web:</string>
-	<string name="website">http://www.dirkgassen.com/</string>
+	<string name="sourcecode_label">Source:</string>
 	<string name="license_label">Lizenz:</string>
 	<string name="license">GNU General Public License version 3 or later</string>
 	<string name="copyright_label">Copyright:</string>

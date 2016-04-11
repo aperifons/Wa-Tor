@@ -95,6 +95,23 @@
 			</TableRow>
 			<TableRow android:padding="4dp">
 				<TextView
+					android:id="@+id/sourcecode_label"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:padding="2sp"
+				    android:text="@string/sourcecode_label"
+				    android:textStyle="bold"
+				    android:labelFor="@+id/sourcecode"/>
+				<TextView
+						android:id="@+id/sourcecode"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:autoLink="web"
+						android:padding="2sp"
+						android:text="@string/sourcecode"/>
+			</TableRow>
+			<TableRow android:padding="4dp">
+				<TextView
 						android:id="@+id/copyright_label"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"

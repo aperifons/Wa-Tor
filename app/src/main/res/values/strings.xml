@@ -38,7 +38,7 @@
 	<string name="version_label">Version:</string>
 	<string name="version">%1$s</string>
 	<string name="website_label">Web:</string>
-	<string name="website">http://www.dirkgassen.com/</string>
+	<string name="sourcecode_label">Quelltext:</string>
 	<string name="license_label">License:</string>
 	<string name="license">GNU General Public License version 3 or later</string>
 	<string name="copyright_label">Copyright:</string>
@@ -117,4 +117,6 @@
 	<string name="simulatorThreadName" translatable="false">Wa-Tor Simulator Thread</string>
 	<string name="desired_fps_value_set" translatable="false">0,1,2,4,6,8,10,12,14,16,20,24,30,35,40,45,50,60,80</string>
 	<string name="threads_value_set" translatable="false">1,2,4,8</string>
+	<string name="sourcecode" translatable="false">https://github.com/aperifons/Wa-Tor</string>
+	<string name="website" translatable="false">http://www.dirkgassen.com/projects/wator</string>
 </resources>
