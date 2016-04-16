@@ -15,7 +15,7 @@ ext {
 	def versionMatcher = (gitVersionName =~ /v([0-9]+)\.([0-9]+)-([0-9]+)-(.*)/)
 	if (versionMatcher.matches()) {
 		println 'v: major = ' + versionMatcher[0][1] + ', minor = ' + versionMatcher[0][2] + ', commit count since tag = ' + versionMatcher[0][3] + ', commit = ' + versionMatcher[0][4]
-		gitVersionCode = (versionMatcher[0][1].toInteger() /* major */ * 1000 + versionMatcher[0][2].toInteger() /* minor */) * 1000 + versionMatcher[0][3].toInteger()
+		gitVersionCode = (versionMatcher[0][1].toInteger() /* major */ * 1000 + versionMatcher[0][2].toInteger() /* minor */) * 1000 + versionMatcher[0][3].toInteger() * 2
 		/* commits since tag */
 	} else {
 		versionMatcher = (gitVersionName =~ /v([0-9]+)\.([0-9]+)/)
@@ -29,6 +29,7 @@ ext {
 
 	if (!git.status().isClean()) {
 		gitVersionName += '-dirty'
+		gitVersionCode += 1;
 	}
 	println "Vesion code: " + gitVersionCode + ", version name: " + gitVersionName
 }
