@@ -29,7 +29,7 @@ ext {
 
 	if (!git.status().isClean()) {
 		gitVersionName += '-dirty'
-		gitVersionCode += 1;
+		gitVersionCode += 1
 	}
 	println "Vesion code: " + gitVersionCode + ", version name: " + gitVersionName
 }

@@ -954,6 +954,11 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		}
 	}
 
+	@Override
+	public Simulator.WorldInspector getWorld() {
+		return simulator.getWorldToPaint();
+	}
+
 	/**
 	 * Called whenever the {@link SimulatorRunnable} has finished calculating a new world. We need to tell the
 	 * registered {@link WorldObserver} objects about this fact.

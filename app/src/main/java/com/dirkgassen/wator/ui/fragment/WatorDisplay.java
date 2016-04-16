@@ -26,6 +26,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -45,7 +46,7 @@ import android.widget.ImageView;
  * implements {@link WorldHost}. It registers itself as a {@link WorldObserver} to that {@link WorldHost} to receive
  * notifications that the simulator has ticked.
  */
-public class WatorDisplay extends Fragment implements WorldObserver {
+public class WatorDisplay extends Fragment implements WorldObserver, SurfaceHolder.Callback {
 
 	/** {@link ImageView} to display the world in */
 	private SurfaceHolder watorDisplay;
@@ -68,6 +69,8 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 	private Bitmap planetBitmap;
 
 	private Rect targetRect = new Rect();
+
+	private Paint backgroundPaint;
 
 	/** Pixel array that is calculated from the world and then dumped into the {@link #planetBitmap} */
 	private int[] pixels;
@@ -122,6 +125,8 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 		super.onCreate(savedInstanceState);
 		waterColor = ContextCompat.getColor(this.getContext(), R.color.water);
 		darkWaterColor = ContextCompat.getColor(this.getContext(), R.color.dark_water);
+		backgroundPaint = new Paint();
+		backgroundPaint.setColor(darkWaterColor);
 	}
 
 	/** Called when this fragment is no longer in use */
@@ -181,53 +186,52 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 		Canvas c = watorDisplay.lockCanvas();
 		if (c != null) {
 			try {
-				if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Updating image"); }
 				long startUpdate = System.currentTimeMillis();
-
-				int worldWidth = world.getWorldWidth();
-				int worldHeight = world.getWorldHeight();
-				int fishBreedTime = world.getFishBreedTime();
-				int sharkStarveTime = world.getSharkStarveTime();
-
-				if (planetBitmap == null || planetBitmap.getWidth() != worldWidth || planetBitmap.getHeight() != worldHeight) {
-					if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "(Re)creating bitmap/pixels"); }
-					planetBitmap = Bitmap.createBitmap(worldWidth, worldHeight, Bitmap.Config.ARGB_8888);
-					pixels = new int[worldWidth * worldHeight];
-				}
-				if (fishAgeColors == null || fishAgeColors.length != fishBreedTime) {
-					if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "(Re)creating fish colors"); }
-					fishAgeColors = calculateIndividualAgeColors(
-							fishBreedTime,
-							ContextCompat.getColor(getContext(), R.color.fish_young),
-							ContextCompat.getColor(getContext(), R.color.fish_old)
-					);
-				}
-				if (sharkAgeColors == null || sharkAgeColors.length != sharkStarveTime) {
-					if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "(Re)creating shark colors"); }
-					sharkAgeColors = calculateIndividualAgeColors(
-							sharkStarveTime,
-							ContextCompat.getColor(getContext(), R.color.shark_young),
-							ContextCompat.getColor(getContext(), R.color.shark_old)
-					);
-				}
-
-				do {
-					if (world.isEmpty()) {
-						pixels[world.getCurrentPosition()] = waterColor;
-					} else if (world.isFish()) {
-						pixels[world.getCurrentPosition()] = fishAgeColors[world.getFishAge() - 1];
-					} else {
-						pixels[world.getCurrentPosition()] = sharkAgeColors[world.getSharkHunger() - 1];
-					}
-				} while (world.moveToNext() != Simulator.WorldInspector.RESET && planetBitmap != null);
-				if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Generating pixels " + (System.currentTimeMillis() - startUpdate) + " ms"); }
+				if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Updating image"); }
 				synchronized (WatorDisplay.this) {
+
+					int worldWidth = world.getWorldWidth();
+					int worldHeight = world.getWorldHeight();
+					int fishBreedTime = world.getFishBreedTime();
+					int sharkStarveTime = world.getSharkStarveTime();
+
+					if (planetBitmap == null || planetBitmap.getWidth() != worldWidth || planetBitmap.getHeight() != worldHeight) {
+						if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "(Re)creating bitmap/pixels"); }
+						planetBitmap = Bitmap.createBitmap(worldWidth, worldHeight, Bitmap.Config.ARGB_8888);
+						pixels = new int[worldWidth * worldHeight];
+					}
+					if (fishAgeColors == null || fishAgeColors.length != fishBreedTime) {
+						if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "(Re)creating fish colors"); }
+						fishAgeColors = calculateIndividualAgeColors(
+								fishBreedTime,
+								ContextCompat.getColor(getContext(), R.color.fish_young),
+								ContextCompat.getColor(getContext(), R.color.fish_old)
+						);
+					}
+					if (sharkAgeColors == null || sharkAgeColors.length != sharkStarveTime) {
+						if (Log.isLoggable("Wa-Tor", Log.DEBUG)) { Log.d("Wa-Tor", "(Re)creating shark colors"); }
+						sharkAgeColors = calculateIndividualAgeColors(
+								sharkStarveTime,
+								ContextCompat.getColor(getContext(), R.color.shark_young),
+								ContextCompat.getColor(getContext(), R.color.shark_old)
+						);
+					}
+
+					do {
+						if (world.isEmpty()) {
+							pixels[world.getCurrentPosition()] = waterColor;
+						} else if (world.isFish()) {
+							pixels[world.getCurrentPosition()] = fishAgeColors[world.getFishAge() - 1];
+						} else {
+							pixels[world.getCurrentPosition()] = sharkAgeColors[world.getSharkHunger() - 1];
+						}
+					} while (world.moveToNext() != Simulator.WorldInspector.RESET && planetBitmap != null);
+					if (Log.isLoggable("Wa-Tor", Log.VERBOSE)) { Log.v("Wa-Tor", "Generating pixels " + (System.currentTimeMillis() - startUpdate) + " ms"); }
 					if (planetBitmap != null) {
 						planetBitmap.getScaledHeight(c);
 						int bitmapWidth = planetBitmap.getWidth();
 						int bitmapHeight = planetBitmap.getHeight();
 						planetBitmap.setPixels(pixels, 0, bitmapWidth, 0, 0, bitmapWidth, bitmapHeight);
-						c.drawColor(darkWaterColor);
 						int canvasHeight = c.getHeight();
 						int canvasWidth = c.getWidth();
 						int scaledWidth = canvasHeight * bitmapWidth / bitmapHeight;
@@ -237,11 +241,17 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 							targetRect.bottom = targetRect.top + scaledHeight;
 							targetRect.left = 0;
 							targetRect.right = canvasWidth;
+
+							c.drawRect(0, 0, canvasWidth, targetRect.top, backgroundPaint);
+							c.drawRect(0, targetRect.bottom, canvasWidth, canvasHeight, backgroundPaint);
 						} else {
 							targetRect.left = (canvasWidth - scaledWidth) / 2;
 							targetRect.right = targetRect.left + scaledWidth;
 							targetRect.top = 0;
 							targetRect.bottom = canvasHeight;
+
+							c.drawRect(0, 0, targetRect.left, canvasHeight, backgroundPaint);
+							c.drawRect(targetRect.right, 0, canvasWidth, canvasHeight, backgroundPaint);
 						}
 						c.drawBitmap(planetBitmap, null /* whole bitmap */, targetRect, null /* no paint */);
 					}
@@ -255,4 +265,40 @@ public class WatorDisplay extends Fragment implements WorldObserver {
 		}
 	}
 
+	@Override
+	public void surfaceCreated(SurfaceHolder holder) {
+		if (displayHost != null) {
+			Simulator.WorldInspector world = displayHost.getWorld();
+			try {
+				synchronized (this) {
+					planetBitmap = null;
+					worldUpdated(world);
+				}
+			} finally {
+				world.release();
+			}
+		}
+	}
+
+	@Override
+	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+		if (displayHost != null) {
+			Simulator.WorldInspector world = displayHost.getWorld();
+			try {
+				synchronized (this) {
+					planetBitmap = null;
+					worldUpdated(world);
+				}
+			} finally {
+				world.release();
+			}
+		}
+	}
+
+	@Override
+	public void surfaceDestroyed(SurfaceHolder holder) {
+		synchronized (this) {
+			planetBitmap = null;
+		}
+	}
 }

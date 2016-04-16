@@ -37,5 +37,11 @@ public interface WorldHost {
 	 */
 	void unregisterSimulatorObserver(WorldObserver goneObserver);
 
+	/**
+	 * Returns a {@link Simulator.WorldInspector} for painting.
+	 * After being done you need to call {@link Simulator.WorldInspector#release()}.
+	 * @return {@link Simulator.WorldInspector} of the world
+	 */
+	Simulator.WorldInspector getWorld();
 
 }
