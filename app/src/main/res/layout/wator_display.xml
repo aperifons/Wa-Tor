@@ -20,11 +20,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-	<ImageView
+	<SurfaceView
 			android:id="@+id/wator_2d_view"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
-			android:background="@color/dark_water"
 			android:contentDescription="@string/wator_image_view_desc" />
 
 </RelativeLayout>
