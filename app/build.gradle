@@ -5,38 +5,64 @@ apply plugin: 'jacoco'
 project.ext.set("archivesBaseName", "Wa-Tor")
 
 ext {
+	int major
+	int minor
+	int addlCommits
+	int dirty
+	String recentCommit
+
 	//noinspection UnnecessaryQualifiedReference
 	git = org.ajoberstar.grgit.Grgit.open(currentDir: projectDir.absolutePath)
 	gitVersionName = git.describe()
 	if (gitVersionName == null) {
-		gitVersionName = "v0.0"
-	}
-
-	def versionMatcher = (gitVersionName =~ /v([0-9]+)\.([0-9]+)-([0-9]+)-(.*)/)
-	if (versionMatcher.matches()) {
-		println 'v: major = ' + versionMatcher[0][1] + ', minor = ' + versionMatcher[0][2] + ', commit count since tag = ' + versionMatcher[0][3] + ', commit = ' + versionMatcher[0][4]
-		gitVersionCode = (versionMatcher[0][1].toInteger() /* major */ * 1000 + versionMatcher[0][2].toInteger() /* minor */) * 1000 + versionMatcher[0][3].toInteger() * 2
-		/* commits since tag */
+		major = 0
+		minor = 0
+		addlCommits = 0
+		dirty = 0
+		recentCommit = ''
 	} else {
-		versionMatcher = (gitVersionName =~ /v([0-9]+)\.([0-9]+)/)
+		def versionMatcher = (gitVersionName =~ /v([0-9]+)\.([0-9]+)-([0-9]+)-(.*)/)
 		if (versionMatcher.matches()) {
-			gitVersionCode = (versionMatcher[0][1].toInteger() /* major */ * 1000 + versionMatcher[0][2].toInteger() /* minor */) * 1000
-			/* commits since tag */
+			println 'v: major = ' + versionMatcher[0][1] + ', minor = ' + versionMatcher[0][2] + ', commit count since tag = ' + versionMatcher[0][3] + ', commit = ' + versionMatcher[0][4]
+			major = versionMatcher[0][1].toInteger()
+			minor = versionMatcher[0][2].toInteger()
+			addlCommits = versionMatcher[0][3].toInteger()
+			recentCommit = versionMatcher[0][4]
 		} else {
-			gitVersionCode = 1
+			versionMatcher = (gitVersionName =~ /v([0-9]+)\.([0-9]+)/)
+			if (versionMatcher.matches()) {
+				gitVersionCode = (versionMatcher[0][1].toInteger() /* major */ * 1000 + versionMatcher[0][2].toInteger() /* minor */) * 1000
+				major = versionMatcher[0][1].toInteger()
+				minor = versionMatcher[0][2].toInteger()
+				addlCommits = 0
+			} else {
+				major = 0
+				minor = 0
+				addlCommits = 0
+			}
+			recentCommit = ''
+		}
+		if (git.status().isClean()) {
+			dirty = 0
+		} else {
+			dirty = 1
 		}
 	}
 
-	if (!git.status().isClean()) {
+	gitVersionCode = (major * 1000 + minor) * 1000 + addlCommits * 2 + dirty
+	gitVersionName = major.toString() + '.' + minor.toString()
+	if (addlCommits > 0) {
+		gitVersionName += '-' + addlCommits.toString() + '-' + recentCommit
+	}
+	if (dirty > 0) {
 		gitVersionName += '-dirty'
-		gitVersionCode += 1
 	}
 	println "Vesion code: " + gitVersionCode + ", version name: " + gitVersionName
 }
 
 android {
 	compileSdkVersion 23
-	buildToolsVersion "23.0.2"
+	buildToolsVersion "23.0.3"
 
 	defaultConfig {
 		applicationId "com.dirkgassen.wator"
@@ -107,7 +133,6 @@ dependencies {
 	androidTestCompile 'com.android.support.test:rules:0.4.1'
 	androidTestCompile 'org.hamcrest:hamcrest-library:1.3'
 	androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.1'
-	androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
 }
 
 gradle.projectsEvaluated {
