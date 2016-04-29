@@ -37,7 +37,7 @@
 				android:elevation="4dp"
 				android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
 				app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-				tools:ignore="UnusedAttribute"/>
+				tools:ignore="UnusedAttribute" />
 
 		<fragment
 				android:name="com.dirkgassen.wator.ui.fragment.WatorStatistics"
@@ -54,7 +54,7 @@
 				android:layout_height="fill_parent"
 				android:layout_below="@+id/main_toolbar"
 				android:layout_above="@id/wator_statistics_fragment"
-				tools:layout="@layout/wator_display"/>
+				tools:layout="@layout/wator_display" />
 
 		<FrameLayout
 				android:name="com.dirkgassen.wator.ui.NewWorld"
@@ -174,7 +174,7 @@
 				app:valueSet="@string/desired_fps_value_set"
 				android:padding="6dp"
 				android:textSize="12sp"
-				android:color="@color/fish_old"/>
+				android:color="@color/fish_old" />
 
 		<TextView
 				android:id="@+id/label_fps"
@@ -197,7 +197,7 @@
 				android:layout_alignLeft="@id/desired_fps"
 				android:layout_alignStart="@id/desired_fps"
 				android:padding="4dp"
-				tools:text="Simulation: 20fps"/>
+				tools:text="Simulation: 20fps" />
 
 		<TextView
 				android:id="@+id/fps_drawing"

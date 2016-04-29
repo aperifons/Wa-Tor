@@ -160,8 +160,14 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 			}
 			DrawerCommandItem item = drawerCommands.get(position);
 			((TextView) convertView.findViewById(R.id.drawer_command_title)).setText(item.title);
-			((TextView) convertView.findViewById(R.id.drawer_command_subtitle)).setText(item.subtitle);
-			((ImageView) convertView.findViewById(R.id.drawer_command_icon)).setImageResource(item.icon);
+			TextView subtitle = (TextView) convertView.findViewById(R.id.drawer_command_subtitle);
+			if (subtitle != null) {
+				subtitle.setText(item.subtitle);
+			}
+			ImageView icon = (ImageView) convertView.findViewById(R.id.drawer_command_icon);
+			if (icon != null) {
+				icon.setImageResource(item.icon);
+			}
 			return convertView;
 		}
 
@@ -956,7 +962,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 
 	@Override
 	public Simulator.WorldInspector getWorld() {
-		return simulator.getWorldToPaint();
+		return simulator == null ? null : simulator.getWorldToPaint();
 	}
 
 	/**
