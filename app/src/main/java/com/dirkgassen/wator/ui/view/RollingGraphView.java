@@ -46,10 +46,10 @@ public class RollingGraphView extends View {
 	/** Names of the series */
 	private String seriesNames[];
 
-	/** Times at which data values are recorded (not uesed yet) */
+	/** Times at which data values are recorded (not used yet) */
 	private long[] dataTimes;
 
-	/** Data points. The first index is the index of the data point while the second specifes the series no. */
+	/** Data points. The first index is the index of the data point while the second specifies the series no. */
 	private float[][] dataValues;
 
 	/**
@@ -59,7 +59,7 @@ public class RollingGraphView extends View {
 	private int oldestValue;
 
 	/**
-	 * Index of the current data point. This index is incremented when new values are added and eventuall rolls back
+	 * Index of the current data point. This index is incremented when new values are added and eventually rolls back
 	 * to zero.
 	 */
 	private int currentValue = -1; // No values yet
@@ -69,7 +69,7 @@ public class RollingGraphView extends View {
 	 */
 	private Bitmap rollingGraphBitmap;
 
-	/** Canvas for painting the grpah */
+	/** Canvas for painting the graph */
 	private Canvas rollingGraphCanvas;
 
 	/** Maximum Number of values to store */

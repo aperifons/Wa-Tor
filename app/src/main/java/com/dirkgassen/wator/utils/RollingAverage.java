@@ -26,7 +26,7 @@ public class RollingAverage {
 
 	/**
 	 * Stores the values in the average. {@link #valueCurrentNo} is the index in this array where the next
-	 * new value is stored. This index is decremented and wrapepd around to start at the end of the array again.
+	 * new value is stored. This index is decremented and wrapped around to start at the end of the array again.
 	 *
 	 * The array must be one element bigger than the history size to accommodate for a spot to save the next value.
 	 */
@@ -48,7 +48,7 @@ public class RollingAverage {
 	 */
 	private int valueCount = 0;
 
-	/** @return average of all n most recent values added (0 if no values have been addedy) */
+	/** @return average of all n most recent values added (0 if no values have been added) */
 	final public float getAverage() {
 		if (valueCount == 0) {
 			return 0f;

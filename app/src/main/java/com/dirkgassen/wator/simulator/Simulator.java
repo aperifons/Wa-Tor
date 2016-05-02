@@ -38,7 +38,7 @@ import java.util.Random;
  * {@link #tick(int)}.
  *
  * To access the current world a {@link WorldInspector} can be requested via {@link #getWorldToPaint()}. A world
- * inspectore stores a snapshot of the world at the time it was requested. The world can progress while the inspector
+ * inspector stores a snapshot of the world at the time it was requested. The world can progress while the inspector
  * is in use but the inspector won't be affected.
  *
  * Note that to avoid excessive object creation (which also puts strain on the garbage collector) {@link WorldInspector#release()}
@@ -55,7 +55,7 @@ import java.util.Random;
 //   C: cells 200 to 299,
 //   and D: cells 300 to 399.
 // The first set would contain chunks A and C while the second set would contain B and D. Now chunks A and C can
-// be calculated simultaniously since none of the cells affected would be anywhere near chunk C. The same is true
+// be calculated simultaneously since none of the cells affected would be anywhere near chunk C. The same is true
 // for chunks B and D. Therefore, we can let two threads calculate chunks A and B, then wait until both are done and
 // then let two threads calculate chunks B and D.
 //
@@ -204,7 +204,7 @@ final public class Simulator {
 
 		/**
 		 * Returns the age (maturity) of a fish at a given location
-		 * @param no locaton
+		 * @param no location
 		 * @return age (maturity) of the fish at the specified location
 		 * (or 0 if there is no fish at the current location)
 		 */
@@ -217,7 +217,7 @@ final public class Simulator {
 
 		/**
 		 * Returns the age (maturity) of a shark at a given location
-		 * @param no locaton
+		 * @param no location
 		 * @return age (maturity) of the shark at the specified location
 		 * (or 0 if there is no shark at the current location)
 		 */
@@ -230,7 +230,7 @@ final public class Simulator {
 
 		/**
 		 * Returns the hunger of a shark at a given location
-		 * @param no locaton
+		 * @param no location
 		 * @return hunger of the shark at the specified location
 		 * (or 0 if there is no shark at the current location)
 		 */
@@ -457,7 +457,7 @@ final public class Simulator {
 
 		/**
 		 * Waits until the thread is no longer working. This method also waits if the thread is currently in the
-		 * state {@link #STATE_STARTING} (which is treaded by this method like {@link #STATE_WORKING}.
+		 * state {@link #STATE_STARTING} (which is threaded by this method like {@link #STATE_WORKING}.
 		 *
 		 * @return {@code true} if the thread is waiting for more work; {@code false} if the thread is
 		 * {@link #STATE_DEAD}
@@ -567,7 +567,7 @@ final public class Simulator {
 
 	/**
 	 * Cache of allocated {@link WorldInspector} objects. Whenever a world inspector is requested one from this
-	 * array is returned (after being initialized appropriately) and the index in this array that containde a reference
+	 * array is returned (after being initialized appropriately) and the index in this array that contained a reference
 	 * to it is set to {@code null}. When {@link WorldInspector#release()} is called that inspector is returned into
 	 * this array.
 	 */
@@ -588,10 +588,10 @@ final public class Simulator {
 	/** Height of the world */
 	private final short worldHeight;
 
-	/** Ticks until a fish breeds (reprdocues) */
+	/** Ticks until a fish breeds (reproduces) */
 	private final short fishBreedTime;
 
-	/** Ticks until a shark breeds (reprdocues) */
+	/** Ticks until a shark breeds (reproducess) */
 	private final short sharkBreedTime;
 
 	/** Ticks until a shark must eat before it starves */

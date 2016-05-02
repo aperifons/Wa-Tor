@@ -35,7 +35,7 @@ import android.view.ViewGroup;
 /**
  * A fragment that shows a rolling graph of the statistics of fish and shark in a {@link Simulator}. The fragment must
  * be placed into an activity that implements {@link WorldHost}.It registers itself as a {@link WorldObserver} to that {@link WorldHost} to receive
- * notifcations that the simulator has ticked.
+ * notifications that the simulator has ticked.
  */
 public class WatorStatistics extends Fragment implements WorldObserver {
 
@@ -69,7 +69,7 @@ public class WatorStatistics extends Fragment implements WorldObserver {
 	 *
 	 * @param inflater           used to inflate the view
 	 * @param container          If not {@code null}, this is the parent view that the fragment's UI should be attached to
-	 * @param savedInstanceState previous state of the framgent (ignored)
+	 * @param savedInstanceState previous state of the fragment (ignored)
 	 * @return view to use for this fragment
 	 */
 	@Nullable

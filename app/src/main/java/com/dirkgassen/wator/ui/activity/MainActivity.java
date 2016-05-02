@@ -71,7 +71,7 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity implements WorldHost, SimulatorRunnable.SimulatorRunnableObserver, NewWorld.WorldCreator {
 
 
-	/** Stores information about one commad in the drawer. */
+	/** Stores information about one command in the drawer. */
 	abstract class DrawerCommandItem {
 
 		/** ID that uniquely identifies the command */
@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		 * @param id       ID for the new command
 		 * @param icon     ID of the icon to use
 		 * @param title    title for the command
-		 * @param subtitle description of th ecommand
+		 * @param subtitle description of the command
 		 */
 		DrawerCommandItem(int id, int icon, String title, String subtitle) {
 			this.id = id;
@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 		/** Key for the fish age */
 		private static final String SHARK_HUNGER_KEY = "sharkHunger";
 
-		/** Key for the array containinng the x coordinates of the fish positions */
+		/** Key for the array containing the x coordinates of the fish positions */
 		private static final String FISH_POSITIONS_X_KEY = "fishPositionsX";
 
 		/** Key for the array containing the y coordinates of the fish positions */
@@ -855,7 +855,7 @@ public class MainActivity extends AppCompatActivity implements WorldHost, Simula
 	}
 
 	/**
-	 * The activitiy is resuming. We need to start our simulator and world updater thread.
+	 * The activity is resuming. We need to start our simulator and world updater thread.
 	 */
 	@Override
 	protected void onResume() {

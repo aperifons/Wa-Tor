@@ -66,7 +66,7 @@ The above syntax is valid for a POSIX compliant shell (e.g., `bash`). For any ot
 please look up how to define environment variables.
 
 This will build the `APK` files for debug and release. These can be found in
-`./app/build/outputs/apk/`. The (few) unit tests are also exceuted as well as lint (reports
+`./app/build/outputs/apk/`. The (few) unit tests are also executed as well as lint (reports
 saved in `app/build/outputs/`).
 
 Note that the `APK` files will be _unsigned_. To sign the release `APK`  you need to create the

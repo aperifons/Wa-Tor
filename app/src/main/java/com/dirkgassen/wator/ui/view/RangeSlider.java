@@ -688,7 +688,7 @@ public class RangeSlider extends View {
 	}
 
 	/**
-	 * Changes the value of the slider. Note: the value is adusted to be in between the minimum and the maximum
+	 * Changes the value of the slider. Note: the value is adjusted to be in between the minimum and the maximum
 	 * (or to be one of the value set values if a set is active)
 	 *
 	 * @param value new value for the slider
