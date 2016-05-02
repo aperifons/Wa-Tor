@@ -57,6 +57,7 @@
 	          android:layout_below="@id/drawer_command_title"
 	          android:layout_alignParentRight="true"
 	          android:layout_alignParentEnd="true"
-	          tools:text="@string/create_new_world_description"/>
+	          tools:text="@string/create_new_world_description"
+	          tools:ignore="InconsistentLayout"/>
 
 </RelativeLayout>

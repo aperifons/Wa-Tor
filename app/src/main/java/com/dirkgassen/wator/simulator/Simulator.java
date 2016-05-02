@@ -591,7 +591,7 @@ final public class Simulator {
 	/** Ticks until a fish breeds (reproduces) */
 	private final short fishBreedTime;
 
-	/** Ticks until a shark breeds (reproducess) */
+	/** Ticks until a shark breeds (reproduces) */
 	private final short sharkBreedTime;
 
 	/** Ticks until a shark must eat before it starves */
